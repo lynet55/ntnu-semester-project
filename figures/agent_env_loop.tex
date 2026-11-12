@@ -1,0 +1,33 @@
+% Agent-environment interaction loop (after Sutton & Barto, 2018, Fig. 3.1)
+% Requires in preamble: \usepackage{tikz} and \usetikzlibrary{arrows.meta}
+\begin{tikzpicture}[
+    line width=1pt,
+    box/.style={draw, rounded corners=3pt, minimum height=0.8cm, inner xsep=8pt},
+    arr/.style={-{Latex[length=2.5mm]}},
+    lbl/.style={font=\small}
+]
+    % Boxes
+    \node[box, minimum width=2.6cm] (agent) at (0,1.8) {Agent};
+    \node[box, minimum width=3.2cm] (env)   at (0,0)   {Environment};
+
+    % Action: Agent -> Environment
+    \draw[arr] (agent.east) -- ++(1.6,0) |- (env.east)
+        node[pos=0.25, right, lbl, align=left] {action\\$A_t$};
+
+    % Environment outputs, ending at the time-step break
+    \draw[arr] ([yshift=0.15cm]env.west)  -- (-2.4,0.15);
+    \draw[arr] ([yshift=-0.15cm]env.west) -- (-2.4,-0.15);
+    \node[font=\scriptsize, above] at (-2.0,0.15)  {$R_{t+1}$};
+    \node[font=\scriptsize, below] at (-2.0,-0.15) {$S_{t+1}$};
+
+    % Time-step break
+    \draw[dashed, line width=0.6pt] (-2.4,-0.45) -- (-2.4,0.45);
+
+    % Reward: inner loop back to Agent
+    \draw[arr] (-2.4,0.15) -- (-3.0,0.15) |- ([yshift=-0.15cm]agent.west);
+    \node[lbl, anchor=west, align=left] at (-3.0,0.9) {reward\\$R_t$};
+
+    % State: outer loop back to Agent
+    \draw[arr] (-2.4,-0.15) -- (-3.5,-0.15) |- ([yshift=0.15cm]agent.west);
+    \node[lbl, anchor=east, align=right] at (-3.5,0.9) {state\\$S_t$};
+\end{tikzpicture}

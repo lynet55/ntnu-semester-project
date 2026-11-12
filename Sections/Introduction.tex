@@ -1,0 +1,268 @@
+\section{Preface and Acknowlagements}
+\section{Introduction}
+
+\subsection{Background and Motivation}
+
+Efforts to improve underwater inspection using Unmanned Underwater Vehicles (UUV's) has potenial to unlock great economical- and ecologial value for the Norwegian fish farming industry.  Such UUV's are commonly used in the process of inspection, maintenance and intervention tasks in fish farms, and have already proven an indispensible tool for Norwegian fish farmes as they have replaced divers for monitoring and inspection operations inside of the cage.  \cite{amundsen2024fieldrobotics}. Specifically operations such as net inspection, biofouling removing, mooring line inspection and fish monitoring \cite{amundsen2025netpen}. However of these operations, net inspection is likely the most important operation, as such failures would represent produciton loss and environmental conserns as fish that have escaped may impact the wild fish population.
+
+\subsubsection{Autonomy in fish farming}
+
+\subsubsection{Economical Impact}
+In 2022 aquaculture production supassed capture of fisheries in global production, accounting for 51 percent of gloabal seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \cite{amundsen2025netpen}.
+
+The econmaical impact is especially significant for Norway as aqaculture has grown to be Norway's second-largest export industry behind the oil and gas industy \cite{amundsen2024fieldrobotics}.
+
+Between 2010 and 2018 more than 70 percent of escaped farmed Atlantic Salamon and rainbow Trout was caused by holes in the net, and avrages to approximatly 220 000 escaped fish per year \cite{evjemo2025aquaculture}. 
+
+\subsubsection{Ecological Impact}
+
+\subsubsection{Importance of precise and robust control}
+
+
+
+\subsection{Related Work}
+
+With the growth of autonomous inspection environments where navigation in complex environment's, the focus on intelligent and safe control has becomed a prominant field of research. In dealing with the complexities of a underwater environment affected by nonlinear dynamics, ocean currents motivates increasingly complex controllers to be applied to this domain. Safety also becomes important when dealing with the constraints imposed by the task of underwater inspection while also preserving optimality.
+
+Finding such controllers have evolved into two schools of tought. Model-Based Optimal Control and Reinforcement Learning (RL)
+
+The use of advanced methods for control such as Model Predictive Control or Reinforcement learning has  becomed an active area of research in the domain of Optimal Control. 
+
+
+
+
+OC (10, 11) relies on the explicit use of an accurate mathematical model within an optimization framework to find an OC law for a given dynamical system. This technique involves solving an optimization problem online to find the control inputs that minimize a cost function while satisfying system constraints. OC techniques make use of convex optimization methods such that the problem is solved in real time at high frequency. 
+
+
+\subsubsection{The state of Optimal Control and Reeinforcement Learning}
+\begin{itemize}
+    \item Example of OC techiques are Linear Quadratic Regualtor (LQR) and its nonlinear finite-horizon counter part, Model Predictive Conrol
+    \item RL on the otherhand is a subfield of Machine Learning that trains an agent to maximize a reward signal from an environment
+    \item RL split into three cataegories, value-based, policy based and actor critic
+\end{itemize}
+
+
+\subsubsection{Optimal Control}
+- Short description of the problem from a practical point of view
+
+\paragraph{The optimal control problem.}
+The optimal control problem is to design an optimal control input to ensure the states of the system to converge to zero by mimize the cost function \parencite{liu2023rlunmanned}.
+- Formal introduction explaining how they both solve the Hamilton-Jacobi-Bellman HJB problem. 
+
+- Short introduction to Finite Horizon Optimal control
+
+Another solution to the HJB problem, is by Reinforcement Learning. A technique made famous by Richard Sutton and Andrew Barton in their book "Reinforcement learning: an introduction".
+
+- \cite{song2023reaching} some takes on why RL is intresting compared to optimization based methods for control like mpc.
+
+\subsection{Reinforcement Learning}
+
+Reinforcement Learning was 
+
+
+in "Reinforcement Learning: An Introduction" \cite[Sec.~3.1]{sutton2018reinforcement} 
+
+
+A learner and descision-maker called the agent, learns by ineracting with everything outside the agent called the environment responding to the agents continous actions and presents new sitations to the agent. The environment will also present the agent with numerical rewards which the agent will attemt to maximize over time. The interaction beteen agent and environment is commonly depicted in Figure~\ref{fig:agent-env-loop}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/agent_env_loop.tex}
+    \caption{The agent environment interaction in a Markov decision process.~\cite[Fig.~3.1]{sutton2018reinforcement}.}
+    \label{fig:agent-env-loop}
+\end{figure}
+
+We formally define the problem as a Markov decision process (MDP) for a single-agent reinforcement learning (RL). In this work, an MDP is defined by the tuple $\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{P}, r, \rho_0, \gamma)$ adopting the notation used in \cite{song2023reaching}, where the state space $\mathcal{S}$ and the action space $\mathcal{A}$ are continous. $\mathcal{P}(s_{t+1} \mid s_t, a_t)$ is the state transition probability and $r : \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ is the reward function. 
+
+
+The agent and environment interact at step in a sequence of descrete time steps. At each time step $t$, the agent receives some representation of the environment's state $s_t \in \mathcal{S}$ and selects an action $a_t \in \mathcal{A}$ available at state $s_t$. At each state the agent implements a mapping form state to propabilities of each possible action, this we call the agents policy.
+
+\subsubsection{Types of Reinforcement learning}
+Algorithms used to train such an agent are commonly divided into two paradigms, model-based and model-free RL. As per described in \textcite[Sec.~1.4]{sutton2018reinforcement} model-free methods for solving reinforcment learning problems are models that use models and planning, in contradiction to model-free methods which only learn from trail-and-error and is regarded as simpler than model-based approaches. As described in \textcite{moerland2023mbrl} the difference between model-based RL and model-free RL methods maily differ in their reversable acces to the MDP dynamics. The MDP dynamics, this typically reffered to as a model. 
+
+Therefore a agent following the model based approach is allowed to repatedly plan from the same state in a model by querying the model at any preffered state-action per in any preffered order. In contrast model-free approaches have irreversable access to the model dynamics, meaning the agent is to move forwards from the next state given by the MDP dynamics after a perticular action has been applied.
+
+a commonality between model-based and model-free reinforcement learning is that a so called \textit{global solution} is stored for the complete state space, as its a property of \textit{learning} a optimal solution to the MDP and in this way differentiates itself from planning based methods which rely on a {local solution} \parencite{moerland2023mbrl}. 
+
+Generally, model-based RL approaches with learned models are outperformed by model-free approaches on asymptotic performance. This is known to be caused of uncertainties in the, as there are examples of model-free approaches with a know model achieving similar performance to model-free methods \parencite{moerland2023mbrl}. 
+
+Even tough model-based methods are increasingly gaining attention, model-free methods are still dominant and distinguished on whether the method is on-policy or off-policy \textcite{sutton2018reinforcement}.
+
+\subsubsection{Continuos control}
+In continuos control, the agent's policy is commonly parametrized as a Feed Forward Neural Network (FFNN) typically defined as a single Multi Layer Perceptrion (MLP) and iteratively improved by generating data from applying the same policy to the system \parencite{moerland2023mbrl}.
+
+In practice, the state $s_t$ not always fully observable by the policy. Problems where the observed state $o_t$ does not match the state exposed by the environment $s_t$, does not match the canonical definition of a MDP used by \cite{sutton2018reinforcement}. Instead we formulate the RL problem as a partially observable Markov decision prosses (POMDP), where the policy of the agent is denoted $\pi_\theta(\boldsymbol{a}_t \mid \boldsymbol{o}_t)$ following the practice used in \cite{song2023reaching}.
+
+- add a control loop with RL notation
+
+\paragraph{Policy Gradient methods} In most control applications RL is done with policy gradient methods (PG). In contrast to other common RL algorithms which rely on learning a state action value function before selecting a optimal value. Policy Gradient methods instead learns the policy directly and instead uses a parametrized function $\pi(a \mid s; \theta)$ with $\theta$ being the functions parameters. Instead of maximizing expected reward as in the canonical RL problem, one attempts to maximize a self defined reward function instead. This is a natural approach for problems in control, as there would be a infinite number of state-actions to estimate the value for. Hence value-based approaches become intractable \parencite{weng2018bandit}.
+
+\paragraph{Actor-Critic methods}
+
+https://claude.ai/chat/53005f4c-7c8b-43a1-beae-e9091413ffe3
+
+
+The two most common baseline methods used for continuos control are both actor-critic algorithms, and represent each category: Proximal Policy Optimization (PPO) \textcite{schulman2017ppo} is on-policy and Soft Actor-Critic \textcite{haarnoja2018soft} is off-policy.
+
+TODO
+- small note on each technique, sample efficency performance comment. 
+- mention model based approaches like td mpc?
+
+\paragraph{PPO Implementations} PPO works by. In Sculman's "Proximal Policy Optimization Algorithms":
+
+\begin{algorithm}
+\caption{PPO, Actor-Critic Style}
+\label{alg:ppo}
+\begin{algorithmic}[1]
+\For{iteration $= 1, 2, \ldots$}
+    \For{actor $= 1, 2, \ldots, N$}
+        \State Run policy $\pi_{\theta_{\text{old}}}$ in environment for $T$ timesteps
+        \State Compute advantage estimates $\hat{A}_1, \ldots, \hat{A}_T$
+    \EndFor
+    \State Optimize surrogate $L$ wrt $\theta$, with $K$ epochs and minibatch size $M \leq NT$
+    \State $\theta_{\text{old}} \leftarrow \theta$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{equation}
+    r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)},
+\end{equation}
+and the clipped surrogate objective, with clipping parameter $\epsilon$, is
+\begin{equation}
+    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t\!\left[
+        \min\!\big( r_t(\theta)\hat{A}_t,\;
+        \operatorname{clip}\!\big(r_t(\theta), 1-\epsilon, 1+\epsilon\big)\hat{A}_t \big)
+    \right].
+\end{equation}
+When the policy and value function share parameters, the surrogate $L$ in
+Algorithm~\ref{alg:ppo} also includes a value loss and an entropy bonus:
+\begin{equation}
+    L^{\text{CLIP+VF+S}}(\theta) = \hat{\mathbb{E}}_t\!\left[
+        L_t^{\text{CLIP}}(\theta) - c_1 L_t^{\text{VF}}(\theta) + c_2\, S[\pi_\theta](s_t)
+    \right],
+\end{equation}
+where $L_t^{\text{VF}} = \big(V_\theta(s_t) - V_t^{\text{targ}}\big)^2$, $S$ is the
+policy entropy, and $c_1, c_2$ are coefficients. The advantages are computed with
+truncated generalized advantage estimation (GAE):
+\begin{align}
+    \hat{A}_t &= \delta_t + (\gamma\lambda)\,\delta_{t+1} + \cdots
+                + (\gamma\lambda)^{T-t-1}\,\delta_{T-1}, \\
+    \delta_t  &= r_t + \gamma V(s_{t+1}) - V(s_t),
+\end{align}
+where $\gamma$ is the discount factor and $\lambda$ the GAE parameter.
+
+
+\subsubsection{Simulation to reality gap}
+It's well documented that RL policies often struggle to achieve the same level of performance when deployed in real life as in the simulation environment in which it was trained in, this is often called the "sim-to-real gap".
+
+This is commonly addressed with randomizing the physical parameters of the simulator used during training and is commonly called Domain Randomization (DR).
+
+
+\subsubsection{Parallelization}
+- What part of 
+
+
+% Requires: \usepackage{amsmath,amssymb,booktabs}
+
+%==========================================================
+% 1. Observation vector during training (uuv-rl-env, sonar_goal.yaml)
+%==========================================================
+\begin{table}[ht]
+\centering
+\caption{Policy observation $o_k \in \mathbb{R}^{30}$ during training. World frame Z-up, body frame FLU.}
+\label{tab:train_obs}
+\begin{tabular}{@{}clllc@{}}
+\toprule
+Index & Symbol & Description & Frame / scaling & Dim \\
+\midrule
+1--3   & $0.1\,\mathbf{g}^{b}$       & Goal vector, $R_{bw}(\mathbf{g}-\mathbf{p})$ & Body FLU, $\times 0.1$ & 3 \\
+4--5   & $\sin e_\psi,\ \cos e_\psi$ & Yaw error to goal                            & --                     & 2 \\
+6--8   & $u,\ v,\ w$                 & Body linear velocity                         & Body FLU, m/s          & 3 \\
+9      & $r$                         & Yaw rate                                     & Body FLU, rad/s        & 1 \\
+10     & $z$                         & Vertical position (raw)                      & World Z-up, m          & 1 \\
+11--12 & $\phi,\ \theta$             & Roll, pitch                                  & rad                    & 2 \\
+13--28 & $d_s/12,\ s=1,\dots,16$     & Sector minimum range, $d_s=\min_{i\in S_s} r^{(i)}$, $|S_s|=4$ & $\div 12$ & 16 \\
+29     & $d_f/12$                    & Front minimum, $d_f=\min_{|\theta_i|\le 30^\circ} r^{(i)}$ & $\div 12$ & 1 \\
+30     & $c_{\mathrm{TTC}}$          & Front time-to-collision risk                 & --                     & 1 \\
+\midrule
+       &                             &                                              & Total                  & 30 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Sonar model behind indices 13--29 (ideal instantaneous raycast)
+\begin{equation}
+r_k^{(i)} = \min\!\Big(\operatorname{ray}\big(\mathbf{p}_k,\ \psi_k + \tfrac{2\pi i}{64}\big),\ 12\Big),
+\qquad i = 0,\dots,63,
+\end{equation}
+with hits below $0.2\,\mathrm{m}$ discarded (read as $12$), so $\mathbf{r}_k \in [0,12]^{64}$ at every decision time $t_k$.
+
+% Compact form of the observation
+\begin{equation}
+\mathbf{o}_k =
+\begin{bmatrix}
+0.1\,\mathbf{g}^{b} &
+\sin e_\psi & \cos e_\psi &
+u & v & w & r & z & \phi & \theta &
+\tfrac{d_1}{12} & \cdots & \tfrac{d_{16}}{12} &
+\tfrac{d_f}{12} & c_{\mathrm{TTC}}
+\end{bmatrix}^{\!\top} \in \mathbb{R}^{30}
+\end{equation}
+
+%==========================================================
+% 2. Agent action
+%==========================================================
+\begin{equation}
+\mathbf{a}_k \in [-1,1]^4, \qquad
+\boldsymbol{\nu}^{*}_k =
+\begin{bmatrix} u^{*} \\ v^{*} \\ w^{*} \\ r^{*} \end{bmatrix}
+= S\,\mathbf{a}_k, \qquad
+S = \operatorname{diag}(0.45,\ 0.30,\ 0.25,\ 0.5)
+\end{equation}
+with units $\mathrm{m/s}$ for $u^{*},v^{*},w^{*}$ and $\mathrm{rad/s}$ for $r^{*}$, in body FLU.
+The setpoint is held (zero-order hold) for one decision period:
+\begin{equation}
+\boldsymbol{\nu}^{*}(t) = \boldsymbol{\nu}^{*}_k, \qquad
+t \in [t_k,\ t_k + 8\Delta t), \quad \Delta t = 0.02\,\mathrm{s},\quad t_{k+1}-t_k = 0.16\,\mathrm{s}.
+\end{equation}
+
+%==========================================================
+% 3. Observation vector available from the Godot hi-fi sim
+%==========================================================
+% State (GroundTruth.sample), NED world frame
+\begin{equation}
+\mathbf{y}_t =
+\begin{bmatrix}
+\mathbf{p}^{n} \\ \operatorname{vec}(R_{nb}) \\ \mathbf{v} \\ \boldsymbol{\omega} \\ t_s
+\end{bmatrix}
+\in \mathbb{R}^{3+9+3+3+1} = \mathbb{R}^{19},
+\end{equation}
+where $\mathbf{p}^{n}$ is position (NED), $R_{nb}$ the body basis in world (\texttt{basis\_world}),
+$\mathbf{v},\boldsymbol{\omega}$ linear and angular velocity, and $t_s$ sim time.
+
+% Sonar (mechanically scanned MSIS): one ping per step
+\begin{equation}
+\mathbf{z}_j = \big(\beta_j,\ t_j,\ \mathbf{I}_j\big),\qquad
+\mathbf{I}_j \in \mathbb{R}^{N_{\mathrm{bins}}},\qquad
+\beta_j = \beta_0 + j\,\Delta\beta,\quad t_j = t_0 + j\,\Delta t_{\mathrm{ping}},
+\end{equation}
+\begin{equation}
+I_j[n] = \sum_{s} b(\beta_s - \beta_j,\ \varphi_s)\,\sigma_s\,
+\frac{e^{-2\alpha\rho_s}}{\rho_s^{2}}\, g(\rho_s - \rho_n) + \epsilon_j[n],
+\end{equation}
+so a full sweep takes $T_{\mathrm{sweep}} = \tfrac{2\pi}{\Delta\beta}\,\Delta t_{\mathrm{ping}}$
+(e.g.\ $400 \times 15.7\,\mathrm{ms} \approx 6.3\,\mathrm{s}$).
+
+% Mapping Godot outputs to the training observation
+\begin{align}
+\mathbf{p}^{\uparrow} &= C\,\mathbf{p}^{n}, &
+C &= \begin{bmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & -1 \end{bmatrix}, \\
+\boldsymbol{\nu}^{\mathrm{FLU}} &= D\,\boldsymbol{\nu}^{\mathrm{FRD}}, &
+D &= \operatorname{diag}(1,-1,-1)\ \text{(linear and angular parts)}, \\
+M_k &= \Phi\big(\{\mathbf{z}_j,\ \mathbf{y}(t_j)\}_{t_j \le t_k}\big), &
+\hat{\mathbf{r}}_k &= \mathcal{R}\big(M_k,\ \mathbf{y}(t_k)\big) \in [0,12]^{64}, \\
+\hat{\mathbf{o}}_k &= f\big(\mathbf{y}(t_k),\ \hat{\mathbf{r}}_k,\ \mathbf{g}\big) \in \mathbb{R}^{30}. & &
+\end{align}

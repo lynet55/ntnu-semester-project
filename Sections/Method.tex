@@ -1,0 +1,84 @@
+\section{Method}
+
+
+
+\subsection{Simulation environment}
+The preffered simuation framework for the training environment was MarineGym \cite{chu2025marinegym} primeraly because of it's GPU-accelerated implementation of the BluROV2 Heavy dynamics, toolkit for Domain Randomization (DR). This allowss for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. 
+
+\subsubsection{Simulation Frameworks}
+MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory.
+
+Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
+
+
+\subsubsection{Simulation Environment}
+The system dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine budled with Isaac Sim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024fieldrobotics} commonly used for simulating a UUV. 
+
+\subsubsection{Coordinate Systems}
+- Ego vessel is defined in NED
+
+
+\subsubsection{State variables}
+
+
+\subsubsection{System dynamics}
+
+
+Where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and moments produced by the thrusters, $\boldsymbol{\nu} = [u, v, w, p, q, r]^\top$ is the vector of linear and angular velocities expressed in the body-fixed frame, and $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^\top$ is the position and orientation (Euler angles) of the vehicle in the North-East-Down (NED) frame. The matrix $\mathbf{M}_{RB}$ is the rigid-body mass and inertia matrix, $\mathbf{C}_{RB}(\boldsymbol{\nu})$ contains the rigid-body Coriolis and centripetal terms, and $\mathbf{g}_{RB}(\boldsymbol{\eta})$ represents the gravitational force acting on the vehicle. The hydrodynamic contributions consist of the added mass matrix $\mathbf{M}_{A}$, which accounts for the inertia of the surrounding fluid accelerated with the vehicle, the corresponding added-mass Coriolis and centripetal matrix $\mathbf{C}_{A}(\boldsymbol{\nu})$, the hydrodynamic damping matrix $\mathbf{D}(\boldsymbol{\nu})$, which includes both linear and quadratic drag, and $\mathbf{g}_{A}(\boldsymbol{\eta})$, which represents the buoyancy force. Together, $\mathbf{g}_{RB}(\boldsymbol{\eta})$ and $\mathbf{g}_{A}(\boldsymbol{\eta})$ form the restoring forces and moments acting on the vehicle.
+
+
+\begin{equation}
+\begin{split}
+\boldsymbol{\tau} = {} & \underbrace{\mathbf{M}_{RB}\dot{\boldsymbol{\nu}} + \mathbf{C}_{RB}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{RB}(\boldsymbol{\eta})}_{\text{Rigid-body term}} \\
+& + \underbrace{\mathbf{M}_{A}\dot{\boldsymbol{\nu}} + \mathbf{C}_{A}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{A}(\boldsymbol{\eta})}_{\text{Hydrodynamic term}}
+\end{split}
+\label{eq:dynamics}
+\end{equation}
+
+The hydrodynamic forces applied on the UUV can be expressed by:
+
+\begin{equation}
+\boldsymbol{\tau}_{hydro} = -\mathbf{M}_{A}\dot{\boldsymbol{\nu}} - \mathbf{C}_{A}(\boldsymbol{\nu})\boldsymbol{\nu} - \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} - \mathbf{g}_{A}(\boldsymbol{\eta})
+\label{eq:hydro}
+\end{equation}
+
+$\tau_{hydro}$ is applied to the centroid of each submerged link every time the model is forward stepped. This does not include forces and torques introduced by the actuators. 
+
+In MarineGym the actuator model is split into a rotor dynamics model simulating the time dependent response of the rotor system, and a thrust generation model simulating which maps actuator states to the forces and torques. 
+
+The thrust generation model for propellers is represented as a quadratic function with a dead zone. In this zone the thrust is set to be proportional to the deviation of rotational speed within predefined thresholds to accoount for nonlinear efficency variations? Each actuator generates their own force based on the input command and the actuator model, before they are individually applied to the corresponding actuator frame.
+
+All actuator configurations are fully configurable in MarineGym, however a built-in configuration of the T200 thruster from Blue  Robotics which is used in the BlueROV2 Heavy.
+
+\subsubsection{Model parameters}
+
+\subsection{Problem formulation}
+
+
+
+
+\subsubsection{Observation and action space}
+
+\subsubsection{Policy arcitechture}
+Policies were trained on Proximal Policy Optimization (PPO) \cite{schulman2017ppo} using the implementation provided in MarineGym \cite{chu2025marinegym}  This implementation is identical to the PPO implementation in OmniDrones \cite{xu2024omnidrones}, on which MarineGym was buldt.
+
+\subsubsection{Curriculum learning}
+
+
+\subsubsection{Domain Randomization}
+
+
+\subsubsection{Reward Function
+
+
+
+\subsection{Evaluation}
+
+To evaluate policy robustness, we 
+
+\subsection{Evaluation Simulator}
+
+
+
+\subsection{}
+
