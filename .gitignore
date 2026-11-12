@@ -16,3 +16,5 @@
 *.xdv
 main.pdf
 *.dvi
+*-SAVE-ERROR
+_minted*
