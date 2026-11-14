@@ -1,7 +1,11 @@
 % !TEX root = ../main.tex
 \section{Method}
 
+\subsection{Problem Formulation}
 
+We evaluate the performance of the navigation the navigation stack by placing an agent in a underwater environment with a corridor filled with obstacles. The agent is tasked to move from a initial position A to a goal position B, on opposite sides of the obstacles without colliding with the obstacles. The obstacles are composed of the geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation and size.
+
+The agent takes decisions based on the policy $\pi(a \mid s, o)$ described in section X, basing it’s actions on the internal states denoted $s$ and external observations from a simulated FLS and depth images, denoted $o$.
 
 \subsection{Simulation environment}
 The preffered simuation framework for the training environment was MarineGym \cite{chu2025marinegym} primeraly because of it's GPU-accelerated implementation of the BluROV2 Heavy dynamics, toolkit for Domain Randomization (DR). This allowss for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. 
@@ -53,14 +57,11 @@ All actuator configurations are fully configurable in MarineGym, however a built
 
 \subsubsection{Model parameters}
 
-\subsection{Problem formulation}
-
-
-
+\subsection{Experiments}
 
 \subsubsection{Observation and action space}
 
-\subsubsection{Policy arcitechture}
+\subsubsection{Policy architecture}
 Policies were trained on Proximal Policy Optimization (PPO) \cite{schulman2017ppo} using the implementation provided in MarineGym \cite{chu2025marinegym}  This implementation is identical to the PPO implementation in OmniDrones \cite{xu2024omnidrones}, on which MarineGym was buldt.
 
 \subsubsection{Curriculum learning}
