@@ -16,6 +16,24 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta}
 
+
+
+\usepackage{tcolorbox}            % no options -> no option clash
+\tcbuselibrary{skins,theorems}    % provides 'enhanced' and 'ams equation/align'
+
+\tcbset{
+  eqbox/.style={
+    enhanced, colback=blue!8, colframe=blue!8, boxrule=0pt, arc=2pt,
+    left=4pt, right=4pt, top=-2pt, bottom=2pt,
+    before skip=6pt, after skip=6pt
+  }
+}
+
+\newtcolorbox{beqn}{eqbox, ams equation}
+\newtcolorbox{balign}{eqbox, ams align}
+\providecommand{\Lc}{}                         % no error if \Lc already exists
+\renewcommand{\Lc}[1]{\mathcal{L}_{\mathrm{#1}}}
+
 % Beginning of document
 \begin{document}
 
