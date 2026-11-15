@@ -18,3 +18,4 @@ main.pdf
 *.dvi
 *-SAVE-ERROR
 _minted*
+preview/

@@ -3,7 +3,7 @@
 
 We evaluate the performance of the navigation stack by placing an agent in a underwater environment with a corridor filled with obstacles. The agent is tasked to move from a initial position A to a goal position B, on opposite sides of the obstacles without colliding with the obstacles. The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
 
-The problem is formalized as follows. At each discrete time step $t$, the agent takes an action $a_t \in \mathbb{R}^{3}$ drawn from a policy $\pi(a_t \mid s_t, o_t)$. Here $s_t \in \mathbb{R}^{6}$ is the agent's internal state, and $o_t = (D_t, \mathbf{r}_t)$ is the observation. It contains a latent representation \bold{$x$}, representing a depth image $D_t \in \mathbb{R}^{96 \times 128}$ from a camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$, with $r_{\max} = 12\,\mathrm{m}$,from a forward-looking sonar (FLS). The agent is conditioned on a goal position $g \in \mathbb{R}^{3}$, which it must reach while avoiding a set of obstacles.
+The problem is formalized as follows. At each discrete time step $t$, the agent takes an action $a_t \in \mathbb{R}^{4}$ drawn from a policy $\pi(a_t \mid s_t, o_t)$. Here $s_t \in \mathbb{R}^{6}$ is the agent's internal state, and $o_t = (D_t, \mathbf{r}_t)$ is the observation. It contains a latent representation \bold{$x$}, representing a depth image $D_t \in \mathbb{R}^{96 \times 128}$ from a camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$, with $r_{\max} = 12\,\mathrm{m}$,from a forward-looking sonar (FLS). The agent is conditioned on a goal position $g \in \mathbb{R}^{3}$, which it must reach while avoiding a set of obstacles.
 
 Two approaches to navigating the environment are considered, an extension of \textcite{ } Deep Collision Encoding (DCE) and the navigation stack proposed in \textcite{} using DeFM. Except for the architectural differences which will further be discussed below, its worth addressing that the approaches differ in how depth and sonar measurements are inputted to the policy. 
 
@@ -34,7 +34,73 @@ In the case of DCE, we denote the policy by $\pi_{DCE}$ and parametrize the MLP 
 Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore a simulated sonar is also available to the agent through an analytical implementation.  
 
 \subsubsection{Reward shaping}
-The environment computes rewards as seen in \ref{eq:rewards}.
+At every policy decision the environment returns the reward $R_t \in \mathbb{R}$ in \eqref{eq:reward-total}, a sum of the shaping terms \eqref{eq:reward-progress}--\eqref{eq:reward-ttc} and the terminal term \eqref{eq:reward-terminal}.
+
+\begin{balign}
+  R_t &= \textstyle\sum_{k} R^{(k)}_t, \label{eq:reward-total}\\
+  R^{(\mathrm{prog})}_t &= \lambda_{\mathrm{prog}}\bigl(d^{\mathrm{goal}}_{t-1} - d^{\mathrm{goal}}_t\bigr), \label{eq:reward-progress}\\
+  R^{(\mathrm{alive})}_t &= -\lambda_{\mathrm{alive}}, \label{eq:reward-alive}\\
+  R^{(\mathrm{depth})}_t &= -\lambda_{\mathrm{depth}}\,\lvert z_{\mathrm{goal}} - z_t\rvert, \label{eq:reward-depth}\\
+  R^{(\mathrm{tilt})}_t &= -\lambda_{\mathrm{tilt}}\sqrt{\phi_t^2 + \theta_t^2}, \label{eq:reward-tilt}\\
+  R^{(\mathrm{eff})}_t &= -\lambda_{\mathrm{eff}}\,\tfrac{1}{4}\lVert\mathbf{a}_t\rVert_1, \label{eq:reward-effort}\\
+  R^{(\mathrm{vel})}_t &= -\lambda_{\mathrm{vel}}\max\bigl(0,\ U_t - U_{\max}\bigr)^2, \label{eq:reward-speed}\\
+  R^{(\mathrm{clr})}_t &= -\lambda_{\mathrm{clr}}\max\bigl(0,\ d_{\mathrm{safe}} - d^{\mathrm{obs}}_t\bigr), \label{eq:reward-clearance}\\
+  R^{(\mathrm{ttc})}_t &= -\lambda_{\mathrm{ttc}}\operatorname{clip}\Bigl(1 - \frac{d^{\mathrm{obs}}_t}{t_{\mathrm{ttc}}\max(u_t,\,u_{\min})},\ 0,\ 1\Bigr), \label{eq:reward-ttc}\\
+  R^{(\mathrm{end})}_t &= \lambda_{\mathrm{succ}}\,\mathbb{I}^{\mathrm{succ}}_t - \lambda_{\mathrm{fail}}\,\mathbb{I}^{\mathrm{fail}}_t \label{eq:reward-terminal}
+\end{balign}
+
+Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^n_{\mathrm{goal}} - \mathbf{p}^n_t \rVert_2$ is the distance from the vehicle position $\mathbf{p}^n_t = [x_t, y_t, z_t]^\top$ to the goal, $d^{\mathrm{obs}}_t$ is the smallest distance to an obstacle, taken over the sonar ranges $\mathbf{r}_t$ and the obstacle set $\mathcal{B}$, and $U_t = \lVert \mathbf{v}^b_t \rVert_2$ is the speed of the body-frame velocity $\mathbf{v}^b_t = [u_t, v_t, w_t]^\top$. The indicator $\mathbb{I}^{\mathrm{succ}}_t \in \{0,1\}$ is set once $d^{\mathrm{goal}}_t \le d_{\mathrm{succ}}$ has held for three consecutive decisions, and $\mathbb{I}^{\mathrm{fail}}_t \in \{0,1\}$ when the vehicle collides ($d^{\mathrm{obs}}_t \le \SI{0.08}{\metre}$), has a time to collision below \SI{0.12}{\second}, or leaves the tank. Both end the episode. The weights and thresholds are listed in Table~\ref{tab:reward-weights}.
+
+% source: uuv-rl-env/cfg/reward/sonar_goal.yaml (weights),
+%         uuv-rl-env/cfg/train/train_bluerov_isaaclab_hover_vel_distill.yaml (thresholds)
+\begin{table}[H]
+  \centering
+  \caption{Reward weights and thresholds. Weights are per policy decision.}
+  \label{tab:reward-weights}
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    Parameter & Symbol & Value & Unit \\
+    \midrule
+    Goal progress          & $\lambda_{\mathrm{prog}}$  & 10.0 & \si{\per\metre} \\
+    Time                   & $\lambda_{\mathrm{alive}}$ & 0.01 & -- \\
+    Depth error            & $\lambda_{\mathrm{depth}}$ & 2.0  & \si{\per\metre} \\
+    Tilt                   & $\lambda_{\mathrm{tilt}}$  & 0.05 & \si{\per\radian} \\
+    Effort                 & $\lambda_{\mathrm{eff}}$   & 0.01 & -- \\
+    Overspeed              & $\lambda_{\mathrm{vel}}$   & 1.0  & \si{\second\squared\per\metre\squared} \\
+    Clearance              & $\lambda_{\mathrm{clr}}$   & 0.1  & \si{\per\metre} \\
+    Time to collision      & $\lambda_{\mathrm{ttc}}$   & 0.3  & -- \\
+    Success                & $\lambda_{\mathrm{succ}}$  & 20.0 & -- \\
+    Failure                & $\lambda_{\mathrm{fail}}$  & 20.0 & -- \\
+    \midrule
+    Speed limit            & $U_{\max}$                 & 0.7  & \si{\metre\per\second} \\
+    Soft clearance         & $d_{\mathrm{safe}}$        & 0.9  & \si{\metre} \\
+    Time-to-collision horizon & $t_{\mathrm{ttc}}$      & 3.0  & \si{\second} \\
+    Minimum surge speed    & $u_{\min}$                 & 0.05 & \si{\metre\per\second} \\
+    Success distance       & $d_{\mathrm{succ}}$        & 1.0  & \si{\metre} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The policy and critic are trained on $R_t$ by minimising the PPO loss \eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$ and $\epsilon = 0.2$.
+
+\begin{balign}
+  \mathcal{L}^{\mathrm{PPO}}(\mathbf{w}_\pi,\mathbf{w}_V)
+    &= \Lc{clip} + \lambda_V\Lc{V} - \lambda_H\Lc{H}, \label{eq:ppo-total}\\
+  \Lc{clip} &= -\mathbb{E}_t\bigl[\min\bigl(\kappa_t\hat A_t,\
+     \operatorname{clip}(\kappa_t,1-\epsilon,1+\epsilon)\hat A_t\bigr)\bigr], \label{eq:ppo-clip}\\
+  \kappa_t &= \frac{\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)}
+                   {\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_{\pi,\mathrm{old}})}, \label{eq:ppo-ratio}\\
+  \Lc{V} &= \max\Bigl(\mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V_t\bigr)\bigr],\
+     \mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V^{\mathrm{clip}}_t\bigr)\bigr]\Bigr), \label{eq:ppo-value}\\
+  \Lc{H} &= \mathbb{E}_t\bigl[\mathcal{H}\bigl(\pi(\cdot\mid\mathbf{x}^e_t;\mathbf{w}_\pi)\bigr)\bigr] \label{eq:ppo-entropy}
+\end{balign}
+
+Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm{old}} + \operatorname{clip}(V_t - V_{t,\mathrm{old}}, -\epsilon, \epsilon)$, $\ell_{\mathrm{H}}$ is the Huber loss with threshold 10 and $\mathcal{H}$ is the entropy. The advantage $\hat A_t$ and the return target $\hat G_t$ follow from generalized advantage estimation \eqref{eq:ppo-gae}, with $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. $\hat A_t$ is normalised to zero mean and unit variance over the batch, and $\hat G_t$ by its running mean and variance.
+
+\begin{balign}
+  \delta_t &= R_t + \gamma V_{t+1} - V_t, \label{eq:ppo-td}\\
+  \hat A_t &= \delta_t + \gamma\lambda_{\mathrm{GAE}}\hat A_{t+1}, \qquad \hat G_t = \hat A_t + V_t \label{eq:ppo-gae}
+\end{balign}
 
 
 
