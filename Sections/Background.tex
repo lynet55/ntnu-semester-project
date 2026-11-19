@@ -3,17 +3,116 @@
 
 \subsection{Reinforcement Learning}
 
-\paragraph{Problem formulation}
+Following \textcite[Sec.~3.1]{sutton2018reinforcement}, a learner and decision-maker called the \textit{agent} learns by interacting with everything outside it, called the \textit{environment}. The environment responds to the agent's actions and presents new situations to the agent. It also gives the agent numerical rewards, which the agent tries to maximise over time. The interaction between agent and environment is commonly depicted as in Figure~\ref{fig:agent-env-loop}.
 
-\paragraph{Common solutions}
+\begin{figure}[htbp]
+    \centering
+    \input{figures/agent_env_loop.tex}
+    \caption{The agent--environment interaction in a Markov decision process \parencite[Fig.~3.1]{sutton2018reinforcement}.}
+    \label{fig:agent-env-loop}
+\end{figure}
+
+\paragraph{Problem formulation}
+We formally define the problem as a Markov decision process (MDP) for single-agent reinforcement learning (RL). Adopting the notation of \textcite{song2023reaching}, an MDP is defined by the tuple $\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{P}, R, \mathcal{P}_0, \gamma)$, where the state space $\mathcal{S}$ and the action space $\mathcal{A}$ are continuous, $\mathcal{P}(\mathbf{s}_{t+1} \mid \mathbf{s}_t, \mathbf{a}_t)$ is the state transition probability, $R : \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ is the reward function, $\mathcal{P}_0$ is the initial state distribution and $\gamma \in [0,1)$ is the discount factor.
+
+The agent and environment interact in a sequence of discrete time steps. At each time step $t$, the agent receives some representation of the environment's state $\mathbf{s}_t \in \mathcal{S}$ and selects an action $\mathbf{a}_t \in \mathcal{A}$. The mapping from states to probabilities of each possible action is called the agent's \textit{policy} \parencite{sutton2018reinforcement}.
+
+In practice, the state $\mathbf{s}_t$ is not always fully observable to the policy. When the observation $o_t$ does not match the state $\mathbf{s}_t$ of the environment, the problem no longer fits the canonical definition of an MDP used by \textcite{sutton2018reinforcement}. Instead, we formulate the RL problem as a partially observable Markov decision process (POMDP), where the policy acts on observations, $\pi(\mathbf{a}_t \mid o_t; \mathbf{w}_\pi)$, following \textcite{song2023reaching}.
+
+% TODO theory missing:
+\begin{itemize}
+  \item Return $G_t = \sum_{k=0}^{\infty}\gamma^k R_{t+k+1}$ and the RL objective
+        $J(\mathbf{w}_\pi) = \mathbb{E}_{\pi}[G_0]$ \parencite[Sec.~3.3]{sutton2018reinforcement}.
+  \item State-value and action-value functions $V^\pi(\mathbf{s})$, $Q^\pi(\mathbf{s},\mathbf{a})$,
+        and the advantage $A^\pi = Q^\pi - V^\pi$ (needed later for PPO/GAE).
+  \item POMDP: add the observation model $\mathcal{O}(o_t \mid \mathbf{s}_t)$ to the tuple, and
+        say why memory (a recurrent policy) helps when $o_t$ is not Markov
+        $\rightarrow$ link to Section~\ref{sec:recurrent}.
+  \item A control-loop figure with RL notation: policy $\rightarrow$ $\mathbf{a}_t$
+        $\rightarrow$ velocity controller $\rightarrow$ $\boldsymbol{\tau}$
+        $\rightarrow$ vehicle $\rightarrow$ sensors $\rightarrow$ $o_t$, $R_t$.
+\end{itemize}
+
+\paragraph{Model-free and model-based RL}
+Algorithms used to train such an agent are commonly divided into two paradigms: model-based and model-free RL. As described in \textcite[Sec.~1.4]{sutton2018reinforcement}, model-based methods use a model and planning, in contrast to model-free methods, which learn only from trial and error and are regarded as simpler. According to \textcite{moerland2023mbrl}, the two mainly differ in whether they have \textit{reversible} access to the MDP dynamics, typically referred to as the \textit{model}. An agent following a model-based approach can plan repeatedly from the same state by querying the model at any state--action pair in any order. Model-free approaches, in contrast, have irreversible access to the dynamics: the agent must move forward from the next state given by the MDP after an action has been applied.
+
+A commonality between model-based and model-free RL is that a so-called \textit{global solution} is stored for the complete state space. This is a property of \textit{learning} an optimal solution to the MDP, and distinguishes both from planning-based methods, which rely on a \textit{local solution} \parencite{moerland2023mbrl}.
+
+Model-based approaches with learned models are generally outperformed by model-free approaches in asymptotic performance. This is attributed to errors in the learned model, as model-based methods with a known model reach performance similar to model-free methods \parencite{moerland2023mbrl}. Even though model-based methods are gaining attention, model-free methods are still dominant, and are further divided into on-policy and off-policy methods \parencite{sutton2018reinforcement}.
+
+% TODO theory missing:
+\begin{itemize}
+  \item One or two sentences defining on-policy vs.\ off-policy (which data the update may use).
+  \item Optional: a model-based example such as TD-MPC, or move it to Related Work.
+\end{itemize}
+
+In continuous control, the agent's policy is commonly parametrised as a feed-forward neural network, typically a single multi-layer perceptron (MLP), and is iteratively improved with data generated by applying the same policy to the system \parencite{moerland2023mbrl}.
+
+\paragraph{Policy gradient methods}
+In most control applications, RL is done with policy gradient (PG) methods. Many common RL algorithms first learn a state--action value function and then select the action with the highest value. Policy gradient methods instead learn the policy directly as a parametrised function $\pi(\mathbf{a}_t \mid \mathbf{s}_t; \mathbf{w}_\pi)$, where $\mathbf{w}_\pi$ are the parameters, and update $\mathbf{w}_\pi$ by gradient ascent on the expected return. This is a natural approach for control problems: with continuous actions there are infinitely many state--action pairs to estimate the value for, so selecting the best action from a value function becomes intractable \parencite{weng2018bandit}.
+
+% TODO theory missing:
+\begin{itemize}
+  \item The policy gradient theorem / REINFORCE estimator,
+        $\nabla J = \mathbb{E}\bigl[\nabla \log \pi(\mathbf{a}_t\mid\mathbf{s}_t;\mathbf{w}_\pi)\,\hat A_t\bigr]$,
+        and the high variance that motivates a baseline.
+  \item Gaussian policy for continuous actions: the network outputs a mean, with a learned
+        standard deviation; actions are squashed/clipped to $[-1,1]$.
+\end{itemize}
+
+\paragraph{Actor-critic methods}
+The two most common baseline methods for continuous control are both actor-critic algorithms, one from each category: Proximal Policy Optimization (PPO) \parencite{schulman2017ppo} is on-policy and Soft Actor-Critic (SAC) \parencite{haarnoja2018soft} is off-policy.
+
+% TODO theory missing:
+\begin{itemize}
+  \item Define actor (policy $\pi$) and critic (value function $V(\cdot;\mathbf{w}_V)$),
+        and that the critic acts as the baseline that reduces gradient variance.
+  \item One sentence each on PPO and SAC: sample efficiency (SAC reuses a replay buffer)
+        vs.\ stability and ease of massive parallelisation (PPO), which is why PPO
+        suits GPU simulators such as MarineGym.
+\end{itemize}
+
+\paragraph{Proximal Policy Optimization}
+PPO \parencite{schulman2017ppo} alternates between collecting experience with the current policy from $N$ parallel actors and optimising a surrogate objective for several epochs on that batch (Algorithm~\ref{alg:ppo}). The surrogate clips the probability ratio $\kappa_t$ between the new and the old policy to $[1-\epsilon, 1+\epsilon]$, so a single update cannot move the policy far from the one that collected the data. The advantages $\hat A_t$ are computed with generalized advantage estimation (GAE). The full loss used in this work is given in \eqref{eq:ppo-total}.
+
+\begin{algorithm}[htbp]
+\caption{PPO, actor-critic style \parencite{schulman2017ppo}.}
+\label{alg:ppo}
+\begin{algorithmic}[1]
+\For{iteration $= 1, 2, \ldots$}
+    \For{actor $= 1, 2, \ldots, N$}
+        \State Run policy $\pi(\cdot;\mathbf{w}_{\pi,\mathrm{old}})$ in the environment for $T$ time steps
+        \State Compute advantage estimates $\hat{A}_1, \ldots, \hat{A}_T$
+    \EndFor
+    \State Optimise the surrogate loss w.r.t.\ $\mathbf{w}_\pi$, with $K$ epochs and minibatch size $M \leq NT$
+    \State $\mathbf{w}_{\pi,\mathrm{old}} \leftarrow \mathbf{w}_\pi$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+% TODO theory missing:
+\begin{itemize}
+  \item Short intuition for GAE: $\lambda_{\mathrm{GAE}}$ trades bias against variance
+        (cite the GAE paper, Schulman et al.\ 2016; not yet in \texttt{references.bib}).
+\end{itemize}
 
 \subsubsection{Reinforcement learning algorithm}
 MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out of the box \cite{chu2025marinegym}. The implementation is identical to the PPO in OmniDrones on which MarineGym was buildt \cite{xu2024omnidrones}.
 
 
 \subsection{Recurrent policies}
+\label{sec:recurrent}
 % TODO: why memory (POMDP), LSTM/GRU equations. Moved from Related Work:
 \begin{itemize}
+  \item A recurrent network carries a hidden state $\mathbf{h}_t$ that summarises past
+        observations, $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$; the policy acts on
+        $\mathbf{h}_t$ instead of a single frame.
+  \item Vanishing gradients in plain RNNs, and gating as the fix: LSTM
+        \parencite{hochreiter1997long}.
+  \item GRU update equations (update gate, reset gate, candidate state), with $\mathbf{h}_t$
+        as in the registry.
+  \item Training detail: truncated backpropagation through time over PPO rollout sequences,
+        and resetting $\mathbf{h}_t$ at episode boundaries.
   \item Problem: a forward-looking camera/sonar only observes the present;
         obstacles leave the field of view, so navigation is partially
         observable and needs a representation of space beyond the current
@@ -26,6 +125,15 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 % Moved from Related Work (End-to-end encoders)
 Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes.
 
+% TODO theory missing:
+\begin{itemize}
+  \item Convolution layer: a small kernel slid over the image, with weights shared
+        across positions (translation equivariance, few parameters).
+  \item Stride / pooling to reduce resolution, nonlinearity, and a final flatten +
+        linear layer giving a feature vector.
+  \item Transposed convolutions in the decoder (link to the VAE below).
+\end{itemize}
+
 \subsection{Autoencoders and VAEs}
 % Moved from Related Work (Encoders trained on reconstruction)
 Another common way to compress data is with so called Auto Encoders (AE), which produce a compressed latent representation of the original input data \textcite{hinton2006reducing}. AEs work by defining two neural networks, one called an encoder and a decoder. The Encoder is constructed in a way so that the input dimensions are of the input data, while the output dimension is set to the desired compression dimension. The compressed representation is called a latent representation, and commonly denoted $z$. The decoder is on the other hand designed oppositely, so that the input dimension is matching the latent and the output dimension map back into the original input data. This is commonly visualized as a bottleneck as in figure \ref{fig:vae}. The Encoder and Decoder is jointly trained on a dataset passed through both networks sequentially, and are penalized with a loss that penalizes the difference between the input data and the reconstructed data. The latent representation, the encoder maps to will then retain most of the information in the original data while the dimensions are reduced. For images, convolutional encoders and decoders preserve spatial structure and shares their weights across images improving spatial understanding \cite{masci2011stacked}. Variational Auto Encoders (VAEs) are a common extention of AE, and are designed to keep latent representations resembling a normal distribution \cite{kingma2014auto}.
@@ -34,20 +142,47 @@ Another common way to compress data is with so called Auto Encoders (AE), which 
     \centering
     \includegraphics[width=1.0\linewidth]{figures/vae.pdf}
     \caption{Canonical Variational Auto Encoder (VAE)}
-    \label{fig:placeholder}
+    \label{fig:vae}
 \end{figure}
+
+% TODO theory missing:
+\begin{itemize}
+  \item Probabilistic encoder $q(\mathbf{z}\mid D_t;\mathbf{w}_{\mathrm{enc}})$ outputting
+        $\boldsymbol{\mu}^{\mathrm{VAE}}_t$, $\boldsymbol{\sigma}^{\mathrm{VAE}}_t$, and the
+        reparameterisation trick $\mathbf{z} = \boldsymbol{\mu} + \boldsymbol{\sigma}\odot\boldsymbol{\epsilon}$
+        (pick a noise symbol not in the registry; $\epsilon$ is the PPO clip range).
+  \item The evidence lower bound (ELBO): reconstruction term + $D_{\mathrm{KL}}$ to
+        $\mathcal{N}(\mathbf{0},\mathbf{I})$ \parencite{kingma2014auto}.
+  \item $\beta$-weighting of the KL term and its effect on a smoother, more
+        disentangled latent space.
+  \item Why only the encoder is kept at policy time.
+\end{itemize}
 
 \subsection{Collision images}
 % Moved from Related Work (Task-driven compression)
 These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimaly combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right.
 
-\subsection{Depth foundation model (DeFM)}
-% TODO: skeleton. Input preprocessing, architecture, embedding used by the policy
-
 \subsection{Underwater vehicle model}
 \paragraph{Types of UUVs}
+% TODO theory missing:
+\begin{itemize}
+  \item ROV vs.\ AUV (tethered/piloted vs.\ autonomous), and torpedo-shaped
+        (under-actuated) vs.\ box-frame (over-/fully actuated) vehicles.
+  \item Where the BlueROV2 Heavy fits: 8 thrusters, actuated in all 6 DOF.
+\end{itemize}
 
-\paragraph{Sensor suit} typical sensor suit
+\paragraph{Sensor suite}
+% TODO theory missing:
+\begin{itemize}
+  \item Typical suite: IMU, DVL, pressure (depth) sensor, USBL/acoustic positioning,
+        cameras and sonar.
+  \item Forward-looking sonar: range--bearing measurements in a 2D fan, range and
+        bearing resolution, noise sources (multipath, speckle).
+  \item Cameras underwater: attenuation and backscatter limit range; why depth
+        images rather than RGB.
+\end{itemize}
+
+% TODO theory missing: 6-DOF kinematics $\dot{\boldsymbol{\eta}} = \mathbf{J}_\Theta(\boldsymbol{\eta})\boldsymbol{\nu}$ and the NED/body frames, before the dynamics.
 
 \paragraph{Vehicle dynamics} The system dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine budled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024aquaculture}. Where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and moments produced by the thrusters, $\boldsymbol{\nu} = [u, v, w, p, q, r]^\top$ is the vector of linear and angular velocities expressed in the body-fixed frame, and $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^\top$ is the position and orientation (Euler angles) of the vehicle in the North-East-Down (NED) frame. The matrix $\mathbf{M}_{RB}$ is the rigid-body mass and inertia matrix, $\mathbf{C}_{RB}(\boldsymbol{\nu})$ contains the rigid-body Coriolis and centripetal terms, and $\mathbf{g}_{RB}(\boldsymbol{\eta})$ represents the gravitational force acting on the vehicle. The hydrodynamic contributions consist of the added mass matrix $\mathbf{M}_{A}$, which accounts for the inertia of the surrounding fluid accelerated with the vehicle, the corresponding added-mass Coriolis and centripetal matrix $\mathbf{C}_{A}(\boldsymbol{\nu})$, the hydrodynamic damping matrix $\mathbf{D}(\boldsymbol{\nu})$, which includes both linear and quadratic drag, and $\mathbf{g}_{A}(\boldsymbol{\eta})$, which represents the buoyancy force. Together, $\mathbf{g}_{RB}(\boldsymbol{\eta})$ and $\mathbf{g}_{A}(\boldsymbol{\eta})$ form the restoring forces and moments acting on the vehicle. The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model is forward stepped. This does not include forces and torques introduced by the actuators.
 
@@ -62,8 +197,19 @@ In MarineGym the actuator model is split into a rotor dynamics model simulating 
 \subsection{Simulation}
 \label{sec:marinegym}
 
-\paragraph{MarineGym} MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
+MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
 
 \paragraph{Other candidate simulators} Stonefish etc.
 
 \paragraph{Sensor emulation} Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast.
+
+\paragraph{Sim-to-real gap and domain randomization}
+It is well documented that RL policies often perform worse when deployed in the real world than in the simulator they were trained in, which is called the \textit{sim-to-real gap}. This is commonly addressed by randomising the physical parameters of the simulator during training, called Domain Randomization (DR).
+
+% TODO theory missing:
+\begin{itemize}
+  \item Cite the DR origin papers (Tobin et al.\ 2017 for vision, Peng et al.\ 2018 for
+        dynamics; neither is in \texttt{references.bib} yet).
+  \item What is randomised in this work (dynamics parameters, currents, sensor noise),
+        and why a policy trained on a distribution of models is more robust.
+\end{itemize}

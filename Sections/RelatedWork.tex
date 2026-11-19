@@ -48,7 +48,15 @@ Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work u
 Maybe mention the method from the locomotion paper. 
 
 \paragraph{Pretrained and foundation encoders}
-% TODO: skeleton (DeFM, DINOv2, R3M, VC-1, domain-gap critique)
+% TODO: skeleton (DINOv2, R3M, VC-1, domain-gap critique)
+\begin{itemize}
+  \item DeFM \parencite{patel2026defm}: a depth foundation model pretrained on large
+        depth datasets, giving a general-purpose embedding that can be frozen and fed to
+        a policy. Contrast with the task-driven VAE used here: no task-specific training,
+        but larger and trained mostly on terrestrial data.
+  \item Not used in this work; noted as an alternative encoder and revisited in
+        Future Work.
+\end{itemize}
 
 
 

@@ -123,6 +123,9 @@ Fossen symbols are **reserved**. ML symbols have been renamed so they don't coll
 | Symbol | Meaning | Space | Renamed from (reason) |
 |---|---|---|---|
 | $\mathbf{s}_t$ | agent internal state | $\mathbb{R}^{n_s}$ | — |
+| $\mathcal{S},\ \mathcal{A}$ | state / action space (Background, MDP) | — | — |
+| $\mathcal{P},\ \mathcal{P}_0$ | transition probability / initial-state distribution | — | $\rho_0$ (water density $\rho$) |
+| $R(\cdot,\cdot)$ | reward function, $\mathcal{S}\times\mathcal{A}\to\mathbb{R}$ | — | $r$ (yaw rate) |
 | $\mathbf{a}_t$ | action | $\mathbb{R}^{n_a}$ | — |
 | $\mathbf{p}^n_{\mathrm{goal}}$ | goal position | $\mathbb{R}^3$ | $g$ (collides with $\mathbf{g}(\boldsymbol\eta)$ and gravity $g$) |
 | $\mathcal{B}=\{\mathcal{B}_k\}_{k=1}^{N_{\mathcal{B}}}$ | obstacle set | $\mathcal{B}_k\subset\mathbb{R}^3$ | $K$ (collides with roll moment $K$) |
