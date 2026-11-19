@@ -6,172 +6,133 @@
 
 Efforts to improve underwater inspection using Unmanned Underwater Vehicles (UUV's) has potenial to unlock great economical- and ecologial value for the Norwegian fish farming industry.  Such UUV's are commonly used in the process of inspection, maintenance and intervention tasks in fish farms, and have already proven an indispensible tool for Norwegian fish farmes as they have replaced divers for monitoring and inspection operations inside of the cage.  \cite{amundsen2024fieldrobotics}. Specifically operations such as net inspection, biofouling removing, mooring line inspection and fish monitoring \cite{amundsen2025netpen}. However of these operations, net inspection is likely the most important operation, as such failures would represent produciton loss and environmental conserns as fish that have escaped may impact the wild fish population.
 
-\subsubsection{Autonomy in fish farming}
 
 \subsubsection{Economical Impact}
-In 2022 aquaculture production supassed capture of fisheries in global production, accounting for 51 percent of gloabal seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \cite{amundsen2025netpen}.
+In 2022 aquaculture production surpassed capture of fisheries in global production, accounting for 51 percent of global seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \cite{amundsen2025netpen}.
 
-The econmaical impact is especially significant for Norway as aqaculture has grown to be Norway's second-largest export industry behind the oil and gas industy \cite{amundsen2024fieldrobotics}.
+The economical impact is especially significant for Norway as aquaculture has grown to be Norway's second-largest export industry behind the oil and gas industry \cite{amundsen2024fieldrobotics}.
 
 Between 2010 and 2018 more than 70 percent of escaped farmed Atlantic Salamon and rainbow Trout was caused by holes in the net, and avrages to approximatly 220 000 escaped fish per year \cite{evjemo2025aquaculture}. 
 
-\subsubsection{Ecological Impact}
+\subsubsection{State of autonomous robots in fish farming}
+- What tasks are currently beeing done autonomously, and what aspects of this is fur
 
 \subsubsection{Importance of precise and robust control}
 
+"Navigation and decision autonomy for UUVs in aquaculture require that the vehicle can safely navigate to perform a planned mission and adjust its trajectory in response to the dynamically changing environment of deformable structures,"
+
+"While safe navigation in dynamic 3D environments using motion planning has been demonstrated under highly controlled conditions, these methods typically do not consider uncertainty or motion 665 errors caused by factors such as poor sensing conditions, waves, or currents [106, 107]. Avoiding dynamic obstacles  is crucial to ensure safe operations within a flexible fish cage containing not only equipment, but also up to 200 000 freely swimming fish. There is a need for novel real-time solutions that can both maximize safety and achieve desired behaviour. In the Resifarm project, a general real-time underwater navigation planner was recently developed to enable safe autonomy under arbitrary disturbances within a net pen. The ResiVis planner combines path 670 optimization for real-time response with constrains that guarantee continuous collision safety, computing paths with  clearance that adapt to the actual conditions of the environment and the performance of the path-follower, though assuming rigid bodies for the obstacles [107]. To ensure safe and effective operations, future intelligent control strategies for UUVs in aquaculture must include information on current environmental conditions, with adequate safety guarantees, thus avoiding collisions with equipment or undesirable impacts on the fish [4]."
+
+\cite{evjemo2025aquaculture}
 
 
-\subsection{Related Work}
+\section{Related Work}
 
-With the growth of autonomous inspection environments where navigation in complex environment's, the focus on intelligent and safe control has becomed a prominant field of research. In dealing with the complexities of a underwater environment affected by nonlinear dynamics, ocean currents motivates increasingly complex controllers to be applied to this domain. Safety also becomes important when dealing with the constraints imposed by the task of underwater inspection while also preserving optimality.
+\subsection{Navigation in cluttered environments}
+\subsubsection{Previous work on underwater navigation}
+Navigation in underwater environments is traditionally done by keeping a safe distance to the obstacles, doing so called "fly-overs" of the area of interest for AUV's \parencite[]{xanthidis2020navigation}. Systems are traditionally designed using classical motion planners, and path following controllers (Need source). When comes to navigation in cluttered environments, efforts have been made to use trajectory optimization to find good solutions (source) tough many of which are limited to planning in 2D, or with vertical releaf \cite{xanthidis2023resiplan}. Some efforts like AquaNav addresses the problem of 3D trajectory planning by incorporating visual features- and warm-restartung the planner \textcite{xanthidis2020navigation} . ResiPlan furthermore extends AquaNav's core with guarantees for environments with dynamic guarantees \parencite[]{xanthidis2023resiplan}.
 
-Finding such controllers have evolved into two schools of tought. Model-Based Optimal Control and Reinforcement Learning (RL)
+\paragraph{Reinforcement learning in underwater domains}
 
-The use of advanced methods for control such as Model Predictive Control or Reinforcement learning has  becomed an active area of research in the domain of Optimal Control. 
+\paragraph{Spatial representation}
+- Whats common: occupancy maps, voxel representaitos
+
+\subsection{Visual Navigation}
+\subsubsection{Extracting visual information}
+For a robot to move freely in space, it becomes natural to incorporate 3D spatial information in the robots description framework to allow for planning in 3D. This is widely achieved by equipping the robotic platform with depth sensors, or by using methods for online depth estimation from camera images. This is commonly the preferred image representation as opposed to a RGB representation, which poses challenges in the context of sim-to-real transfer due to the visual complexities such as lighting, texture and color variation, of which depth is invariant to \parencite{patel2026defm}.
+
+\paragraph{Depth images in underwater domains}
+Capturing spatial information in 3D is a particular challenge for underwater robotics, as visibility is significantly reduced compared to in air. Visibility is reduced with depth, and debris in the water increases the turbidity of the water, making camera visibility even worse \parencite{evjemo2025aquaculture}. 
+
+learned depth estiators 
+
+\paragraph{Obtaining depth measurements underwater}
+Most commonly underwater robots are equipped with  a Forward Looking Sonar (FLS) which is limited to measuring depth information in a 2D plane. More recently, novel 3D multi-beam sonars entering the market but have not yet been fully adopted by the research community \cite{}.
+
+Furthermore the challenges related to visibility in underwater environments have motivated the development of foundation models for stereo cameras like \textcite{wu2025stereoadapter} and complete SLAM systems \textcite{surfslam} fusing inertial- and barometer measurements with predictions from such depth prediction models. 
+
+\subsubsection{Encoding Depth information}
+\paragraph{Why compress images at all}When training a control policy to incorporate high dimensional sensor data such as images, decoupling the feature extraction from policy learning proves beneficial \parencite{raffin2019decoupling}. In RL, the agent learns from state and observation and in some cases the state of the environment is not directly accessible from the observation. This is commonly done by automatically extracting useful features from the observation, which is described as the problem of State Representation Learning (SRL).
+
+\cite{raffin2019decoupling} Argues that using such low dimensional representations helps overcome the curse of dimensionality, and can help improve the performance and speed of policy learning algorithms such as RL. 
+
+\paragraph{End-to-end encoders} 
+Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. They have furthermore been successfully applied to control of unmanned vehicles. The idea of training a CNN together with the RL loss was first shown to work for higher dimensional problems with the introduction of the Deep Q-Network (DQN), showing human-level control in the computer game Atari \textcite{mnih2015human}. In the aftermath of this, CNNs have been successfully applied to drone navigation \textcite{wijmans2020ddppo} similarly learning the weights of the CNN together with the weights of the control policy showing that end-to-end visual navigation. Notably \textcite{wijmans2020ddppo} states that the success of this comes at the cost of high sample inefficiency, and claims that reward is a poor teacher for vision. To address the issue of data inefficiency, the so called "student-teacher" approach has been adopted \parencite{agarwal2023legged, loquercio2021learning}. A policy is trained with access to full state information (Privileged Information) to navigate to the desired goal, this policy is called the teacher. Then a second policy is given access to the depth image and true sensor input, and is then trained to make the same action predictions as the privileged teacher, thus distilling a student policy.
+
+\paragraph{Encoders trained on reconstruction}
+Another common way to compress data is with so called Auto Encoders (AE), which produce a compressed latent representation of the original input data \textcite{hinton2006reducing}. AEs work by defining two neural networks, one called an encoder and a decoder. The Encoder is constructed in a way so that the input dimensions are of the input data, while the output dimension is set to the desired compression dimension. The compressed representation is called a latent representation, and commonly denoted $z$. The decoder is on the other hand designed oppositely, so that the input dimension is matching the latent and the output dimension map back into the original input data. This is commonly visualized as a bottleneck as in figure \ref{fig:vae}. The Encoder and Decoder is jointly trained on a dataset passed through both networks sequentially, and are penalized with a loss that penalizes the difference between the input data and the reconstructed data. The latent representation, the encoder maps to will then retain most of the information in the original data while the dimensions are reduced. For images, convolutional encoders and decoders preserve spatial structure and shares their weights across images improving spatial understanding \cite{masci2011stacked}. Variational Auto Encoders (VAEs) are a common extention of AE, and are designed to keep latent representations resembling a normal distribution \cite{kingma2014auto}. A key distinction from other methods is that AEs and VAEs are only trained to reconstruct the input itself, and can therefore be trained offline on available depth data, thus reducing reinforcement learning to policy optimization over the latent state by only using the encoder during . VAEs are now seen in real world scenarios of robotic navigation are common and can be seen in work on autonomous cars using camera and inertial measurements for generating speed and steering commands, or quadrupeds navigating cluttered and dynamic environments by encoding depth images only \cite{kendall2019learning,hoeller2021learning} .
 
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/vae.pdf}
+    \caption{Canonical Variational Auto Encoder (VAE)}
+    \label{fig:placeholder}
+\end{figure}
+
+\paragraph{Task-driven compression}
+Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work using modifications of the traditional VAE by incorporating task specific compression. ORACLE predicts collision probabilities used by a motion planner, by using a set of predetermined action sequences (motion primitives) directly from an image and the robots velocity estimates\cite{nguyen2022motion}. Later, seVAE introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss ignoring the contributions of invalid pixels which are missing depth information \cite{kulkarni2023semantically}.  Another idea presented by the same authors for encoding depth images for collision free navigation, is by training the VAE on so called collision images. These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimaly combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right. In a follow up paper, this method has even been combined with reinforcement learning for learning a policy capable of collision avoidance.
+
+Maybe mention the method from the locomotion paper. 
+
+\paragraph{Pretrained and foundation encoders}
+In this type of task VAE only need to estimate the rough shape of the obstacle\textcite{hoeller2021learning} .
+The VAE filters out the inputs high frequency content and thus filters out noise in the images, which is important because depth derived from real images can be noisy \cite{hoeller2021learning}.
 
 
-OC (10, 11) relies on the explicit use of an accurate mathematical model within an optimization framework to find an OC law for a given dynamical system. This technique involves solving an optimization problem online to find the control inputs that minimize a cost function while satisfying system constraints. OC techniques make use of convex optimization methods such that the problem is solved in real time at high frequency. 
-
-
-\subsubsection{The state of Optimal Control and Reeinforcement Learning}
-\begin{itemize}
-    \item Example of OC techiques are Linear Quadratic Regualtor (LQR) and its nonlinear finite-horizon counter part, Model Predictive Conrol
-    \item RL on the otherhand is a subfield of Machine Learning that trains an agent to maximize a reward signal from an environment
-    \item RL split into three cataegories, value-based, policy based and actor critic
-\end{itemize}
-
-
-\subsubsection{Optimal Control}
-- Short description of the problem from a practical point of view
-
-\paragraph{The optimal control problem.}
-The optimal control problem is to design an optimal control input to ensure the states of the system to converge to zero by mimize the cost function \parencite{liu2023rlunmanned}.
-- Formal introduction explaining how they both solve the Hamilton-Jacobi-Bellman HJB problem. 
-
-- Short introduction to Finite Horizon Optimal control
-
-Another solution to the HJB problem, is by Reinforcement Learning. A technique made famous by Richard Sutton and Andrew Barton in their book "Reinforcement learning: an introduction".
-
-- \cite{song2023reaching} some takes on why RL is intresting compared to optimization based methods for control like mpc.
-
-
-\subsection{Simulators}
-\label{sec:marinegym}
-The preffered simuation framework for the training environment was MarineGym \cite{chu2025marinegym} primeraly because of it's GPU-accelerated implementation of the BluROV2 Heavy dynamics, toolkit for Domain Randomization (DR). This allowss for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. 
-
-MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory.
-
-Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
-
-The system dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine budled with Isaac Sim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024fieldrobotics}.
+\cite{hoeller2021learning}
+To bridge the reality gap, the VAE is trained with images from simulation and the real robot. We define the auto encoder's loss as the reconstruction error between the decoded image and a filtered version of the input image. The filtering operations are inspired by the IP-Basic algorithm [36], which performs simple depth completion. We extend this method to inflate objects and remove their level of detail to extract object bounds rather than exact shapes. As a result, we can mask the main shortcomings of real depth images compared to simulated ones: Missing information, loss of detail, and depth noise. The filter first performs a dilation and hole closing operation. This removes the noise in the planes and along the edges of objects. Next, a dilation with a large kernel is performed on the image but only applied to the remaining black pixels. Finally, a bilateral filter is applied to the resulting image to smooth out shapes. These steps are depicted in Fig. 3, which shows how missing information is recovered and the level of detail of objects reduced. The filtering operations could also be performed as a preprocessing step before passing the image to the VAE. However, this would require running the filtering operations at inference time, which would increase computational load on our mobile hardware. With our method, filtering is implicitly integrated into the VAE forward-pass and therefore incurs no additional computational cost. B. Fusing the sequence of i
 
 
 \subsection{Reinforcement Learning}
 
-Reinforcement Learning was 
+\paragraph{Problem formulation}
+
+\paragraph{Common solutions}
+
+\paragraph{State of the art}
+
+\subsection{Research platform}
+
+\paragraph{Types of UUVs}
+
+\paragraph{Sensor suit} typical sensor suit
+
+\subsection{Underwater simulator}
+\label{sec:marinegym}
+
+\subsubsection{Training Simulator} 
+\paragraph{MarineGym} MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
+
+\paragraph{Other candidate simulators} Stonefish etc.
+
+\paragraph{Vehicle dynamics} The system dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine budled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024fieldrobotics}. Where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and moments produced by the thrusters, $\boldsymbol{\nu} = [u, v, w, p, q, r]^\top$ is the vector of linear and angular velocities expressed in the body-fixed frame, and $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^\top$ is the position and orientation (Euler angles) of the vehicle in the North-East-Down (NED) frame. The matrix $\mathbf{M}_{RB}$ is the rigid-body mass and inertia matrix, $\mathbf{C}_{RB}(\boldsymbol{\nu})$ contains the rigid-body Coriolis and centripetal terms, and $\mathbf{g}_{RB}(\boldsymbol{\eta})$ represents the gravitational force acting on the vehicle. The hydrodynamic contributions consist of the added mass matrix $\mathbf{M}_{A}$, which accounts for the inertia of the surrounding fluid accelerated with the vehicle, the corresponding added-mass Coriolis and centripetal matrix $\mathbf{C}_{A}(\boldsymbol{\nu})$, the hydrodynamic damping matrix $\mathbf{D}(\boldsymbol{\nu})$, which includes both linear and quadratic drag, and $\mathbf{g}_{A}(\boldsymbol{\eta})$, which represents the buoyancy force. Together, $\mathbf{g}_{RB}(\boldsymbol{\eta})$ and $\mathbf{g}_{A}(\boldsymbol{\eta})$ form the restoring forces and moments acting on the vehicle. The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model is forward stepped. This does not include forces and torques introduced by the actuators.
+
+\begin{beqn}
+\boldsymbol{\tau} = \underbrace{\mathbf{M}_{RB}\dot{\boldsymbol{\nu}} + \mathbf{C}_{RB}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{RB}(\boldsymbol{\eta})}_{\text{Rigid-body term}} + \underbrace{\mathbf{M}_{A}\dot{\boldsymbol{\nu}} + \mathbf{C}_{A}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{A}(\boldsymbol{\eta})}_{\text{Hydrodynamic term}}
+\label{eq:dynamics}
+\end{beqn}
+
+\paragraph{BlueRov2 Heavy in MarineGym}
+In MarineGym the actuator model is split into a rotor dynamics model simulating the time dependent response of the rotor system, and a thrust generation model simulating which maps actuator states to the forces and torques. The thrust generation model for propellers is represented as a quadratic function with a dead zone. In this zone the thrust is set to be proportional to the deviation of rotational speed within predefined thresholds to account for nonlinear efficency variations? Each actuator generates their own force based on the input command and the actuator model, before they are individually applied to the corresponding actuator frame. All actuator configurations are fully configurable in MarineGym, however a built-in configuration of the T200 thruster from Blue  Robotics which is used in the BlueROV2 Heavy.
+
+\paragraph{Sensor emulation} Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast.
+
+\subsubsection{Reinforcement learning algorithm}
+MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out of the box \cite{chu2025marinegym}. The implementation is identical to the PPO in OmniDrones on which MarineGym was buildt \cite{xu2024omnidrones}.
 
 
-in "Reinforcement Learning: An Introduction" \cite[Sec.~3.1]{sutton2018reinforcement} 
 
-
-A learner and descision-maker called the agent, learns by ineracting with everything outside the agent called the environment responding to the agents continous actions and presents new sitations to the agent. The environment will also present the agent with numerical rewards which the agent will attemt to maximize over time. The interaction beteen agent and environment is commonly depicted in Figure~\ref{fig:agent-env-loop}.
-
-
-
-\begin{figure}[htbp]
-    \centering
-    \input{figures/agent_env_loop.tex}
-    \caption{The agent environment interaction in a Markov decision process.~\cite[Fig.~3.1]{sutton2018reinforcement}.}
-    \label{fig:agent-env-loop}
-\end{figure}
-
-We formally define the problem as a Markov decision process (MDP) for a single-agent reinforcement learning (RL). In this work, an MDP is defined by the tuple $\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{P}, r, \rho_0, \gamma)$ adopting the notation used in \cite{song2023reaching}, where the state space $\mathcal{S}$ and the action space $\mathcal{A}$ are continous. $\mathcal{P}(s_{t+1} \mid s_t, a_t)$ is the state transition probability and $r : \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ is the reward function. 
-
-
-The agent and environment interact at step in a sequence of descrete time steps. At each time step $t$, the agent receives some representation of the environment's state $s_t \in \mathcal{S}$ and selects an action $a_t \in \mathcal{A}$ available at state $s_t$. At each state the agent implements a mapping form state to propabilities of each possible action, this we call the agents policy.
-
-\subsubsection{Types of Reinforcement learning}
-Algorithms used to train such an agent are commonly divided into two paradigms, model-based and model-free RL. As per described in \textcite[Sec.~1.4]{sutton2018reinforcement} model-free methods for solving reinforcment learning problems are models that use models and planning, in contradiction to model-free methods which only learn from trail-and-error and is regarded as simpler than model-based approaches. As described in \textcite{moerland2023mbrl} the difference between model-based RL and model-free RL methods maily differ in their reversable acces to the MDP dynamics. The MDP dynamics, this typically reffered to as a model. 
-
-Therefore a agent following the model based approach is allowed to repatedly plan from the same state in a model by querying the model at any preffered state-action per in any preffered order. In contrast model-free approaches have irreversable access to the model dynamics, meaning the agent is to move forwards from the next state given by the MDP dynamics after a perticular action has been applied.
-
-a commonality between model-based and model-free reinforcement learning is that a so called \textit{global solution} is stored for the complete state space, as its a property of \textit{learning} a optimal solution to the MDP and in this way differentiates itself from planning based methods which rely on a {local solution} \parencite{moerland2023mbrl}. 
-
-Generally, model-based RL approaches with learned models are outperformed by model-free approaches on asymptotic performance. This is known to be caused of uncertainties in the, as there are examples of model-free approaches with a know model achieving similar performance to model-free methods \parencite{moerland2023mbrl}. 
-
-Even tough model-based methods are increasingly gaining attention, model-free methods are still dominant and distinguished on whether the method is on-policy or off-policy \textcite{sutton2018reinforcement}.
-
-\subsubsection{Continuos control}
-In continuos control, the agent's policy is commonly parametrized as a Feed Forward Neural Network (FFNN) typically defined as a single Multi Layer Perceptrion (MLP) and iteratively improved by generating data from applying the same policy to the system \parencite{moerland2023mbrl}.
-
-In practice, the state $s_t$ not always fully observable by the policy. Problems where the observed state $o_t$ does not match the state exposed by the environment $s_t$, does not match the canonical definition of a MDP used by \cite{sutton2018reinforcement}. Instead we formulate the RL problem as a partially observable Markov decision prosses (POMDP), where the policy of the agent is denoted $\pi_\theta(\boldsymbol{a}_t \mid \boldsymbol{o}_t)$ following the practice used in \cite{song2023reaching}.
-
-- add a control loop with RL notation
-
-\paragraph{Policy Gradient methods} In most control applications RL is done with policy gradient methods (PG). In contrast to other common RL algorithms which rely on learning a state action value function before selecting a optimal value. Policy Gradient methods instead learns the policy directly and instead uses a parametrized function $\pi(a \mid s; \theta)$ with $\theta$ being the functions parameters. Instead of maximizing expected reward as in the canonical RL problem, one attempts to maximize a self defined reward function instead. This is a natural approach for problems in control, as there would be a infinite number of state-actions to estimate the value for. Hence value-based approaches become intractable \parencite{weng2018bandit}.
-
-\paragraph{Actor-Critic methods}
-
-https://claude.ai/chat/53005f4c-7c8b-43a1-beae-e9091413ffe3
-
-
-The two most common baseline methods used for continuos control are both actor-critic algorithms, and represent each category: Proximal Policy Optimization (PPO) \textcite{schulman2017ppo} is on-policy and Soft Actor-Critic \textcite{haarnoja2018soft} is off-policy.
-
-TODO
-- small note on each technique, sample efficency performance comment. 
-- mention model based approaches like td mpc?
-
-\paragraph{PPO Implementations} PPO works by. In Sculman's "Proximal Policy Optimization Algorithms":
-
-\begin{algorithm}
-\caption{PPO, Actor-Critic Style}
-\label{alg:ppo}
-\begin{algorithmic}[1]
-\For{iteration $= 1, 2, \ldots$}
-    \For{actor $= 1, 2, \ldots, N$}
-        \State Run policy $\pi_{\theta_{\text{old}}}$ in environment for $T$ timesteps
-        \State Compute advantage estimates $\hat{A}_1, \ldots, \hat{A}_T$
-    \EndFor
-    \State Optimize surrogate $L$ wrt $\theta$, with $K$ epochs and minibatch size $M \leq NT$
-    \State $\theta_{\text{old}} \leftarrow \theta$
-\EndFor
-\end{algorithmic}
-\end{algorithm}
-
-\begin{equation}
-    r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)},
-\end{equation}
-and the clipped surrogate objective, with clipping parameter $\epsilon$, is
-\begin{equation}
-    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t\!\left[
-        \min\!\big( r_t(\theta)\hat{A}_t,\;
-        \operatorname{clip}\!\big(r_t(\theta), 1-\epsilon, 1+\epsilon\big)\hat{A}_t \big)
-    \right].
-\end{equation}
-When the policy and value function share parameters, the surrogate $L$ in
-Algorithm~\ref{alg:ppo} also includes a value loss and an entropy bonus:
-\begin{equation}
-    L^{\text{CLIP+VF+S}}(\theta) = \hat{\mathbb{E}}_t\!\left[
-        L_t^{\text{CLIP}}(\theta) - c_1 L_t^{\text{VF}}(\theta) + c_2\, S[\pi_\theta](s_t)
-    \right],
-\end{equation}
-where $L_t^{\text{VF}} = \big(V_\theta(s_t) - V_t^{\text{targ}}\big)^2$, $S$ is the
-policy entropy, and $c_1, c_2$ are coefficients. The advantages are computed with
-truncated generalized advantage estimation (GAE):
-\begin{align}
-    \hat{A}_t &= \delta_t + (\gamma\lambda)\,\delta_{t+1} + \cdots
-                + (\gamma\lambda)^{T-t-1}\,\delta_{T-1}, \\
-    \delta_t  &= r_t + \gamma V(s_{t+1}) - V(s_t),
-\end{align}
-where $\gamma$ is the discount factor and $\lambda$ the GAE parameter.
-
-
-\subsubsection{Simulation to reality gap}
-It's well documented that RL policies often struggle to achieve the same level of performance when deployed in real life as in the simulation environment in which it was trained in, this is often called the "sim-to-real gap".
-
-This is commonly addressed with randomizing the physical parameters of the simulator used during training and is commonly called Domain Randomization (DR).
+\section{Problem Formulation}
 
 \subsection{Research Questions}
 Motivated by the success of "end to end" robotic navigation in above water domains seen in collision free navigation with drones and quadrupedal robots, a natural future extension transferability of this approach for underwater robotics. This motivated the following two research questions: How can such a navigation stack be designed for the sensors commonly found on a UUV? What are the domain specific limitations of a "end-to-end" learned navigation stack for underwater robots?
+
+\subsection{Formal Problem}
+To answer the research question, we construct a underwater environment with a corridor filled with obstacles. An agent is introduced at an initial position A, and is tasked to navigate throught a cluttred environment to a goal position B, on opposite side of  a set of obstacles without colliding with them. The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
+
+\paragraph{State Space representation} The problem is formalized as follows. At each discrete time step $t$, the agent takes an action $a_t \in \mathbb{R}^{4}$ drawn from a policy $\pi(a_t \mid s_t, o_t)$. Here $s_t \in \mathbb{R}^{6}$ is the agent's internal state, and $o_t = (D_t, \mathbf{r}_t)$ is the observation. It contains a latent representation \bold{$x$}, representing a depth image $D_t \in \mathbb{R}^{96 \times 128}$ from a camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$, with $r_{\max} = 12\,\mathrm{m}$,from a forward-looking sonar (FLS). The agent is conditioned on a goal position $g \in \mathbb{R}^{3}$, which it must reach while avoiding a set of obstacles.
+
+Two approaches to navigating the environment are considered, an extension of \textcite{ } Deep Collision Encoding (DCE) and the navigation stack proposed in \textcite{} using DeFM. Except for the architectural differences which will further be discussed below, its worth addressing that the approaches differ in how depth and sonar measurements are inputted to the policy.
+
+\subsection{Contributions}

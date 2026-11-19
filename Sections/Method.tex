@@ -1,17 +1,40 @@
 % !TEX root = ../main.tex
 \section{Method}
 
-We evaluate the performance of the navigation stack by placing an agent in a underwater environment with a corridor filled with obstacles. The agent is tasked to move from a initial position A to a goal position B, on opposite sides of the obstacles without colliding with the obstacles. The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
+\subsection{Proposed method}
 
-The problem is formalized as follows. At each discrete time step $t$, the agent takes an action $a_t \in \mathbb{R}^{4}$ drawn from a policy $\pi(a_t \mid s_t, o_t)$. Here $s_t \in \mathbb{R}^{6}$ is the agent's internal state, and $o_t = (D_t, \mathbf{r}_t)$ is the observation. It contains a latent representation \bold{$x$}, representing a depth image $D_t \in \mathbb{R}^{96 \times 128}$ from a camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$, with $r_{\max} = 12\,\mathrm{m}$,from a forward-looking sonar (FLS). The agent is conditioned on a goal position $g \in \mathbb{R}^{3}$, which it must reach while avoiding a set of obstacles.
+\subsection{Research Platform} 
 
-Two approaches to navigating the environment are considered, an extension of \textcite{ } Deep Collision Encoding (DCE) and the navigation stack proposed in \textcite{} using DeFM. Except for the architectural differences which will further be discussed below, its worth addressing that the approaches differ in how depth and sonar measurements are inputted to the policy. 
+The navigational policy will be trained, and evaluated using the dynamics of the BlueRov2 Heavy, configured with a emulated mono camera returning a depth image and a FLS. The model parameters used for the dynamics ~\ref{eq:dynamics} are taken from the default parameters in MarineGym, and can be found in Table ~\ref{tab:bluerov_model}. 
 
-\subsubsection{Deep Collision Encoding}
-To compress the depth images into a suitable latent representation for the policy to observe the images, a VAE consiting of ... is trained to reconstruct images from 100,000 captured state-observation pairs collected from the simulator by sampling from older policy rollouts, and perturbing the samples with randomly sampled offsets. The depth images are then augmented to create Collision Images following the process described in \textcite{} yielding the images seen in \cref{fig:collision_image}
+\begin{table}[H]
+  \centering
+  \caption{BlueROV2 Heavy model parameters used in MarineGym.}
+  \label{tab:bluerov_model}
+  \begin{tabular}{lllll}
+    \toprule
+    Parameter & Symbol & Value & Unit \\
+    \midrule
+    Mass                    & $m$                 & 11.5          & \si{\kilogram} \\
+    Moments of inertia      & $I_x, I_y, I_z$     & 0.21, 0.245, 0.245 & \si{\kilogram\metre\squared} \\
+    Displaced volume        & $\nabla$            & 0.0116499     & \si{\metre\cubed} \\
+    CB above CG             & $z_{GB}$            & 0.01          & \si{\metre} \\
+    \midrule
+    Added mass (lin.)       & $X_{\dot u}, Y_{\dot v}, Z_{\dot w}$ & 5.5, 12.7, 14.57 & \si{\kilogram} \\
+    Added mass (rot.)       & $K_{\dot p}, M_{\dot q}, N_{\dot r}$ & 0.12, 0.12, 0.12 & \si{\kilogram\metre\squared} \\
+    Linear damping (lin.)   & $X_u, Y_v, Z_w$     & 4.03, 6.22, 5.18 & \si{\newton\second\per\metre} \\
+    Linear damping (rot.)   & $K_p, M_q, N_r$     & 0.07, 0.07, 0.07 & \si{\newton\metre\second\per\radian} \\
+    Quadratic damping (lin.)& $X_{u|u|}, Y_{v|v|}, Z_{w|w|}$ & 18.18, 21.66, 36.99 & \si{\newton\second\squared\per\metre\squared} \\
+    Quadratic damping (rot.)& $K_{p|p|}, M_{q|q|}, N_{r|r|}$ & 1.55, 1.55, 1.55 & \si{\newton\metre\second\squared\per\radian\squared} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-The VLA was trained using a reconstruction loss on the target images and the decoded images, seen in 
 
+\subsection{Image Encoding}
+\subsubsection{Architecture} To compress the depth images into a suitable latent representation for the policy to observe the images, a VAE consiting of ... is trained to reconstruct images from 100,000 captured state-observation pairs collected from the simulator by sampling from older policy rollouts, and perturbing the samples with randomly sampled offsets. The depth images are then augmented to create Collision Images following the process described in \textcite{} yielding the images seen in \cref{fig:collision_image}
+
+\subsubsection{Losses}
 
 \begin{beqn}
   \Lc{total} = \Lc{rec} + \lambda \Lc{KL}
@@ -23,15 +46,23 @@ The VLA was trained using a reconstruction loss on the target images and the dec
   \mathbf{y}_t &= g(\mathbf{h}_t) \label{eq:y}
 \end{balign}
 
+\subssection{Sonar emulation}
+
+
+
 \subsection{Navigation policy}
-We train a policy to navigate the cluttered environment by formulating as POMDP. Policies were trained on Proximal Policy Optimization (PPO) \cite{schulman2017ppo} using the implementation provided in MarineGym \textcite{chu2025marinegym}, and given privileged state information about the location of the objects. It should be noted that this is identical to the PPO implementation in OmniDrones \cite{xu2024omnidrones}, on which MarineGym was bulidt.
+We train a policy to navigate the cluttered environment by formulating as POMDP. Policies were trained on Proximal Policy Optimization (PPO) \cite{schulman2017ppo} using the implementation provided in MarineGym \textcite{chu2025marinegym}, and given privileged state information about the location of the objects.
 
 
 \subsubsection{DCE policy}
 In the case of DCE, we denote the policy by $\pi_{DCE}$ and parametrize the MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64. 
 
 \subsection{Training environment}
-Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore a simulated sonar is also available to the agent through an analytical implementation.  
+\subsubsection{Proprioceptive and exteroceptive sensor emulation}
+\paragraph{Proprioceptive sensors} 
+\paragraph{Exteroceptive sensors}
+
+Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore a simulated sonar is also available to the agent through an analytical implementation.
 
 \subsubsection{Reward shaping}
 At every policy decision the environment returns the reward $R_t \in \mathbb{R}$ in \eqref{eq:reward-total}, a sum of the shaping terms \eqref{eq:reward-progress}--\eqref{eq:reward-ttc} and the terminal term \eqref{eq:reward-terminal}.
@@ -104,58 +135,7 @@ Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm
 
 
 
-
-\subsubsection{Training environment}
-
-
-
-\subsubsection{UUV dynamics}
-Where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and moments produced by the thrusters, $\boldsymbol{\nu} = [u, v, w, p, q, r]^\top$ is the vector of linear and angular velocities expressed in the body-fixed frame, and $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^\top$ is the position and orientation (Euler angles) of the vehicle in the North-East-Down (NED) frame. The matrix $\mathbf{M}_{RB}$ is the rigid-body mass and inertia matrix, $\mathbf{C}_{RB}(\boldsymbol{\nu})$ contains the rigid-body Coriolis and centripetal terms, and $\mathbf{g}_{RB}(\boldsymbol{\eta})$ represents the gravitational force acting on the vehicle. The hydrodynamic contributions consist of the added mass matrix $\mathbf{M}_{A}$, which accounts for the inertia of the surrounding fluid accelerated with the vehicle, the corresponding added-mass Coriolis and centripetal matrix $\mathbf{C}_{A}(\boldsymbol{\nu})$, the hydrodynamic damping matrix $\mathbf{D}(\boldsymbol{\nu})$, which includes both linear and quadratic drag, and $\mathbf{g}_{A}(\boldsymbol{\eta})$, which represents the buoyancy force. Together, $\mathbf{g}_{RB}(\boldsymbol{\eta})$ and $\mathbf{g}_{A}(\boldsymbol{\eta})$ form the restoring forces and moments acting on the vehicle.
-
-\begin{beqn}
-\boldsymbol{\tau} = \underbrace{\mathbf{M}_{RB}\dot{\boldsymbol{\nu}} + \mathbf{C}_{RB}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{RB}(\boldsymbol{\eta})}_{\text{Rigid-body term}} + \underbrace{\mathbf{M}_{A}\dot{\boldsymbol{\nu}} + \mathbf{C}_{A}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{A}(\boldsymbol{\eta})}_{\text{Hydrodynamic term}}
-\label{eq:dynamics}
-\end{beqn}
-
-$\tau_{hydro}$ is applied to the centroid of each submerged link every time the model is forward stepped. This does not include forces and torques introduced by the actuators.
-
-In MarineGym the actuator model is split into a rotor dynamics model simulating the time dependent response of the rotor system, and a thrust generation model simulating which maps actuator states to the forces and torques. 
-
-The thrust generation model for propellers is represented as a quadratic function with a dead zone. In this zone the thrust is set to be proportional to the deviation of rotational speed within predefined thresholds to account for nonlinear efficency variations? Each actuator generates their own force based on the input command and the actuator model, before they are individually applied to the corresponding actuator frame.
-
-All actuator configurations are fully configurable in MarineGym, however a built-in configuration of the T200 thruster from Blue  Robotics which is used in the BlueROV2 Heavy.
-
-\subsubsection{Model parameters}
-The model parameters are adopted from the default model for the BlueROV2 Heavy in MarineGym and were not identified experimentally, as seen in \ref{tab:bluerov_model}. 
-
-\begin{table}[H]
-  \centering
-  \caption{BlueROV2 Heavy model parameters used in MarineGym.}
-  \label{tab:bluerov_model}
-  \begin{tabular}{lllll}
-    \toprule
-    Parameter & Symbol & Value & Unit \\
-    \midrule
-    Mass                    & $m$                 & 11.5          & \si{\kilogram} \\
-    Moments of inertia      & $I_x, I_y, I_z$     & 0.21, 0.245, 0.245 & \si{\kilogram\metre\squared} \\
-    Displaced volume        & $\nabla$            & 0.0116499     & \si{\metre\cubed} \\
-    CB above CG             & $z_{GB}$            & 0.01          & \si{\metre} \\
-    \midrule
-    Added mass (lin.)       & $X_{\dot u}, Y_{\dot v}, Z_{\dot w}$ & 5.5, 12.7, 14.57 & \si{\kilogram} \\
-    Added mass (rot.)       & $K_{\dot p}, M_{\dot q}, N_{\dot r}$ & 0.12, 0.12, 0.12 & \si{\kilogram\metre\squared} \\
-    Linear damping (lin.)   & $X_u, Y_v, Z_w$     & 4.03, 6.22, 5.18 & \si{\newton\second\per\metre} \\
-    Linear damping (rot.)   & $K_p, M_q, N_r$     & 0.07, 0.07, 0.07 & \si{\newton\metre\second\per\radian} \\
-    Quadratic damping (lin.)& $X_{u|u|}, Y_{v|v|}, Z_{w|w|}$ & 18.18, 21.66, 36.99 & \si{\newton\second\squared\per\metre\squared} \\
-    Quadratic damping (rot.)& $K_{p|p|}, M_{q|q|}, N_{r|r|}$ & 1.55, 1.55, 1.55 & \si{\newton\metre\second\squared\per\radian\squared} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
 \subsubsection{Sonar simulation}
-
-
-
-\subsection{Experiments}
 To evaluate the limitations of the methods proposed, we again consider the dynamics \ref{eq:dynamics} of a BlueROV2 Heavy in a corridor of obstacles. 
 
 
