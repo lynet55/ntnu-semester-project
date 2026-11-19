@@ -1,0 +1,103 @@
+\subsection{Reinforcement Learning}
+Reinforcement Learning was 
+
+
+in "Reinforcement Learning: An Introduction" \cite[Sec.~3.1]{sutton2018reinforcement} 
+
+
+A learner and descision-maker called the agent, learns by ineracting with everything outside the agent called the environment responding to the agents continous actions and presents new sitations to the agent. The environment will also present the agent with numerical rewards which the agent will attemt to maximize over time. The interaction beteen agent and environment is commonly depicted in Figure~\ref{fig:agent-env-loop}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/agent_env_loop.tex}
+    \caption{The agent environment interaction in a Markov decision process.~\cite[Fig.~3.1]{sutton2018reinforcement}.}
+    \label{fig:agent-env-loop}
+\end{figure}
+
+We formally define the problem as a Markov decision process (MDP) for a single-agent reinforcement learning (RL). In this work, an MDP is defined by the tuple $\mathcal{M} = (\mathcal{S}, \mathcal{A}, \mathcal{P}, r, \rho_0, \gamma)$ adopting the notation used in \cite{song2023reaching}, where the state space $\mathcal{S}$ and the action space $\mathcal{A}$ are continous. $\mathcal{P}(s_{t+1} \mid s_t, a_t)$ is the state transition probability and $r : \mathcal{S} \times \mathcal{A} \to \mathbb{R}$ is the reward function. 
+
+
+The agent and environment interact at step in a sequence of descrete time steps. At each time step $t$, the agent receives some representation of the environment's state $s_t \in \mathcal{S}$ and selects an action $a_t \in \mathcal{A}$ available at state $s_t$. At each state the agent implements a mapping form state to propabilities of each possible action, this we call the agents policy.
+
+\subsubsection{Types of Reinforcement learning}
+Algorithms used to train such an agent are commonly divided into two paradigms, model-based and model-free RL. As per described in \textcite[Sec.~1.4]{sutton2018reinforcement} model-free methods for solving reinforcment learning problems are models that use models and planning, in contradiction to model-free methods which only learn from trail-and-error and is regarded as simpler than model-based approaches. As described in \textcite{moerland2023mbrl} the difference between model-based RL and model-free RL methods maily differ in their reversable acces to the MDP dynamics. The MDP dynamics, this typically reffered to as a model. 
+
+Therefore a agent following the model based approach is allowed to repatedly plan from the same state in a model by querying the model at any preffered state-action per in any preffered order. In contrast model-free approaches have irreversable access to the model dynamics, meaning the agent is to move forwards from the next state given by the MDP dynamics after a perticular action has been applied.
+
+a commonality between model-based and model-free reinforcement learning is that a so called \textit{global solution} is stored for the complete state space, as its a property of \textit{learning} a optimal solution to the MDP and in this way differentiates itself from planning based methods which rely on a {local solution} \parencite{moerland2023mbrl}. 
+
+Generally, model-based RL approaches with learned models are outperformed by model-free approaches on asymptotic performance. This is known to be caused of uncertainties in the, as there are examples of model-free approaches with a know model achieving similar performance to model-free methods \parencite{moerland2023mbrl}. 
+
+Even tough model-based methods are increasingly gaining attention, model-free methods are still dominant and distinguished on whether the method is on-policy or off-policy \textcite{sutton2018reinforcement}.
+
+\subsubsection{Continuos control}
+In continuos control, the agent's policy is commonly parametrized as a Feed Forward Neural Network (FFNN) typically defined as a single Multi Layer Perceptrion (MLP) and iteratively improved by generating data from applying the same policy to the system \parencite{moerland2023mbrl}.
+
+In practice, the state $s_t$ not always fully observable by the policy. Problems where the observed state $o_t$ does not match the state exposed by the environment $s_t$, does not match the canonical definition of a MDP used by \cite{sutton2018reinforcement}. Instead we formulate the RL problem as a partially observable Markov decision prosses (POMDP), where the policy of the agent is denoted $\pi_\theta(\boldsymbol{a}_t \mid \boldsymbol{o}_t)$ following the practice used in \cite{song2023reaching}.
+
+- add a control loop with RL notation
+
+\paragraph{Policy Gradient methods} In most control applications RL is done with policy gradient methods (PG). In contrast to other common RL algorithms which rely on learning a state action value function before selecting a optimal value. Policy Gradient methods instead learns the policy directly and instead uses a parametrized function $\pi(a \mid s; \theta)$ with $\theta$ being the functions parameters. Instead of maximizing expected reward as in the canonical RL problem, one attempts to maximize a self defined reward function instead. This is a natural approach for problems in control, as there would be a infinite number of state-actions to estimate the value for. Hence value-based approaches become intractable \parencite{weng2018bandit}.
+
+\paragraph{Actor-Critic methods}
+
+https://claude.ai/chat/53005f4c-7c8b-43a1-beae-e9091413ffe3
+
+
+The two most common baseline methods used for continuos control are both actor-critic algorithms, and represent each category: Proximal Policy Optimization (PPO) \textcite{schulman2017ppo} is on-policy and Soft Actor-Critic \textcite{haarnoja2018soft} is off-policy.
+
+TODO
+- small note on each technique, sample efficency performance comment. 
+- mention model based approaches like td mpc?
+
+\paragraph{PPO Implementations} PPO works by. In Sculman's "Proximal Policy Optimization Algorithms":
+
+\begin{algorithm}
+\caption{PPO, Actor-Critic Style}
+\label{alg:ppo}
+\begin{algorithmic}[1]
+\For{iteration $= 1, 2, \ldots$}
+    \For{actor $= 1, 2, \ldots, N$}
+        \State Run policy $\pi_{\theta_{\text{old}}}$ in environment for $T$ timesteps
+        \State Compute advantage estimates $\hat{A}_1, \ldots, \hat{A}_T$
+    \EndFor
+    \State Optimize surrogate $L$ wrt $\theta$, with $K$ epochs and minibatch size $M \leq NT$
+    \State $\theta_{\text{old}} \leftarrow \theta$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\begin{equation}
+    r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)},
+\end{equation}
+and the clipped surrogate objective, with clipping parameter $\epsilon$, is
+\begin{equation}
+    L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t\!\left[
+        \min\!\big( r_t(\theta)\hat{A}_t,\;
+        \operatorname{clip}\!\big(r_t(\theta), 1-\epsilon, 1+\epsilon\big)\hat{A}_t \big)
+    \right].
+\end{equation}
+When the policy and value function share parameters, the surrogate $L$ in
+Algorithm~\ref{alg:ppo} also includes a value loss and an entropy bonus:
+\begin{equation}
+    L^{\text{CLIP+VF+S}}(\theta) = \hat{\mathbb{E}}_t\!\left[
+        L_t^{\text{CLIP}}(\theta) - c_1 L_t^{\text{VF}}(\theta) + c_2\, S[\pi_\theta](s_t)
+    \right],
+\end{equation}
+where $L_t^{\text{VF}} = \big(V_\theta(s_t) - V_t^{\text{targ}}\big)^2$, $S$ is the
+policy entropy, and $c_1, c_2$ are coefficients. The advantages are computed with
+truncated generalized advantage estimation (GAE):
+\begin{align}
+    \hat{A}_t &= \delta_t + (\gamma\lambda)\,\delta_{t+1} + \cdots
+                + (\gamma\lambda)^{T-t-1}\,\delta_{T-1}, \\
+    \delta_t  &= r_t + \gamma V(s_{t+1}) - V(s_t),
+\end{align}
+where $\gamma$ is the discount factor and $\lambda$ the GAE parameter.
+
+
+\subsubsection{Simulation to reality gap}
+It's well documented that RL policies often struggle to achieve the same level of performance when deployed in real life as in the simulation environment in which it was trained in, this is often called the "sim-to-real gap".
+
+This is commonly addressed with randomizing the physical parameters of the simulator used during training and is commonly called Domain Randomization (DR).

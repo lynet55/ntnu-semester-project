@@ -3,283 +3,38 @@
 % Grouped: (A) Aquaculture / underwater robotics domain
 %          (B) MPC, MPPI and safe sampling-based control
 %          (C) Reinforcement learning and evolutionary RL
+%          (D) Image representations for RL (related work section)
+%
+% CLEAN-UP NOTES (Nov 2026)
+% Duplicate entries were merged. If your .tex cites a removed key,
+% find-and-replace it with the kept key:
+%   amundsen2024fieldrobotics          -> amundsen2024aquaculture
+%   kelasidi2022robotics               -> kelasidi2023robotics
+%   doi:10.1142/S2301385023310027      -> liu2023rlunmanned
+%   kulkarni2024reinforcement          -> kulkarni2024dce
+% Same key defined twice (only one kept, fields merged):
+%   evjemo2025aquaculture, hasan2024oceanic, zhao2025gvfmppi,
+%   chu2025marinegym, song2023reaching
 % ============================================================
 
 % ------------------------------------------------------------
 % (A) AQUACULTURE AND UNDERWATER ROBOTICS DOMAIN
 % ------------------------------------------------------------
 
-@misc{amundsen2024aquaculture,
-  author       = {Amundsen, Herman B. and Xanthidis, Marios and F{\o}re, Martin and Ohrem, Sveinung J. and Kelasidi, Eleni},
-  title        = {Aquaculture Field Robotics: Applications, Lessons Learned and Future Prospects},
-  year         = {2024},
-  eprint       = {2404.12995},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.RO},
-  note         = {Accepted to the IEEE ICRA Workshop on Field Robotics 2024},
-  url          = {https://arxiv.org/abs/2404.12995}
-}
-
-@incollection{evjemo2025aquaculture,
-  author       = {Evjemo, Linn D. and Ohrem, Sveinung J. and Su, Biao and F{\o}re, Martin and Kelasidi, Eleni},
-  title        = {Aquaculture Robotics -- Challenges, Opportunities and Future Prospects and the Role of Digital Twin Technology and Autonomous Solutions},
-  booktitle    = {Springer Handbooks},
-  publisher    = {Springer},
-  year         = {2025},
-  issn         = {2522-8692}
-}
-
-@incollection{kelasidi2022robotics,
-  author       = {Kelasidi, Eleni and Svendsen, Eirik},
-  title        = {Robotics for Sea-Based Fish Farming},
-  booktitle    = {Encyclopedia of Smart Agriculture Technologies},
-  editor       = {Zhang, Qin},
-  publisher    = {Springer International Publishing},
-  address      = {Cham},
-  pages        = {1--20},
-  year         = {2022}
-}
-
-@article{haugalokken2024lowcost,
-  author       = {Haugal{\o}kken, Bent O. A. and Nissen, Oscar and Skaldeb{\o}, Martin B. and Ohrem, Sveinung J. and Kelasidi, Eleni},
-  title        = {Low-Cost Sensor Technologies for Underwater Vehicle Navigation in Aquaculture Net Pens},
-  journal      = {IFAC-PapersOnLine},
-  volume       = {58},
-  number       = {20},
-  pages        = {87--94},
-  year         = {2024},
-  note         = {15th IFAC Conference on Control Applications in Marine Systems, Robotics and Vehicles (CAMS)}
-}
-
-@article{bogue2015underwater,
-  author       = {Bogue, Robert},
-  title        = {Underwater Robots: A Review of Technologies and Applications},
-  journal      = {Industrial Robot: An International Journal},
-  volume       = {42},
-  number       = {3},
-  pages        = {186--191},
-  year         = {2015},
-  doi          = {10.1108/IR-01-2015-0010}
-}
-
-@inproceedings{aldhaheri2025simulators,
-  author       = {Aldhaheri, Sara and Hu, Yang and Xie, Yongchang and Wu, Peng and Kanoulas, Dimitrios and Liu, Yuanchang},
-  title        = {Underwater Robotic Simulators Review for Autonomous System Development},
-  booktitle    = {OCEANS 2025 -- Brest},
-  pages        = {1--10},
-  year         = {2025},
-  organization = {IEEE},
-  doi          = {10.1109/OCEANS58557.2025.11104581},
-  eprint       = {2504.06245},
-  archivePrefix = {arXiv}
-}
-
-@article{hasan2024oceanic,
-  author       = {Hasan, Kayes and Ahmad, Shameem and Liaf, Abrar Fahim and Karimi, Mazaher and Ahmed, Tofael and Shawon, Mehedi Azad and Mekhilef, Saad},
-  title        = {Oceanic Challenges to Technological Solutions: A Review of Autonomous Underwater Vehicle Path Technologies in Biomimicry, Control, Navigation, and Sensing},
-  journal      = {IEEE Access},
-  volume       = {12},
-  year         = {2024},
-  doi          = {10.1109/ACCESS.2024.3380458}
-}
-
-% ------------------------------------------------------------
-% (B) MPC, MPPI AND SAFE SAMPLING-BASED CONTROL
-% ------------------------------------------------------------
-
-@article{honda2026pimpc,
-  author       = {Honda, Kohei},
-  title        = {Model Predictive Control via Probabilistic Inference: A Tutorial and Survey},
-  year         = {2026},
-  eprint       = {2511.08019},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.RO},
-  doi          = {10.48550/arXiv.2511.08019}
-}
-
-@article{kazim2024pathintegral,
-  author       = {Kazim, Muhammad and Hong, JunGee and Kim, Min-Gyeom and Kim, Kwang-Ki K.},
-  title        = {Recent Advances in Path Integral Control for Trajectory Optimization: An Overview in Theoretical and Algorithmic Perspectives},
-  journal      = {Annual Reviews in Control},
-  volume       = {57},
-  pages        = {100931},
-  year         = {2024}
-}
-
-@inproceedings{ezeji2025bcmppi,
-  author       = {Ezeji, Odichimnma and Ziegltrum, Michael and Turrisi, Giulio and Belvedere, Tommaso and Modugno, Valerio},
-  title        = {{BC-MPPI}: A Probabilistic Constraint Layer for Safe Model-Predictive Path-Integral Control},
-  booktitle    = {Agents and Robots for Reliable Engineered Autonomy (AREA 2025)},
-  series       = {Communications in Computer and Information Science},
-  publisher    = {Springer},
-  year         = {2025},
-  eprint       = {2510.00272},
-  archivePrefix = {arXiv}
-}
-
-@inproceedings{andrejev2025pimppi,
-  author       = {Andrejev, Edvin Martin and Manoharan, Amith and Unt, Karl-Eerik and Singh, Arun Kumar},
-  title        = {{$\pi$-MPPI}: A Projection-Based Model Predictive Path Integral Scheme for Smooth Optimal Control of Fixed-Wing Aerial Vehicles},
-  year         = {2025},
-  eprint       = {2504.10962},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.RO}
-}
-
-@article{kim2025datadriven,
-  author       = {Kim, Dong-Hwi and Kim, Moon Hwan and Kim, Jun and Baek, Hyung-Min and Choi, Young-Myung and Shin, Sung-chul and Kim, Minwoo and Kim, Yagin and Kim, Eun Soo and Lee, Seung Hwan},
-  title        = {Data-Driven Stochastic Nonlinear Model Predictive Control for 6 {DOF} Underwater Vehicle Under Unknown Disturbance and Uncertainty},
-  journal      = {Ocean Engineering},
-  volume       = {318},
-  pages        = {120067},
-  year         = {2025}
-}
-
-@article{liu2024gpmpc,
-  author       = {Liu, Tao and Zhao, Jintao and Huang, Junhao},
-  title        = {A Gaussian-Process-Based Model Predictive Control Approach for Trajectory Tracking and Obstacle Avoidance in Autonomous Underwater Vehicles},
-  journal      = {Journal of Marine Science and Engineering},
-  volume       = {12},
-  number       = {4},
-  pages        = {676},
-  year         = {2024},
-  doi          = {10.3390/jmse12040676}
-}
-
-@article{zhao2026diamppi,
-  author       = {Zhao, Jintao and Liu, Tao and Huang, Junhao and Fang, Zizhe and Liu, Dongye and Shen, Zijian and He, Can and Li, Zhenglin},
-  title        = {{DIA-MPPI}: A Diffusion-Inspired Control Framework for Efficient Path Optimization in Autonomous Underwater Vehicle Fleets},
-  journal      = {Ocean Engineering},
-  volume       = {343},
-  pages        = {123558},
-  year         = {2026}
-}
-
-@article{zhao2025gvfmppi,
-  author       = {Zhao, Jintao and Liu, Tao and Huang, Junhao},
-  title        = {Enhanced Obstacle Avoidance for Autonomous Underwater Vehicles via Path Integral Control Based on Guiding Vector Field},
-  journal      = {ISA Transactions},
-  volume       = {166},
-  pages        = {116--125},
-  year         = {2025}
-}
-
-@inproceedings{vijayakumar2025docking,
-  author       = {Vijayakumar, Akash and Atmanand, M. A. and Somayajula, Abhilash},
-  title        = {Model Predictive Path Integral Docking of Fully Actuated Surface Vessel},
-  booktitle    = {IEEE International Symposium on Underwater Technology (UT)},
-  year         = {2025},
-  eprint       = {2501.09668},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.RO}
-}
-
-@inproceedings{minarik2024mppiuav,
-  author       = {Mina{\v{r}}{\'i}k, Michal and P{\v{e}}ni{\v{c}}ka, Robert and Von{\'a}sek, Vojt{\v{e}}ch and Saska, Martin},
-  title        = {Model Predictive Path Integral Control for Agile Unmanned Aerial Vehicles},
-  booktitle    = {2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
-  year         = {2024},
-  eprint       = {2407.09812},
-  archivePrefix = {arXiv}
-}
-
-@inproceedings{wang2025residualmppi,
-  author       = {Wang, Pengcheng and Li, Chenran and Weaver, Catherine and Kawamoto, Kenta and Tomizuka, Masayoshi and Tang, Chen and Zhan, Wei},
-  title        = {{Residual-MPPI}: Online Policy Customization for Continuous Control},
-  booktitle    = {International Conference on Learning Representations (ICLR)},
-  year         = {2025}
-}
-
-@article{mathisen2026mpmppi,
-  author       = {Mathisen, Marlon G. and Vaaler, Aksel and Egeland, Olav and Kelasidi, Eleni},
-  title        = {{MP-MPPI}: A Motion Primitive Guided Sampling-Based Optimizer for Model Predictive Control},
-  year         = {2026},
-  eprint       = {2607.06123},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.RO}
-}
-
-% ------------------------------------------------------------
-% (C) REINFORCEMENT LEARNING AND EVOLUTIONARY RL
-% ------------------------------------------------------------
-
-@article{moerland2023mbrl,
-  author       = {Moerland, Thomas M. and Broekens, Joost and Plaat, Aske and Jonker, Catholijn M.},
-  title        = {Model-Based Reinforcement Learning: A Survey},
-  journal      = {Foundations and Trends in Machine Learning},
-  volume       = {16},
-  number       = {1},
-  pages        = {1--118},
-  year         = {2023},
-  doi          = {10.1561/2200000086}
-}
-
-@article{liu2023rlunmanned,
-  author       = {Liu, Hao and Kiumarsi, Bahare and Kartal, Yusuf and Koru, Ahmet Taha and Modares, Hamidreza and Lewis, Frank L.},
-  title        = {Reinforcement Learning Applications in Unmanned Vehicle Control: A Comprehensive Overview},
-  journal      = {Unmanned Systems},
-  year         = {2023},
-  doi          = {10.1142/S2301385023310027}
-}
-
-@article{bai2023evorl,
-  author       = {Bai, Hui and Cheng, Ran and Jin, Yaochu},
-  title        = {Evolutionary Reinforcement Learning: A Survey},
-  journal      = {Intelligent Computing},
-  volume       = {2},
-  pages        = {0025},
-  year         = {2023},
-  doi          = {10.34133/icomputing.0025}
-}
-
-@article{li2025bridging,
-  author       = {Li, Pengyi and Hao, Jianye and Tang, Hongyao and Fu, Xian and Zheng, Yan and Tang, Ke},
-  title        = {Bridging Evolutionary Algorithms and Reinforcement Learning: A Comprehensive Survey on Hybrid Algorithms},
-  journal      = {IEEE Transactions on Evolutionary Computation},
-  volume       = {29},
-  pages        = {1707--1728},
-  year         = {2025},
-  doi          = {10.1109/TEVC.2024.3443913}
-}
-
-@article{zhu2023erlsurvey,
-  author       = {Zhu, Qingling and Wu, Xiaoqiang and Lin, Qiuzhen and Ma, Lijia and Li, Jianqiang and Ming, Zhong and Chen, Jianyong},
-  title        = {A Survey on Evolutionary Reinforcement Learning Algorithms},
-  journal      = {Neurocomputing},
-  volume       = {556},
-  pages        = {126628},
-  year         = {2023}
-}
-
-@article{song2024rlea,
-  author       = {Song, Yanjie and Wu, Yutong and Guo, Yangyang and Yan, Ran and Suganthan, Ponnuthurai Nagaratnam and Zhang, Yue and Pedrycz, Witold and Das, Swagatam and Mallipeddi, Rammohan and Ajani, Oladayo Solomon and Feng, Qiang},
-  title        = {Reinforcement Learning-Assisted Evolutionary Algorithm: A Survey and Research Opportunities},
-  journal      = {Swarm and Evolutionary Computation},
-  volume       = {86},
-  pages        = {101517},
-  year         = {2024}
-}
-
-@inproceedings{amundsen2024fieldrobotics,
-  author    = {Amundsen, Herman B. and Xanthidis, Marios and F{\o}re, Martin and Ohrem, Sveinung J. and Kelasidi, Eleni},
-  title     = {Aquaculture Field Robotics: Applications, Lessons Learned and Future Prospects},
-  booktitle = {IEEE ICRA Workshop on Field Robotics},
-  year      = {2024},
-  eprint    = {2404.12995},
+@inproceedings{amundsen2024aquaculture,
+  author        = {Amundsen, Herman B. and Xanthidis, Marios and F{\o}re, Martin and Ohrem, Sveinung J. and Kelasidi, Eleni},
+  title         = {Aquaculture Field Robotics: Applications, Lessons Learned and Future Prospects},
+  booktitle     = {IEEE ICRA Workshop on Field Robotics},
+  year          = {2024},
+  eprint        = {2404.12995},
   archivePrefix = {arXiv},
   primaryClass  = {cs.RO}
 }
 
-@article{amundsen2025netpen,
-  author  = {Amundsen, Herman B. and Katsidoniotaki, Eirini and F{\o}re, Martin and Kelasidi, Eleni},
-  title   = {Aquaculture Robotics: Adaptive Path Planning Through Real-Time Estimation of the Shape of Flexible Net Pens},
-  journal = {IEEE Transactions on Field Robotics},
-  volume  = {2},
-  pages   = {230--249},
-  year    = {2025},
-  doi     = {10.1109/TFR.2025.3560245}
-}
-
+% CHECK: two different versions of this existed in the old file
+% (a Springer Handbooks chapter, and a preprint submitted to Computers and
+% Electronics in Agriculture). The preprint version is kept; confirm which
+% one you actually mean.
 @misc{evjemo2025aquaculture,
   author = {Evjemo, Linn D. and Ohrem, Sveinung J. and Su, Biao and F{\o}re, Martin and Kelasidi, Eleni},
   title  = {Aquaculture Robotics -- Challenges, Opportunities and Future Prospects and the Role of Digital Twin Technology and Autonomous Solutions},
@@ -291,10 +46,45 @@
   author    = {Kelasidi, Eleni and Svendsen, Eirik},
   title     = {Robotics for Sea-Based Fish Farming},
   booktitle = {Encyclopedia of Smart Agriculture Technologies},
-  editor    = {Zhang, Q.},
+  editor    = {Zhang, Qin},
   publisher = {Springer Nature Switzerland},
+  address   = {Cham},
   year      = {2023},
   doi       = {10.1007/978-3-030-89123-7_202-1}
+}
+
+@article{haugalokken2024lowcost,
+  author  = {Haugal{\o}kken, Bent O. A. and Nissen, Oscar and Skaldeb{\o}, Martin B. and Ohrem, Sveinung J. and Kelasidi, Eleni},
+  title   = {Low-Cost Sensor Technologies for Underwater Vehicle Navigation in Aquaculture Net Pens},
+  journal = {IFAC-PapersOnLine},
+  volume  = {58},
+  number  = {20},
+  pages   = {87--94},
+  year    = {2024},
+  note    = {15th IFAC Conference on Control Applications in Marine Systems, Robotics and Vehicles (CAMS)}
+}
+
+@article{bogue2015underwater,
+  author  = {Bogue, Robert},
+  title   = {Underwater Robots: A Review of Technologies and Applications},
+  journal = {Industrial Robot: An International Journal},
+  volume  = {42},
+  number  = {3},
+  pages   = {186--191},
+  year    = {2015},
+  doi     = {10.1108/IR-01-2015-0010}
+}
+
+@inproceedings{aldhaheri2025simulators,
+  author        = {Aldhaheri, Sara and Hu, Yang and Xie, Yongchang and Wu, Peng and Kanoulas, Dimitrios and Liu, Yuanchang},
+  title         = {Underwater Robotic Simulators Review for Autonomous System Development},
+  booktitle     = {OCEANS 2025 -- Brest},
+  pages         = {1--10},
+  year          = {2025},
+  organization  = {IEEE},
+  doi           = {10.1109/OCEANS58557.2025.11104581},
+  eprint        = {2504.06245},
+  archivePrefix = {arXiv}
 }
 
 @article{hasan2024oceanic,
@@ -307,59 +97,189 @@
   doi     = {10.1109/ACCESS.2024.3380458}
 }
 
+@inproceedings{xanthidis2020navigation,
+  author        = {Xanthidis, Marios and Karapetyan, Nare and Damron, Hunter and Rahman, Sharmin and Johnson, James and O'Connell, Allison and O'Kane, Jason M. and Rekleitis, Ioannis},
+  title         = {Navigation in the Presence of Obstacles for an Agile Autonomous Underwater Vehicle},
+  booktitle     = {IEEE International Conference on Robotics and Automation (ICRA)},
+  pages         = {892--899},
+  year          = {2020},
+  doi           = {10.1109/ICRA40945.2020.9197558},
+  eprint        = {1903.11750},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+@inproceedings{xanthidis2021aquavis,
+  author        = {Xanthidis, Marios and Kalaitzakis, Michail and Karapetyan, Nare and Johnson, James and Vitzilaios, Nikolaos and O'Kane, Jason M. and Rekleitis, Ioannis},
+  title         = {{AquaVis}: A Perception-Aware Autonomous Navigation Framework for Underwater Vehicles},
+  booktitle     = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages         = {5410--5417},
+  year          = {2021},
+  doi           = {10.1109/IROS51168.2021.9636124},
+  eprint        = {2110.01646},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+@inproceedings{xanthidis2023resiplan,
+  author    = {Xanthidis, Marios and Kelasidi, Eleni and Alexis, Kostas},
+  title     = {{ResiPlan}: Closing the Planning-Acting Loop for Safe Underwater Navigation},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {3138--3145},
+  year      = {2023},
+  doi       = {10.1109/ICRA48891.2023.10160801}
+}
+
+@article{amundsen2025netpen,
+  author  = {Amundsen, Herman B. and Katsidoniotaki, Eirini and F{\o}re, Martin and Kelasidi, Eleni},
+  title   = {Aquaculture Robotics: Adaptive Path Planning Through Real-Time Estimation of the Shape of Flexible Net Pens},
+  journal = {IEEE Transactions on Field Robotics},
+  volume  = {2},
+  pages   = {230--249},
+  year    = {2025},
+  doi     = {10.1109/TFR.2025.3560245}
+}
+
+@misc{wu2025stereoadapter,
+  author        = {Wu, Zhengri and Wang, Yiran and Wen, Yu and Zhang, Zeyu and Wu, Biao and Tang, Hao},
+  title         = {{StereoAdapter}: Adapting Stereo Depth Estimation to Underwater Scenes},
+  year          = {2025},
+  eprint        = {2509.16415},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV}
+}
+
+@inproceedings{chu2025marinegym,
+  title         = {{MarineGym}: A High-Performance Reinforcement Learning Platform for Underwater Robotics},
+  author        = {Chu, Shuguang and Huang, Zebin and Li, Yutong and Lin, Mingwei and Li, Dejun and Carlucho, Ignacio and Petillot, Yvan R. and Yang, Canjun},
+  booktitle     = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages         = {17146--17153},
+  year          = {2025},
+  organization  = {IEEE},
+  eprint        = {2503.09203},
+  archivePrefix = {arXiv}
+}
+
+% ------------------------------------------------------------
+% (B) MPC, MPPI AND SAFE SAMPLING-BASED CONTROL
+% ------------------------------------------------------------
+
+@misc{honda2026pimpc,
+  author        = {Honda, Kohei},
+  title         = {Model Predictive Control via Probabilistic Inference: A Tutorial and Survey},
+  year          = {2026},
+  eprint        = {2511.08019},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  doi           = {10.48550/arXiv.2511.08019}
+}
+
+@article{kazim2024pathintegral,
+  author  = {Kazim, Muhammad and Hong, JunGee and Kim, Min-Gyeom and Kim, Kwang-Ki K.},
+  title   = {Recent Advances in Path Integral Control for Trajectory Optimization: An Overview in Theoretical and Algorithmic Perspectives},
+  journal = {Annual Reviews in Control},
+  volume  = {57},
+  pages   = {100931},
+  year    = {2024}
+}
+
+@inproceedings{ezeji2025bcmppi,
+  author        = {Ezeji, Odichimnma and Ziegltrum, Michael and Turrisi, Giulio and Belvedere, Tommaso and Modugno, Valerio},
+  title         = {{BC-MPPI}: A Probabilistic Constraint Layer for Safe Model-Predictive Path-Integral Control},
+  booktitle     = {Agents and Robots for Reliable Engineered Autonomy (AREA 2025)},
+  series        = {Communications in Computer and Information Science},
+  publisher     = {Springer},
+  year          = {2025},
+  eprint        = {2510.00272},
+  archivePrefix = {arXiv}
+}
+
+@misc{andrejev2025pimppi,
+  author        = {Andrejev, Edvin Martin and Manoharan, Amith and Unt, Karl-Eerik and Singh, Arun Kumar},
+  title         = {{$\pi$-MPPI}: A Projection-Based Model Predictive Path Integral Scheme for Smooth Optimal Control of Fixed-Wing Aerial Vehicles},
+  year          = {2025},
+  eprint        = {2504.10962},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+@article{kim2025datadriven,
+  author  = {Kim, Dong-Hwi and Kim, Moon Hwan and Kim, Jun and Baek, Hyung-Min and Choi, Young-Myung and Shin, Sung-chul and Kim, Minwoo and Kim, Yagin and Kim, Eun Soo and Lee, Seung Hwan},
+  title   = {Data-Driven Stochastic Nonlinear Model Predictive Control for 6 {DOF} Underwater Vehicle Under Unknown Disturbance and Uncertainty},
+  journal = {Ocean Engineering},
+  volume  = {318},
+  pages   = {120067},
+  year    = {2025}
+}
+
+@article{liu2024gpmpc,
+  author  = {Liu, Tao and Zhao, Jintao and Huang, Junhao},
+  title   = {A Gaussian-Process-Based Model Predictive Control Approach for Trajectory Tracking and Obstacle Avoidance in Autonomous Underwater Vehicles},
+  journal = {Journal of Marine Science and Engineering},
+  volume  = {12},
+  number  = {4},
+  pages   = {676},
+  year    = {2024},
+  doi     = {10.3390/jmse12040676}
+}
+
+@article{zhao2026diamppi,
+  author  = {Zhao, Jintao and Liu, Tao and Huang, Junhao and Fang, Zizhe and Liu, Dongye and Shen, Zijian and He, Can and Li, Zhenglin},
+  title   = {{DIA-MPPI}: A Diffusion-Inspired Control Framework for Efficient Path Optimization in Autonomous Underwater Vehicle Fleets},
+  journal = {Ocean Engineering},
+  volume  = {343},
+  pages   = {123558},
+  year    = {2026}
+}
+
 @article{zhao2025gvfmppi,
   author  = {Zhao, Jintao and Liu, Tao and Huang, Junhao},
   title   = {Enhanced Obstacle Avoidance for Autonomous Underwater Vehicles via Path Integral Control Based on Guiding Vector Field},
   journal = {ISA Transactions},
+  volume  = {166},
+  pages   = {116--125},
   year    = {2025},
   doi     = {10.1016/j.isatra.2025.07.020}
 }
 
-@article{song2023reaching,
-  title     = {Reaching the limit in autonomous racing: Optimal control versus reinforcement learning},
-  author    = {Song, Yunlong and Romero, Angel and M{\"u}ller, Matthias and Koltun, Vladlen and Scaramuzza, Davide},
-  journal   = {Science Robotics},
-  volume    = {8},
-  number    = {82},
-  pages     = {eadg1462},
-  year      = {2023},
-  doi       = {10.1126/scirobotics.adg1462},
-  publisher = {American Association for the Advancement of Science}
-}
-@article{chu2025marinegym,
-  title     = {MarineGym: A High-Performance Reinforcement Learning Platform for Underwater Robotics},
-  author    = {Chu, Shuguang and Huang, Zebin and Li, Yutong and Lin, Mingwei and Li, Dejun and Carlucho, Ignacio and Petillot, Yvan R. and Yang, Canjun},
-  journal   = {arXiv preprint arXiv:2503.09203},
-  year      = {2025},
-  doi       = {10.48550/arXiv.2503.09203},
-  publisher = {arXiv}
+@inproceedings{vijayakumar2025docking,
+  author        = {Vijayakumar, Akash and Atmanand, M. A. and Somayajula, Abhilash},
+  title         = {Model Predictive Path Integral Docking of Fully Actuated Surface Vessel},
+  booktitle     = {IEEE International Symposium on Underwater Technology (UT)},
+  year          = {2025},
+  eprint        = {2501.09668},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
 }
 
-@article{schulman2017ppo,
-  title   = {Proximal Policy Optimization Algorithms},
-  author  = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
-  journal = {arXiv preprint arXiv:1707.06347},
-  year    = {2017}
+@inproceedings{minarik2024mppiuav,
+  author        = {Mina{\v{r}}{\'i}k, Michal and P{\v{e}}ni{\v{c}}ka, Robert and Von{\'a}sek, Vojt{\v{e}}ch and Saska, Martin},
+  title         = {Model Predictive Path Integral Control for Agile Unmanned Aerial Vehicles},
+  booktitle     = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year          = {2024},
+  eprint        = {2407.09812},
+  archivePrefix = {arXiv}
 }
 
-@inproceedings{chu2025marinegym,
-  title     = {MarineGym: A High-Performance Reinforcement Learning Platform for Underwater Robotics},
-  author    = {Chu, Shuguang and Huang, Zebin and Li, Yutong and Lin, Mingwei and Li, Dejun and Carlucho, Ignacio and Petillot, Yvan R. and Yang, Canjun},
-  booktitle = {2025 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
-  pages     = {17146--17153},
-  year      = {2025},
-  organization = {IEEE}
+@inproceedings{wang2025residualmppi,
+  author    = {Wang, Pengcheng and Li, Chenran and Weaver, Catherine and Kawamoto, Kenta and Tomizuka, Masayoshi and Tang, Chen and Zhan, Wei},
+  title     = {{Residual-MPPI}: Online Policy Customization for Continuous Control},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025}
 }
 
-@article{xu2024omnidrones,
-  title   = {OmniDrones: An Efficient and Flexible Platform for Reinforcement Learning in Drone Control},
-  author  = {Xu, Botian and Gao, Feng and Yu, Chao and Zhang, Ruize and Wu, Yi and Wang, Yu},
-  journal = {IEEE Robotics and Automation Letters},
-  volume  = {9},
-  number  = {3},
-  pages   = {2838--2844},
-  year    = {2024}
+@misc{mathisen2026mpmppi,
+  author        = {Mathisen, Marlon G. and Vaaler, Aksel and Egeland, Olav and Kelasidi, Eleni},
+  title         = {{MP-MPPI}: A Motion Primitive Guided Sampling-Based Optimizer for Model Predictive Control},
+  year          = {2026},
+  eprint        = {2607.06123},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
 }
+
+% ------------------------------------------------------------
+% (C) REINFORCEMENT LEARNING AND EVOLUTIONARY RL
+% ------------------------------------------------------------
 
 @book{sutton2018reinforcement,
   title     = {Reinforcement Learning: An Introduction},
@@ -369,51 +289,568 @@
   publisher = {MIT Press}
 }
 
-@article{song2023reaching,
-  title   = {Reaching the limit in autonomous racing: Optimal control versus reinforcement learning},
-  author  = {Song, Yunlong and Romero, Angel and M{\"u}ller, Matthias and Koltun, Vladlen and Scaramuzza, Davide},
-  journal = {Science Robotics},
-  volume  = {8},
-  number  = {82},
-  pages   = {eadg1462},
-  year    = {2023}
-}
-
-
-@article{doi:10.1142/S2301385023310027,
-author = {Liu, Hao and Kiumarsi, Bahare and Kartal, Yusuf and Taha Koru, Ahmet and Modares, Hamidreza and Lewis, Frank L.},
-title = {Reinforcement Learning Applications in Unmanned Vehicle Control: A Comprehensive Overview},
-journal = {Unmanned Systems},
-volume = {11},
-number = {01},
-pages = {17-26},
-year = {2023},
-doi = {10.1142/S2301385023310027},
-
-URL = {https://doi.org/10.1142/S2301385023310027},
-eprint = {https://doi.org/10.1142/S2301385023310027},
-abstract = { This paper briefly reviews the dynamics and the control architectures of unmanned vehicles; reinforcement learning (RL) in optimal control theory; and RL-based applications in unmanned vehicles. Nonlinearities and uncertainties in the dynamics of unmanned vehicles (e.g. aerial, underwater, and tailsitter vehicles) pose critical challenges to their control systems. Solving Hamilton–Jacobi–Bellman (HJB) equations to find optimal controllers becomes difficult in the presence of nonlinearities, uncertainties, and actuator faults. Therefore, RL-based approaches are widely used in unmanned vehicle systems to solve the HJB equations. To this end, they learn the optimal solutions by using online data measured along the system trajectories. This approach is very practical in partially or completely model-free optimal control design and optimal fault-tolerant control design for unmanned vehicle systems. }
+@misc{schulman2017ppo,
+  title         = {Proximal Policy Optimization Algorithms},
+  author        = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
+  year          = {2017},
+  eprint        = {1707.06347},
+  archivePrefix = {arXiv}
 }
 
 @inproceedings{haarnoja2018soft,
   title     = {Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor},
   author    = {Haarnoja, Tuomas and Zhou, Aurick and Abbeel, Pieter and Levine, Sergey},
-  booktitle = {Proceedings of the 35th International Conference on Machine Learning},
+  booktitle = {Proceedings of the 35th International Conference on Machine Learning (ICML)},
   series    = {Proceedings of Machine Learning Research},
   volume    = {80},
   pages     = {1861--1870},
-  editor    = {Dy, Jennifer and Krause, Andreas},
   publisher = {PMLR},
-  year      = {2018},
-  url       = {https://proceedings.mlr.press/v80/haarnoja18b.html}
+  year      = {2018}
+}
+
+@article{moerland2023mbrl,
+  author  = {Moerland, Thomas M. and Broekens, Joost and Plaat, Aske and Jonker, Catholijn M.},
+  title   = {Model-Based Reinforcement Learning: A Survey},
+  journal = {Foundations and Trends in Machine Learning},
+  volume  = {16},
+  number  = {1},
+  pages   = {1--118},
+  year    = {2023},
+  doi     = {10.1561/2200000086}
+}
+
+@article{liu2023rlunmanned,
+  author  = {Liu, Hao and Kiumarsi, Bahare and Kartal, Yusuf and Koru, Ahmet Taha and Modares, Hamidreza and Lewis, Frank L.},
+  title   = {Reinforcement Learning Applications in Unmanned Vehicle Control: A Comprehensive Overview},
+  journal = {Unmanned Systems},
+  volume  = {11},
+  number  = {1},
+  pages   = {17--26},
+  year    = {2023},
+  doi     = {10.1142/S2301385023310027}
+}
+
+@article{bai2023evorl,
+  author  = {Bai, Hui and Cheng, Ran and Jin, Yaochu},
+  title   = {Evolutionary Reinforcement Learning: A Survey},
+  journal = {Intelligent Computing},
+  volume  = {2},
+  pages   = {0025},
+  year    = {2023},
+  doi     = {10.34133/icomputing.0025}
+}
+
+@article{li2025bridging,
+  author  = {Li, Pengyi and Hao, Jianye and Tang, Hongyao and Fu, Xian and Zheng, Yan and Tang, Ke},
+  title   = {Bridging Evolutionary Algorithms and Reinforcement Learning: A Comprehensive Survey on Hybrid Algorithms},
+  journal = {IEEE Transactions on Evolutionary Computation},
+  volume  = {29},
+  pages   = {1707--1728},
+  year    = {2025},
+  doi     = {10.1109/TEVC.2024.3443913}
+}
+
+@article{zhu2023erlsurvey,
+  author  = {Zhu, Qingling and Wu, Xiaoqiang and Lin, Qiuzhen and Ma, Lijia and Li, Jianqiang and Ming, Zhong and Chen, Jianyong},
+  title   = {A Survey on Evolutionary Reinforcement Learning Algorithms},
+  journal = {Neurocomputing},
+  volume  = {556},
+  pages   = {126628},
+  year    = {2023}
+}
+
+@article{song2024rlea,
+  author  = {Song, Yanjie and Wu, Yutong and Guo, Yangyang and Yan, Ran and Suganthan, Ponnuthurai Nagaratnam and Zhang, Yue and Pedrycz, Witold and Das, Swagatam and Mallipeddi, Rammohan and Ajani, Oladayo Solomon and Feng, Qiang},
+  title   = {Reinforcement Learning-Assisted Evolutionary Algorithm: A Survey and Research Opportunities},
+  journal = {Swarm and Evolutionary Computation},
+  volume  = {86},
+  pages   = {101517},
+  year    = {2024}
+}
+
+@article{song2023reaching,
+  title     = {Reaching the Limit in Autonomous Racing: Optimal Control versus Reinforcement Learning},
+  author    = {Song, Yunlong and Romero, Angel and M{\"u}ller, Matthias and Koltun, Vladlen and Scaramuzza, Davide},
+  journal   = {Science Robotics},
+  volume    = {8},
+  number    = {82},
+  pages     = {eadg1462},
+  year      = {2023},
+  doi       = {10.1126/scirobotics.adg1462},
+  publisher = {American Association for the Advancement of Science}
+}
+
+@article{xu2024omnidrones,
+  title   = {{OmniDrones}: An Efficient and Flexible Platform for Reinforcement Learning in Drone Control},
+  author  = {Xu, Botian and Gao, Feng and Yu, Chao and Zhang, Ruize and Wu, Yi and Wang, Yu},
+  journal = {IEEE Robotics and Automation Letters},
+  volume  = {9},
+  number  = {3},
+  pages   = {2838--2844},
+  year    = {2024}
+}
+
+@misc{weng2018bandit,
+  title        = {A (Long) Peek into Reinforcement Learning},
+  author       = {Weng, Lilian},
+  howpublished = {\url{https://lilianweng.github.io/posts/2018-02-19-rl-overview/}},
+  year         = {2018},
+  note         = {Blog post}
+}
+
+@inproceedings{kulkarni2024dce,
+  author        = {Kulkarni, Mihir and Alexis, Kostas},
+  title         = {Reinforcement Learning for Collision-free Flight Exploiting Deep Collision Encoding},
+  booktitle     = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year          = {2024},
+  eprint        = {2402.03947},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% ------------------------------------------------------------
+% (D) IMAGE REPRESENTATIONS FOR RL  (related-work section)
+% ------------------------------------------------------------
+
+% ---------------------------------------------------------------------
+% 1. Why compressed / low-dimensional representations
+% ---------------------------------------------------------------------
+@article{bengio2013representation,
+  title   = {Representation Learning: A Review and New Perspectives},
+  author  = {Bengio, Yoshua and Courville, Aaron and Vincent, Pascal},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume  = {35},
+  number  = {8},
+  pages   = {1798--1828},
+  year    = {2013},
+  doi     = {10.1109/TPAMI.2013.50}
+}
+
+@article{lesort2018state,
+  title   = {State Representation Learning for Control: An Overview},
+  author  = {Lesort, Timoth{\'e}e and D{\'\i}az-Rodr{\'\i}guez, Natalia and Goudou, Jean-Fran{\c{c}}ois and Filliat, David},
+  journal = {Neural Networks},
+  volume  = {108},
+  pages   = {379--392},
+  year    = {2018},
+  doi     = {10.1016/j.neunet.2018.07.006}
+}
+
+@inproceedings{raffin2019decoupling,
+  title     = {Decoupling Feature Extraction from Policy Learning: Assessing Benefits of State Representation Learning in Goal Based Robotics},
+  author    = {Raffin, Antonin and Hill, Ashley and Traor{\'e}, Ren{\'e} and Lesort, Timoth{\'e}e and D{\'\i}az-Rodr{\'\i}guez, Natalia and Filliat, David},
+  booktitle = {ICLR Workshop on Structure \& Priors in Reinforcement Learning},
+  year      = {2019},
+  eprint    = {1901.08651},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------------
+% 2. CNN encoders (end-to-end, trained by the RL / task loss)
+% ---------------------------------------------------------------------
+@article{lecun1998gradient,
+  title   = {Gradient-Based Learning Applied to Document Recognition},
+  author  = {LeCun, Yann and Bottou, L{\'e}on and Bengio, Yoshua and Haffner, Patrick},
+  journal = {Proceedings of the IEEE},
+  volume  = {86},
+  number  = {11},
+  pages   = {2278--2324},
+  year    = {1998},
+  doi     = {10.1109/5.726791}
+}
+
+@article{mnih2015human,
+  title   = {Human-Level Control through Deep Reinforcement Learning},
+  author  = {Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Rusu, Andrei A. and Veness, Joel and Bellemare, Marc G. and Graves, Alex and Riedmiller, Martin and Fidjeland, Andreas K. and Ostrovski, Georg and Petersen, Stig and Beattie, Charles and Sadik, Amir and Antonoglou, Ioannis and King, Helen and Kumaran, Dharshan and Wierstra, Daan and Legg, Shane and Hassabis, Demis},
+  journal = {Nature},
+  volume  = {518},
+  number  = {7540},
+  pages   = {529--533},
+  year    = {2015},
+  doi     = {10.1038/nature14236}
+}
+
+@article{levine2016end,
+  title   = {End-to-End Training of Deep Visuomotor Policies},
+  author  = {Levine, Sergey and Finn, Chelsea and Darrell, Trevor and Abbeel, Pieter},
+  journal = {Journal of Machine Learning Research},
+  volume  = {17},
+  number  = {39},
+  pages   = {1--40},
+  year    = {2016}
+}
+
+@inproceedings{zhu2017target,
+  title     = {Target-Driven Visual Navigation in Indoor Scenes Using Deep Reinforcement Learning},
+  author    = {Zhu, Yuke and Mottaghi, Roozbeh and Kolve, Eric and Lim, Joseph J. and Gupta, Abhinav and Fei-Fei, Li and Farhadi, Ali},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {3357--3364},
+  year      = {2017}
+}
+
+@article{loquercio2021learning,
+  title   = {Learning High-Speed Flight in the Wild},
+  author  = {Loquercio, Antonio and Kaufmann, Elia and Ranftl, Ren{\'e} and M{\"u}ller, Matthias and Koltun, Vladlen and Scaramuzza, Davide},
+  journal = {Science Robotics},
+  volume  = {6},
+  number  = {59},
+  pages   = {eabg5810},
+  year    = {2021},
+  doi     = {10.1126/scirobotics.abg5810}
+}
+
+% ---------------------------------------------------------------------
+% 3. Autoencoders (unsupervised, reconstruction-trained encoders)
+% ---------------------------------------------------------------------
+@article{hinton2006reducing,
+  title   = {Reducing the Dimensionality of Data with Neural Networks},
+  author  = {Hinton, Geoffrey E. and Salakhutdinov, Ruslan R.},
+  journal = {Science},
+  volume  = {313},
+  number  = {5786},
+  pages   = {504--507},
+  year    = {2006},
+  doi     = {10.1126/science.1127647}
+}
+
+@inproceedings{masci2011stacked,
+  title     = {Stacked Convolutional Auto-Encoders for Hierarchical Feature Extraction},
+  author    = {Masci, Jonathan and Meier, Ueli and Cire{\c{s}}an, Dan and Schmidhuber, J{\"u}rgen},
+  booktitle = {Artificial Neural Networks and Machine Learning -- ICANN 2011},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {6791},
+  pages     = {52--59},
+  publisher = {Springer},
+  year      = {2011},
+  doi       = {10.1007/978-3-642-21735-7_7}
+}
+
+@inproceedings{lange2010deep,
+  title     = {Deep Auto-Encoder Neural Networks in Reinforcement Learning},
+  author    = {Lange, Sascha and Riedmiller, Martin},
+  booktitle = {International Joint Conference on Neural Networks (IJCNN)},
+  year      = {2010}
+}
+
+@inproceedings{finn2016deep,
+  title     = {Deep Spatial Autoencoders for Visuomotor Learning},
+  author    = {Finn, Chelsea and Tan, Xin Yu and Duan, Yan and Darrell, Trevor and Levine, Sergey and Abbeel, Pieter},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2016},
+  eprint    = {1509.06113},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{yarats2021improving,
+  title     = {Improving Sample Efficiency in Model-Free Reinforcement Learning from Images},
+  author    = {Yarats, Denis and Zhang, Amy and Kostrikov, Ilya and Amos, Brandon and Pineau, Joelle and Fergus, Rob},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {35},
+  year      = {2021},
+  doi       = {10.1609/aaai.v35i12.17276}
+}
+
+% ---------------------------------------------------------------------
+% 4. Variational autoencoders and their use in RL / navigation
+% ---------------------------------------------------------------------
+@inproceedings{kingma2014auto,
+  title     = {Auto-Encoding Variational {B}ayes},
+  author    = {Kingma, Diederik P. and Welling, Max},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2014},
+  eprint    = {1312.6114},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{rezende2014stochastic,
+  title     = {Stochastic Backpropagation and Approximate Inference in Deep Generative Models},
+  author    = {Rezende, Danilo Jimenez and Mohamed, Shakir and Wierstra, Daan},
+  booktitle = {Proceedings of the 31st International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {32},
+  pages     = {1278--1286},
+  year      = {2014}
+}
+
+@misc{doersch2016tutorial,
+  title  = {Tutorial on Variational Autoencoders},
+  author = {Doersch, Carl},
+  year   = {2016},
+  eprint = {1606.05908},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{higgins2017beta,
+  title     = {beta-{VAE}: Learning Basic Visual Concepts with a Constrained Variational Framework},
+  author    = {Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017}
+}
+
+@inproceedings{higgins2017darla,
+  title     = {{DARLA}: Improving Zero-Shot Transfer in Reinforcement Learning},
+  author    = {Higgins, Irina and Pal, Arka and Rusu, Andrei and Matthey, Loic and Burgess, Christopher and Pritzel, Alexander and Botvinick, Matthew and Blundell, Charles and Lerchner, Alexander},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {70},
+  year      = {2017}
+}
+
+@inproceedings{ha2018recurrent,
+  title     = {Recurrent World Models Facilitate Policy Evolution},
+  author    = {Ha, David and Schmidhuber, J{\"u}rgen},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {31},
+  year      = {2018}
+}
+
+@inproceedings{kendall2019learning,
+  title     = {Learning to Drive in a Day},
+  author    = {Kendall, Alex and Hawke, Jeffrey and Janz, David and Mazur, Przemyslaw and Reda, Daniele and Allen, John-Mark and Lam, Vinh-Dieu and Bewley, Alex and Shah, Amar},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2019},
+  eprint    = {1807.00412},
+  archivePrefix = {arXiv}
+}
+
+@article{hoeller2021learning,
+  title   = {Learning a State Representation and Navigation in Cluttered and Dynamic Environments},
+  author  = {Hoeller, David and Wellhausen, Lorenz and Farshidian, Farbod and Hutter, Marco},
+  journal = {IEEE Robotics and Automation Letters},
+  year    = {2021},
+  doi     = {10.1109/LRA.2021.3068639}
+}
+
+% ---------------------------------------------------------------------
+% 5. Task-driven VAE variant: Deep Collision Encoder (DCE)
+% ---------------------------------------------------------------------
+@inproceedings{kulkarni2023task,
+  title     = {Task-Driven Compression for Collision Encoding Based on Depth Images},
+  author    = {Kulkarni, Mihir and Alexis, Kostas},
+  booktitle = {Advances in Visual Computing -- ISVC 2023},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {14362},
+  pages     = {259--273},
+  publisher = {Springer},
+  year      = {2023},
+  eprint    = {2309.05289},
+  archivePrefix = {arXiv}
 }
 
 
-@article{weng2018bandit,
-  title   = "A (Long) Peek into Reinforcement Learning",
-  author  = "Weng, Lilian",
-  journal = "lilianweng.github.io",
-  year    = "2018",
-  url     = "https://lilianweng.github.io/posts/2018-02-19-rl-overview/"
+% ---------------------------------------------------------------------
+% 6. Pretrained / foundation-model visual representations
+% ---------------------------------------------------------------------
+@article{oquab2024dinov2,
+  title   = {{DINOv2}: Learning Robust Visual Features without Supervision},
+  author  = {Oquab, Maxime and Darcet, Timoth{\'e}e and Moutakanni, Th{\'e}o and Vo, Huy and Szafraniec, Marc and Khalidov, Vasil and Fernandez, Pierre and Haziza, Daniel and Massa, Francisco and El-Nouby, Alaaeldin and Assran, Mahmoud and Ballas, Nicolas and Galuba, Wojciech and Howes, Russell and Huang, Po-Yao and Li, Shang-Wen and Misra, Ishan and Rabbat, Michael and Sharma, Vasu and Synnaeve, Gabriel and Xu, Hu and Jegou, Herv{\'e} and Mairal, Julien and Labatut, Patrick and Joulin, Armand and Bojanowski, Piotr},
+  journal = {Transactions on Machine Learning Research},
+  year    = {2024}
 }
 
+@inproceedings{nair2022r3m,
+  title     = {{R3M}: A Universal Visual Representation for Robot Manipulation},
+  author    = {Nair, Suraj and Rajeswaran, Aravind and Kumar, Vikash and Finn, Chelsea and Gupta, Abhinav},
+  booktitle = {Proceedings of the 6th Conference on Robot Learning (CoRL)},
+  series    = {PMLR},
+  volume    = {205},
+  pages     = {892--909},
+  year      = {2023}
+}
+
+% =====================================================================
+% PART B: Application-level papers close to the anchor papers
+% (taken from the DCE and DeFM reference lists, then checked individually)
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% B1. Compressed depth latents for navigation (DCE lineage + ETH work)
+% ---------------------------------------------------------------------
+@inproceedings{nguyen2022motion,
+  title     = {Motion Primitives-based Navigation Planning using Deep Collision Prediction},
+  author    = {Nguyen, Huan and Fyhn, Sondre Holm and De Petris, Paolo and Alexis, Kostas},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {9660--9667},
+  year      = {2022},
+  doi       = {10.1109/ICRA46639.2022.9812231}
+}
+
+@inproceedings{kulkarni2023semantically,
+  title     = {Semantically-Enhanced Deep Collision Prediction for Autonomous Navigation Using Aerial Robots},
+  author    = {Kulkarni, Mihir and Nguyen, Huan and Alexis, Kostas},
+  booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2023},
+  doi       = {10.1109/IROS55552.2023.10342297}
+}
+
+@inproceedings{dugas2021navrep,
+  title     = {{NavRep}: Unsupervised Representations for Reinforcement Learning of Robot Navigation in Dynamic Human Environments},
+  author    = {Dugas, Daniel and Nieto, Juan and Siegwart, Roland and Chung, Jen Jen},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2021},
+  eprint    = {2012.04406},
+  archivePrefix = {arXiv}
+}
+
+@article{yang2026spatially,
+  title   = {Spatially-Enhanced Recurrent Memory for Long-Range Mapless Navigation via End-to-End Reinforcement Learning},
+  author  = {Yang, Fan and Frivik, Per and Hoeller, David and Wang, Chen and Cadena, Cesar and Hutter, Marco},
+  journal = {The International Journal of Robotics Research},
+  volume  = {45},
+  year    = {2026},
+  eprint  = {2506.05997},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------------
+% B2. End-to-end CNN depth encoders in navigation / perceptive locomotion
+% ---------------------------------------------------------------------
+@article{loquercio2018dronet,
+  title   = {{DroNet}: Learning to Fly by Driving},
+  author  = {Loquercio, Antonio and Maqueda, Ana I. and del-Blanco, Carlos R. and Scaramuzza, Davide},
+  journal = {IEEE Robotics and Automation Letters},
+  volume  = {3},
+  number  = {2},
+  pages   = {1088--1095},
+  year    = {2018},
+  doi     = {10.1109/LRA.2018.2795643}
+}
+
+@inproceedings{wijmans2020ddppo,
+  title     = {{DD-PPO}: Learning Near-Perfect PointGoal Navigators from 2.5 Billion Frames},
+  author    = {Wijmans, Erik and Kadian, Abhishek and Morcos, Ari and Lee, Stefan and Essa, Irfan and Parikh, Devi and Savva, Manolis and Batra, Dhruv},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020}
+}
+
+@article{miki2022learning,
+  title   = {Learning Robust Perceptive Locomotion for Quadrupedal Robots in the Wild},
+  author  = {Miki, Takahiro and Lee, Joonho and Hwangbo, Jemin and Wellhausen, Lorenz and Koltun, Vladlen and Hutter, Marco},
+  journal = {Science Robotics},
+  volume  = {7},
+  number  = {62},
+  pages   = {eabk2822},
+  year    = {2022},
+  doi     = {10.1126/scirobotics.abk2822}
+}
+
+@inproceedings{agarwal2023legged,
+  title     = {Legged Locomotion in Challenging Terrains using Egocentric Vision},
+  author    = {Agarwal, Ananye and Kumar, Ashish and Malik, Jitendra and Pathak, Deepak},
+  booktitle = {Proceedings of the 6th Conference on Robot Learning (CoRL)},
+  series    = {PMLR},
+  volume    = {205},
+  pages     = {403--415},
+  year      = {2023}
+}
+
+@article{lee2024learning,
+  title   = {Learning Robust Autonomous Navigation and Locomotion for Wheeled-Legged Robots},
+  author  = {Lee, Joonho and Bjelonic, Marko and Reske, Alexander and Wellhausen, Lorenz and Miki, Takahiro and Hutter, Marco},
+  journal = {Science Robotics},
+  volume  = {9},
+  number  = {89},
+  pages   = {eadi9641},
+  year    = {2024},
+  doi     = {10.1126/scirobotics.adi9641}
+}
+
+% ---------------------------------------------------------------------
+% B3. Pretrained visual representations for control (bridge to DeFM)
+% ---------------------------------------------------------------------
+@inproceedings{parisi2022unsurprising,
+  title     = {The Unsurprising Effectiveness of Pre-Trained Vision Models for Control},
+  author    = {Parisi, Simone and Rajeswaran, Aravind and Purushwalkam, Senthil and Gupta, Abhinav},
+  booktitle = {Proceedings of the 39th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {162},
+  pages     = {17359--17371},
+  year      = {2022}
+}
+
+@misc{xiao2022masked,
+  title  = {Masked Visual Pre-training for Motor Control},
+  author = {Xiao, Tete and Radosavovic, Ilija and Darrell, Trevor and Malik, Jitendra},
+  year   = {2022},
+  eprint = {2203.06173},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{majumdar2023where,
+  title     = {Where Are We in the Search for an Artificial Visual Cortex for Embodied Intelligence?},
+  author    = {Majumdar, Arjun and Yadav, Karmesh and Arnaud, Sergio and Ma, Yecheng Jason and Chen, Claire and Silwal, Sneha and Jain, Aryan and Berges, Vincent-Pierre and Abbeel, Pieter and Malik, Jitendra and Batra, Dhruv and Lin, Yixin and Maksymets, Oleksandr and Rajeswaran, Aravind and Meier, Franziska},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2023}
+}
+
+@inproceedings{hansen2023pretraining,
+  title     = {On Pre-Training for Visuo-Motor Control: Revisiting a Learning-from-Scratch Baseline},
+  author    = {Hansen, Nicklas and Yuan, Zhecheng and Ze, Yanjie and Mu, Tongzhou and Rajeswaran, Aravind and Su, Hao and Xu, Huazhe and Wang, Xiaolong},
+  booktitle = {Proceedings of the 40th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {202},
+  pages     = {12511--12526},
+  year      = {2023}
+}
+
+@inproceedings{shang2025theia,
+  title     = {Theia: Distilling Diverse Vision Foundation Models for Robot Learning},
+  author    = {Shang, Jinghuan and others},
+  booktitle = {Conference on Robot Learning (CoRL)},
+  series    = {PMLR},
+  volume    = {270},
+  year      = {2025}
+}
+
+% ---------------------------------------------------------------------
+% B4. Underwater context
+% ---------------------------------------------------------------------
+@inproceedings{akkaynak2019seathru,
+  title     = {Sea-Thru: A Method for Removing Water From Underwater Images},
+  author    = {Akkaynak, Derya and Treibitz, Tali},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {1682--1691},
+  year      = {2019},
+  doi       = {10.1109/CVPR.2019.00178}
+}
+
+@article{havenstrom2021deep,
+  title   = {Deep Reinforcement Learning Controller for {3D} Path Following and Collision Avoidance by Autonomous Underwater Vehicles},
+  author  = {Havenstr{\o}m, Simen Theie and Rasheed, Adil and San, Omer},
+  journal = {Frontiers in Robotics and AI},
+  year    = {2021},
+  note    = {Add volume/article number from the publisher page}
+}
+
+@inproceedings{yang2022monocular,
+  title     = {Monocular Camera and Single-Beam Sonar-Based Underwater Collision-Free Navigation with Domain Randomization},
+  author    = {Yang, Pengzhi and Liu, Haowen and Roznere, Monika and Quattrini Li, Alberto},
+  booktitle = {Robotics Research (ISRR 2022)},
+  publisher = {Springer},
+  year      = {2023},
+  doi       = {10.1007/978-3-031-25555-7_7}
+}
+
+@misc{singh2025ariel,
+  title  = {Ariel Explores: Vision-based Underwater Exploration and Inspection via Generalist Drone-Level Autonomy},
+  author = {Singh, Mohit and Dharmadhikari, Mihir and Alexis, Kostas},
+  year   = {2025},
+  eprint = {2507.10003},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{potokar2022holoocean,
+  title     = {{HoloOcean}: An Underwater Robotics Simulator},
+  author    = {Potokar, Easton and Ashford, Spencer and Kaess, Michael and Mangelson, Joshua G.},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  pages     = {3040--3046},
+  year      = {2022}
+}
+
+@misc{patel2026defm,
+  title  = {{DeFM}: Learning Foundation Representations from Depth for Robotics},
+  author = {Patel, Manthan and Frey, Jonas and Mittal, Mayank and Yang, Fan and Hansson, Alexander and Bar, Amir and Cadena, Cesar and Hutter, Marco},
+  year   = {2026},
+  eprint = {2601.18923},
+  archivePrefix = {arXiv}
+}
