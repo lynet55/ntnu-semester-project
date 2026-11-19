@@ -102,6 +102,16 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 
 \subsection{Recurrent policies}
 \label{sec:recurrent}
+In a POMDP the state of the state of the environment is only partially observable to the agent. Thus, an agent navigating an unknown environment should have some notion of memory of the previously seen observations. RNNs have seen great success in a variety of sequential problems such as speech recognition language modelling and translations. In robotics, variations of RNNs have been increasingly adopted for adding memory capabilities to polices for navigation. 
+
+RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state.
+
+An unfortunate downside of the canonical RNN, is that it struggles to produce good predicitons when the gap between current observations and previoulsy seen information grows too large. The problem was famously addressed by Hochreiter and Scmidhuber, with the introduction of Long Short Term Memory networks (LSTMs) and later refined by the work of many others. 
+
+Another popular varaition of the LSTM is a "Gated Recurrent Unit" (GRU) introduced by \cite{}.  It combies the forget and input gate into a single "update gate". 
+
+
+
 % TODO: why memory (POMDP), LSTM/GRU equations. Moved from Related Work:
 \begin{itemize}
   \item A recurrent network carries a hidden state $\mathbf{h}_t$ that summarises past
