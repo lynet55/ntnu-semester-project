@@ -28,25 +28,11 @@ Furthermore the challenges related to visibility in underwater environments have
 \cite{raffin2019decoupling} Argues that using such low dimensional representations helps overcome the curse of dimensionality, and can help improve the performance and speed of policy learning algorithms such as RL. 
 
 \paragraph{End-to-end encoders} 
-Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. They have furthermore been successfully applied to control of unmanned vehicles. The idea of training a CNN together with the RL loss was first shown to work for higher dimensional problems with the introduction of the Deep Q-Network (DQN), showing human-level control in the computer game Atari \textcite{mnih2015human}. In the aftermath of this, CNNs have been successfully applied to drone navigation \textcite{wijmans2020ddppo} similarly learning the weights of the CNN together with the weights of the control policy showing that end-to-end visual navigation. Notably \textcite{wijmans2020ddppo} states that the success of this comes at the cost of high sample inefficiency, and claims that reward is a poor teacher for vision. To address the issue of data inefficiency, the so called "student-teacher" approach has been adopted \parencite{agarwal2023legged, loquercio2021learning}. A policy is trained with access to full state information (Privileged Information) to navigate to the desired goal, this policy is called the teacher. Then a second policy is given access to the depth image and true sensor input, and is then trained to make the same action predictions as the privileged teacher, thus distilling a student policy.
+They have furthermore been successfully applied to control of unmanned vehicles. The idea of training a CNN together with the RL loss was first shown to work for higher dimensional problems with the introduction of the Deep Q-Network (DQN), showing human-level control in the computer game Atari \textcite{mnih2015human}. In the aftermath of this, CNNs have been successfully applied to drone navigation \textcite{wijmans2020ddppo} similarly learning the weights of the CNN together with the weights of the control policy showing that end-to-end visual navigation. Notably \textcite{wijmans2020ddppo} states that the success of this comes at the cost of high sample inefficiency, and claims that reward is a poor teacher for vision. To address the issue of data inefficiency, the so called "student-teacher" approach has been adopted \parencite{agarwal2023legged, loquercio2021learning}. A policy is trained with access to full state information (Privileged Information) to navigate to the desired goal, this policy is called the teacher. Then a second policy is given access to the depth image and true sensor input, and is then trained to make the same action predictions as the privileged teacher, thus distilling a student policy.
 
 \paragraph{Encoders trained on reconstruction}
-Another common way to compress data is with so called Auto Encoders (AE), which produce a compressed latent representation of the original input data \textcite{hinton2006reducing}. AEs work by defining two neural networks, one called an encoder and a decoder. The Encoder is constructed in a way so that the input dimensions are of the input data, while the output dimension is set to the desired compression dimension. The compressed representation is called a latent representation, and commonly denoted $z$. The decoder is on the other hand designed oppositely, so that the input dimension is matching the latent and the output dimension map back into the original input data. This is commonly visualized as a bottleneck as in figure \ref{fig:vae}. The Encoder and Decoder is jointly trained on a dataset passed through both networks sequentially, and are penalized with a loss that penalizes the difference between the input data and the reconstructed data. The latent representation, the encoder maps to will then retain most of the information in the original data while the dimensions are reduced. For images, convolutional encoders and decoders preserve spatial structure and shares their weights across images improving spatial understanding \cite{masci2011stacked}. Variational Auto Encoders (VAEs) are a common extention of AE, and are designed to keep latent representations resembling a normal distribution \cite{kingma2014auto}. A key distinction from other methods is that AEs and VAEs are only trained to reconstruct the input itself, and can therefore be trained offline on available depth data, thus reducing reinforcement learning to policy optimization over the latent state by only using the encoder during . VAEs are now seen in real world scenarios of robotic navigation are common and can be seen in work on autonomous cars using camera and inertial measurements for generating speed and steering commands, or quadrupeds navigating cluttered and dynamic environments by encoding depth images only \cite{kendall2019learning,hoeller2021learning} .
+A key distinction from other methods is that AEs and VAEs are only trained to reconstruct the input itself, and can therefore be trained offline on available depth data, thus reducing reinforcement learning to policy optimization over the latent state by only using the encoder during . VAEs are now seen in real world scenarios of robotic navigation are common and can be seen in work on autonomous cars using camera and inertial measurements for generating speed and steering commands, or quadrupeds navigating cluttered and dynamic environments by encoding depth images only \cite{kendall2019learning,hoeller2021learning} .
 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1.0\linewidth]{figures/vae.pdf}
-    \caption{Canonical Variational Auto Encoder (VAE)}
-    \label{fig:placeholder}
-\end{figure}
-
-\paragraph{Task-driven compression}
-Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work using modifications of the traditional VAE by incorporating task specific compression. ORACLE predicts collision probabilities used by a motion planner, by using a set of predetermined action sequences (motion primitives) directly from an image and the robots velocity estimates\cite{nguyen2022motion}. Later, seVAE introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss ignoring the contributions of invalid pixels which are missing depth information \cite{kulkarni2023semantically}.  Another idea presented by the same authors for encoding depth images for collision free navigation, is by training the VAE on so called collision images. These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimaly combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right. In a follow up paper, this method has even been combined with reinforcement learning for learning a policy capable of collision avoidance.
-
-Maybe mention the method from the locomotion paper. 
-
-\paragraph{Pretrained and foundation encoders}
 In this type of task VAE only need to estimate the rough shape of the obstacle\textcite{hoeller2021learning} .
 The VAE filters out the inputs high frequency content and thus filters out noise in the images, which is important because depth derived from real images can be noisy \cite{hoeller2021learning}.
 
@@ -55,13 +41,20 @@ The VAE filters out the inputs high frequency content and thus filters out noise
 To bridge the reality gap, the VAE is trained with images from simulation and the real robot. We define the auto encoder's loss as the reconstruction error between the decoded image and a filtered version of the input image. The filtering operations are inspired by the IP-Basic algorithm [36], which performs simple depth completion. We extend this method to inflate objects and remove their level of detail to extract object bounds rather than exact shapes. As a result, we can mask the main shortcomings of real depth images compared to simulated ones: Missing information, loss of detail, and depth noise. The filter first performs a dilation and hole closing operation. This removes the noise in the planes and along the edges of objects. Next, a dilation with a large kernel is performed on the image but only applied to the remaining black pixels. Finally, a bilateral filter is applied to the resulting image to smooth out shapes. These steps are depicted in Fig. 3, which shows how missing information is recovered and the level of detail of objects reduced. The filtering operations could also be performed as a preprocessing step before passing the image to the VAE. However, this would require running the filtering operations at inference time, which would increase computational load on our mobile hardware. With our method, filtering is implicitly integrated into the VAE forward-pass and therefore incurs no additional computational cost. B. Fusing the sequence of i
 
 
+
+\paragraph{Task-driven compression}
+Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work using modifications of the traditional VAE by incorporating task specific compression. ORACLE predicts collision probabilities used by a motion planner, by using a set of predetermined action sequences (motion primitives) directly from an image and the robots velocity estimates\cite{nguyen2022motion}. Later, seVAE introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss ignoring the contributions of invalid pixels which are missing depth information \cite{kulkarni2023semantically}.  Another idea presented by the same authors for encoding depth images for collision free navigation, is by training the VAE on so called collision images. In a follow up paper, this method has even been combined with reinforcement learning for learning a policy capable of collision avoidance.
+
+Maybe mention the method from the locomotion paper. 
+
+\paragraph{Pretrained and foundation encoders}
+% TODO: skeleton (DeFM, DINOv2, R3M, VC-1, domain-gap critique)
+
+
+
 \subsection{Spatial representation and memory}
 \paragraph{Spatial representation}
 \begin{itemize}
-  \item Problem: a forward-looking camera/sonar only observes the present;
-        obstacles leave the field of view, so navigation is partially
-        observable and needs a representation of space beyond the current
-        frame.
   \item Classical approach: explicit maps built from range data.
         Occupancy grids \parencite{elfes1989occupancy}, octree maps
         \parencite{hornung2013octomap}, and distance fields for planning in
@@ -72,8 +65,7 @@ To bridge the reality gap, the VAE is trained with images from simulation and th
   \item Recurrent memory: LSTM \parencite{hochreiter1997long} replaces frame
         stacking in deep RL \parencite{hausknecht2015deep}; LSTM agents
         navigate 3D mazes from pixels \parencite{mirowski2017learning}.
-  \item GRU \parencite{cho2014learning}: fewer gates, comparable to LSTM
-        \parencite{chung2014empirical}. Common in recent robot RL:
+  \item Common in recent robot RL:
         DCE policy uses a 64-unit GRU \parencite{kulkarni2024dce};
         recurrent belief encoders \parencite{miki2022learning};
         navigation among moving obstacles \parencite{hoeller2021learning}.
