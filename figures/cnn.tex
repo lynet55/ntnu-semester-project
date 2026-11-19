@@ -1,0 +1,51 @@
+% !TEX root = ../main.tex
+% Convolutional encoder: depth image -> conv/stride blocks -> flatten -> linear -> feature vector
+% Requires: \usepackage{tikz}, \usetikzlibrary{arrows.meta}
+\begin{tikzpicture}[
+    line width=0.8pt,
+    >={Latex[length=2mm]},
+    lbl/.style={font=\footnotesize, align=center},
+    fm/.style={draw, fill=blue!12, minimum width=#1},
+]
+  % Feature-map stack: \stack{x}{y}{width}{height}{depth}{fill}
+  \newcommand{\stack}[6]{%
+    \foreach \i in {1,...,#5} {%
+      \draw[fill=#6] ({#1+0.12*\i},{#2+0.12*\i}) rectangle ++(#3,#4);}%
+  }
+
+  % Input depth image
+  \stack{0}{0}{0.25}{2.4}{1}{gray!20}
+  \node[lbl] at (0.5,-0.6) {Depth image\\$D_t$\\$1{\times}H{\times}W$};
+
+  % Conv block 1
+  \stack{1.9}{0.3}{0.25}{1.8}{3}{blue!15}
+  \node[lbl] at (2.4,-0.6) {Conv + ReLU\\stride 2\\$C_1{\times}\frac{H}{2}{\times}\frac{W}{2}$};
+
+  % Conv block 2
+  \stack{3.9}{0.5}{0.25}{1.3}{4}{blue!25}
+  \node[lbl] at (4.5,-0.6) {Conv + ReLU\\stride 2\\$C_2{\times}\frac{H}{4}{\times}\frac{W}{4}$};
+
+  % Conv block 3
+  \stack{5.9}{0.7}{0.25}{0.9}{5}{blue!35}
+  \node[lbl] at (6.6,-0.6) {Conv + ReLU\\stride 2\\$C_3{\times}\frac{H}{8}{\times}\frac{W}{8}$};
+
+  % Flatten vector
+  \draw[fill=orange!20] (8.3,0.2) rectangle ++(0.22,2.0);
+  \node[lbl] at (8.4,-0.6) {Flatten};
+
+  % Latent / feature vector
+  \draw[fill=green!25!black!15] (9.9,0.9) rectangle ++(0.22,0.8);
+  \node[lbl] at (10.0,-0.6) {Linear\\$\mathbf{z}\in\mathbb{R}^{d}$};
+
+  % Arrows
+  \draw[->] (0.95,1.2) -- (1.85,1.2);
+  \draw[->] (3.0,1.2)  -- (3.85,1.2);
+  \draw[->] (4.95,1.2) -- (5.85,1.2);
+  \draw[->] (7.0,1.2)  -- (8.25,1.2);
+  \draw[->] (8.6,1.2)  -- (9.85,1.2);
+
+  % Kernel illustration on the input
+  \draw[red!70!black, line width=0.9pt] (0.12,1.6) rectangle ++(0.25,0.5);
+  \node[font=\scriptsize, red!70!black] at (0.5,2.95) {kernel};
+  \draw[red!70!black, ->] (0.5,2.8) -- (0.3,2.15);
+\end{tikzpicture}

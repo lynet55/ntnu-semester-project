@@ -123,7 +123,7 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 
 \subsection{Convolutional neural networks}
 % Moved from Related Work (End-to-end encoders)
-Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes.
+Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. A convolutional encoder is illustrated in Figure~\ref{fig:cnn}.
 
 % TODO theory missing:
 \begin{itemize}
@@ -133,6 +133,13 @@ Convolutional Neural Networks were first introduced in\textcite{lecun1998gradien
         linear layer giving a feature vector.
   \item Transposed convolutions in the decoder (link to the VAE below).
 \end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/cnn.tex}
+    \caption{Illustration of a convolutional encoder. Each convolution slides a small kernel over the input and shares its weights across positions. Strided convolutions reduce the resolution while the number of channels $C_i$ grows. The final feature map is flattened and mapped to a vector $\mathbf{z}$ by a linear layer. Sizes are illustrative.}
+    \label{fig:cnn}
+\end{figure}
 
 \subsection{Autoencoders and VAEs}
 % Moved from Related Work (Encoders trained on reconstruction)
