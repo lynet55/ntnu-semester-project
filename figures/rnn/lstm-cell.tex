@@ -1,0 +1,20 @@
+% !TEX root = ../../main.tex
+% Copied from bb_theme/latex/rnn (Overleaf does not fetch submodules).
+% One LSTM cell. Options (set with \def before \input, inside the figure environment):
+%   \rnnfocus   none | cline | gate | f | i | c | o     (highlight one step, as in Olah's walk-through)
+%   \rnnvariant standard | peephole | coupled
+% Use:  \input{figures/rnn/lstm-cell.tex}   (set \rnndir if the folder lives elsewhere)
+\providecommand{\rnndir}{figures/rnn}
+\input{\rnndir/rnn-style.tex}
+\begin{tikzpicture}[rnn]
+  \rnnLSTM{0}{1}
+  \node[io, anchor=east, hlt if={c,cline}] at (-0.75,3.9) {$\rnnc_{t-1}$};
+  \draw[wire, hl if={c,cline}] (-0.75,3.9) -- (0,3.9);
+  \node[io, anchor=east, hlt if={f,i,o,gate}] at (-0.75,0.7) {$\rnnh_{t-1}$};
+  \draw[wire, hl if={f,i,o,gate}] (-0.75,0.7) -- (0,0.7);
+  \node[io, anchor=north, hlt if={f,i,o,gate}] (x) at (1.0,-0.65) {$\rnnx_t$};
+  \draw[wire, hl if={f,i,o,gate}] (x) -- (1.0,0);
+  \draw[wire, hl if={c,cline}] (7.5,3.9) -- (8.25,3.9) node[io, anchor=west] {$\rnnc_t$};
+  \draw[wire, hl if=o] (7.5,0.7) -- (8.25,0.7) node[io, anchor=west] {$\rnnh_t$};
+  \draw[wire, hl if=o] (6.8,4.6) -- (6.8,5.25) node[io, anchor=south] {$\rnnh_t$};
+\end{tikzpicture}

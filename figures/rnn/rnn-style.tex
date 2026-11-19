@@ -1,0 +1,232 @@
+% Copied from bb_theme/latex/rnn. Thesis change: GRU gates renamed to avoid the registry (NOTATION_STYLE.md):
+% z is the depth embedding and r the sonar ranges, so update gate -> upsilon, reset gate -> chi.
+% Shared style and cell macros for the RNN / LSTM / GRU figures.
+% Layout after C. Olah, "Understanding LSTM Networks" (2015), redrawn in the bb_theme style
+% (palette and wires follow latex/vae-canonical/vae.tex).
+%
+% Every figure file in this folder \input's this file; it is safe to load more than once.
+% Needs in the preamble: tikz with \usetikzlibrary{arrows.meta, shapes.geometric}, amsmath, amssymb.
+%
+% Symbols (override with \renewcommand before \input'ing a figure):
+%   \rnnx input, \rnnh hidden state, \rnnc LSTM cell state, \rnnzg / \rnnrg GRU update / reset gate.
+% Options (set with \def before \input'ing a figure, inside the figure environment):
+%   \rnnfocus   none | cline | gate | f | i | c | o   which part of the LSTM cell to highlight
+%   \rnnvariant standard | peephole | coupled            LSTM variant
+%   \rnnunrolled full | short | long                      which unrolled-RNN figure
+% Libraries are not loaded here: inside a figure group they would be marked loaded but
+% defined only locally, breaking later figures. Load them in the preamble.
+\definecolor{vaeInk}{HTML}{0F1B2D}
+\definecolor{vaeHatch}{HTML}{2F3FD0}
+\definecolor{vaeSignal}{HTML}{1D5FD1}
+\definecolor{vaeMuted}{HTML}{56677F}
+\definecolor{vaeFill}{HTML}{EEF3FB}
+
+\providecommand{\rnnx}{\mathbf{x}}
+\providecommand{\rnnh}{\mathbf{h}}
+\providecommand{\rnnc}{\mathbf{c}}
+\providecommand{\rnnzg}{\boldsymbol{\upsilon}}
+\providecommand{\rnnrg}{\boldsymbol{\chi}}
+\providecommand{\rnnfocus}{none}
+\providecommand{\rnnvariant}{standard}
+\def\rnnNone{none}
+
+% \rnnifvariant{name}{then}{else}
+\providecommand{\rnnifvariant}[3]{\edef\rnnA{\rnnvariant}\edef\rnnB{#1}\ifx\rnnA\rnnB #2\else #3\fi}
+
+\tikzset{
+  rnn/.style={font=\small, line cap=round, line join=round},
+  % wires: `wire` ends in an arrow, `line` does not (it ends in a junction or at a cell border)
+  line/.style={draw=vaeInk, line width=0.6pt},
+  wire/.style={line, -{Stealth[length=4.5pt, width=3.5pt]}},
+  % a wire that crosses another one: a gap in the cell colour around it
+  bridge/.style={preaction={draw=vaeFill, line width=3.4pt, line cap=butt, arrows=-}},
+  dot/.style={fill=vaeInk, hl extra/.style={fill=vaeSignal}},
+  cell/.style={draw=vaeInk, line width=0.7pt, fill=vaeFill, rounded corners=7pt},
+  % neural-network layer (learned weights) and point-wise operation
+  layer/.style={draw=vaeInk, line width=0.6pt, fill=vaeSignal!22, rounded corners=1pt,
+    minimum width=0.62cm, minimum height=0.42cm, inner sep=1pt, font=\footnotesize,
+    hl extra/.style={fill=vaeSignal!45}},
+  op/.style={circle, draw=vaeInk, line width=0.6pt, fill=white, minimum size=11pt,
+    inner sep=0pt, font=\footnotesize},
+  opwide/.style={ellipse, draw=vaeInk, line width=0.6pt, fill=white, minimum width=0.62cm,
+    minimum height=0.34cm, inner sep=0pt, font=\footnotesize},
+  gl/.style={font=\footnotesize},                        % gate labels inside a cell
+  io/.style={inner sep=1.5pt},                           % x_t, h_t labels outside a cell
+  vcap/.style={font=\footnotesize, text=vaeMuted, align=center},
+  % highlighting: `hl if={f,i}` highlights the element when \rnnfocus is f or i,
+  % fades it when \rnnfocus is something else, and does nothing when \rnnfocus is none.
+  hl extra/.style={},
+  focus on/.style={draw=vaeSignal, line width=1.0pt, text=vaeSignal, hl extra},
+  focus off/.style={opacity=0.2},
+  hlt if/.style={hl if={#1}, draw=none},  % for text labels
+  hl if/.code={%
+    \edef\rnnF{\rnnfocus}%
+    \ifx\rnnF\rnnNone\else
+      \gdef\rnnHit{0}%
+      \foreach \g in {#1}{\edef\rnnG{\g}\ifx\rnnG\rnnF\gdef\rnnHit{1}\fi}%
+      \if1\rnnHit\pgfkeysalso{/tikz/focus on}\else\pgfkeysalso{/tikz/focus off}\fi
+    \fi},
+}
+
+% ---------------------------------------------------------------------------------------------
+% LSTM cell.  \rnnLSTM{x offset}{gate labels: 1 or 0}
+% Ports (relative to the offset): C in (0,3.9), C out (7.5,3.9), h in (0,0.7), h out (7.5,0.7),
+% x in (1.0,0), h up (6.8,4.6).  Size 7.5 x 4.6.
+\providecommand{\rnnLSTM}[2]{%
+\begin{scope}[shift={(#1,0)}]
+  \path[cell] (0,0) rectangle (7.5,4.6);
+  % layers and point-wise operations
+  \node[layer, hl if={f,gate}] (sf) at (1.9,1.75) {$\sigma$};
+  \rnnifvariant{coupled}{%
+    \node[op, minimum size=13pt, hl if={i,c}] (om) at (3.0,2.95) {$1{-}$};
+  }{%
+    \node[layer, hl if=i] (si) at (3.0,1.75) {$\sigma$};
+  }
+  \node[layer, hl if=i] (tc) at (4.1,1.75) {$\tanh$};
+  \node[layer, hl if=o] (so) at (5.3,1.75) {$\sigma$};
+  \node[op, hl if={c,cline,gate}] (mf) at (1.9,3.9) {$\times$};
+  \node[op, hl if=c] (mi) at (4.1,2.95) {$\times$};
+  \node[op, hl if={c,cline}] (pc) at (4.1,3.9) {$+$};
+  \node[opwide, hl if=o] (th) at (6.2,3.25) {$\tanh$};
+  \node[op, hl if=o] (mo) at (6.2,2.45) {$\times$};
+  % cell state line
+  \draw[wire, hl if={c,cline}] (0,3.9) -- (mf);
+  \draw[wire, hl if={c,cline}] (mf) -- (pc);
+  \draw[line, hl if={c,cline,o}] (pc) -- (6.2,3.9);
+  \draw[line, hl if={c,cline}] (6.2,3.9) -- (7.5,3.9);
+  \fill[dot, hl if={o}] (6.2,3.9) circle (1.3pt);
+  \draw[wire, hl if=o] (6.2,3.9) -- (th);
+  \draw[wire, hl if=o] (th) -- (mo);
+  % input trunk: [h_{t-1}, x_t]
+  \draw[line, hl if={f,i,o,gate}] (0,0.7) -- (1.0,0.7);
+  \draw[line, hl if={f,i,o,gate}] (1.0,0) -- (1.0,0.7);
+  \draw[line, hl if={f,i,o,gate}] (1.0,0.7) -- (1.9,0.7);
+  \rnnifvariant{coupled}{%
+    \draw[line, hl if={i,o}] (1.9,0.7) -- (4.1,0.7);
+  }{%
+    \draw[line, hl if={i,o}] (1.9,0.7) -- (3.0,0.7);
+    \draw[line, hl if={i,o}] (3.0,0.7) -- (4.1,0.7);
+    \fill[dot, hl if={i,o}] (3.0,0.7) circle (1.3pt);
+    \draw[wire, hl if=i] (3.0,0.7) -- (si);
+  }
+  \draw[wire, hl if=o] (4.1,0.7) -| (so);
+  \fill[dot, hl if={f,i,o,gate}] (1.0,0.7) circle (1.3pt);
+  \fill[dot, hl if={f,i,o,gate}] (1.9,0.7) circle (1.3pt);
+  \fill[dot, hl if={i,o}] (4.1,0.7) circle (1.3pt);
+  \draw[wire, hl if={f,gate}] (1.9,0.7) -- (sf);
+  \draw[wire, hl if=i] (4.1,0.7) -- (tc);
+  % gates into the cell state
+  \rnnifvariant{coupled}{%
+    \draw[wire, hl if={f,c}] (sf) -- (mf);
+    \fill[dot, hl if={i,c}] (1.9,2.95) circle (1.3pt);
+    \draw[wire, hl if={i,c}] (1.9,2.95) -- (om);
+    \draw[wire, hl if={i,c}] (om) -- (mi);
+  }{%
+    \draw[wire, hl if={f,c,gate}] (sf) -- (mf);
+    \draw[wire, hl if={i,c}] (si) |- (mi);
+  }
+  \draw[wire, hl if={i,c}] (tc) -- (mi);
+  \draw[wire, hl if=c] (mi) -- (pc);
+  % output gate and new hidden state
+  \draw[wire, hl if=o] (so) |- (mo);
+  \draw[line, hl if=o] (mo) -- (6.8,2.45);
+  \draw[line, hl if=o] (6.8,2.45) -- (6.8,4.6);
+  \draw[line, bridge, hl if=o] (6.8,3.6) -- (6.8,4.2);
+  \draw[line, hl if=o] (6.8,2.45) |- (7.5,0.7);
+  \fill[dot, hl if=o] (6.8,2.45) circle (1.3pt);
+  % peepholes: the gate layers also see the cell state
+  \rnnifvariant{peephole}{%
+    \tikzset{peep/.style={wire, draw=vaeHatch}}
+    \fill[dot] (1.3,3.9) circle (1.3pt);
+    \draw[peep] (1.3,3.9) |- (sf);
+    \fill[dot] (2.4,3.9) circle (1.3pt);
+    \draw[peep] (2.4,3.9) |- (si);
+    \fill[dot] (4.7,3.9) circle (1.3pt);
+    \draw[peep] (4.7,3.9) |- (so);
+  }{}
+  % gate labels
+  \ifnum#2=1
+    \node[gl, anchor=west, hlt if={f,c,gate}] at (1.92,2.4) {$\mathbf{f}_t$};
+    \rnnifvariant{coupled}{%
+      \node[gl, anchor=south, hlt if={i,c}] at (2.45,2.97) {$1{-}\mathbf{f}_t$};
+    }{%
+      \node[gl, anchor=east, hlt if={i,c}] at (2.98,2.4) {$\mathbf{i}_t$};
+    }
+    \node[gl, anchor=west, hlt if={i,c}] at (4.12,2.4) {$\tilde{\rnnc}_t$};
+    \node[gl, anchor=west, hlt if=o] at (5.32,2.15) {$\mathbf{o}_t$};
+  \fi
+\end{scope}}
+
+% ---------------------------------------------------------------------------------------------
+% GRU cell.  \rnnGRU{x offset}{gate labels: 1 or 0}
+% Ports: h in (0,3.9), h out (7.5,3.9), x in (1.1,0), h up (6.8,4.6).  Size 7.5 x 4.6.
+\providecommand{\rnnGRU}[2]{%
+\begin{scope}[shift={(#1,0)}]
+  \path[cell] (0,0) rectangle (7.5,4.6);
+  \node[layer] (sr) at (1.7,1.75) {$\sigma$};
+  \node[layer] (sz) at (2.8,1.75) {$\sigma$};
+  \node[layer] (tc) at (5.9,1.75) {$\tanh$};
+  \node[op] (mr) at (1.7,2.85) {$\times$};
+  \node[op, minimum size=13pt] (om) at (4.7,3.1) {$1{-}$};
+  \node[op] (ma) at (4.7,3.9) {$\times$};
+  \node[op] (mb) at (5.9,2.85) {$\times$};
+  \node[op] (pc) at (5.9,3.9) {$+$};
+  % hidden-state line
+  \draw[line] (0,3.9) -- (0.6,3.9);
+  \draw[wire] (0.6,3.9) -- (ma);
+  \draw[wire] (ma) -- (pc);
+  \draw[line] (pc) -- (7.5,3.9);
+  \draw[line] (6.8,3.9) -- (6.8,4.6);
+  \fill[dot] (6.8,3.9) circle (1.3pt);
+  % h_{t-1} down into the gates and the reset product
+  \draw[line] (0.6,3.9) -- (0.6,0.7) -- (1.1,0.7);
+  \fill[dot] (0.6,3.9) circle (1.3pt);
+  \fill[dot] (0.6,2.85) circle (1.3pt);
+  \draw[wire] (0.6,2.85) -- (mr);
+  % trunk [h_{t-1}, x_t] into both gates
+  \draw[line] (1.1,0) -- (1.1,0.7);
+  \draw[line] (1.1,0.7) -- (1.7,0.7);
+  \draw[wire] (1.7,0.7) -- (sr);
+  \draw[wire] (1.7,0.7) -| (sz);
+  \fill[dot] (1.1,0.7) circle (1.3pt);
+  \fill[dot] (1.7,0.7) circle (1.3pt);
+  % reset gate, then [r_t * h_{t-1}, x_t] into the candidate layer
+  \draw[wire] (sr) -- (mr);
+  \fill[dot] (1.1,0.3) circle (1.3pt);
+  \draw[line] (1.1,0.3) -- (3.6,0.3);
+  \draw[wire] (3.6,0.3) -| (tc);
+  % update gate
+  \draw[line] (sz) |- (4.7,2.3);
+  \draw[wire] (4.7,2.3) -- (om);
+  \draw[wire] (om) -- (ma);
+  \draw[wire] (4.7,2.3) -- (5.3,2.3) |- (mb);
+  \fill[dot] (4.7,2.3) circle (1.3pt);
+  \draw[line] (mr) -| (3.6,0.3);
+  \draw[line, bridge] (3.6,2.6) -- (3.6,2.0);
+  \fill[dot] (3.6,0.3) circle (1.3pt);
+  % candidate state
+  \draw[wire] (tc) -- (mb);
+  \draw[wire] (mb) -- (pc);
+  \ifnum#2=1
+    \node[gl, anchor=east] at (1.68,2.3) {$\rnnrg_t$};
+    \node[gl, anchor=south west] at (2.82,2.3) {$\rnnzg_t$};
+    \node[gl, anchor=west] at (5.92,2.3) {$\tilde{\rnnh}_t$};
+  \fi
+\end{scope}}
+
+% ---------------------------------------------------------------------------------------------
+% Plain RNN cell (one tanh layer).  \rnnSimple{x offset}
+% Ports: h in (0,0.7), h out (3.6,0.7), x in (0.9,0), h up (2.7,3.6).  Size 3.6 x 3.6.
+\providecommand{\rnnSimple}[1]{%
+\begin{scope}[shift={(#1,0)}]
+  \path[cell] (0,0) rectangle (3.6,3.6);
+  \node[layer] (tc) at (1.8,1.75) {$\tanh$};
+  \draw[line] (0,0.7) -- (0.9,0.7);
+  \draw[line] (0.9,0) -- (0.9,0.7);
+  \draw[wire] (0.9,0.7) -| (tc);
+  \fill[dot] (0.9,0.7) circle (1.3pt);
+  \draw[line] (tc) |- (2.7,2.75);
+  \draw[line] (2.7,2.75) -- (2.7,3.6);
+  \draw[line] (2.7,2.75) |- (3.6,0.7);
+  \fill[dot] (2.7,2.75) circle (1.3pt);
+\end{scope}}

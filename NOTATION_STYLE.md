@@ -45,6 +45,7 @@ Each topic takes its notation from one reference. Write that topic the way its r
 | Depth images and the DeFM encoder | DeFM | **missing — add** | Depth image $D_t$ and its size $H\times W$, the log-scaled 3-channel preprocessing $\Gamma(\cdot)$, the embedding $\mathbf{z}^{\mathrm{DeFM}}_t$. |
 | Collision images and the VAE encoder | Deep Collision Encoding (DCE) | **missing — add** | Collision image $D^{\mathrm{col}}_t$, its reconstruction, the VAE loss in §4. |
 | PPO and GAE | Schulman et al., *Proximal Policy Optimization Algorithms*; Schulman et al., GAE | `schulman2017ppo`; GAE **missing — add** | Clipped objective, clip range $\epsilon$, advantage $\hat A_t$, TD residual $\delta_t$, $\lambda_{\mathrm{GAE}}$. |
+| Recurrent networks (RNN, LSTM, GRU) | Hochreiter and Schmidhuber (LSTM); Cho et al. (GRU); figures after Olah, *Understanding LSTM Networks* | `hochreiter1997long`; `cho2014learning`; `olah2015lstm` | Hidden state $\mathbf{h}_t$, LSTM cell state $\mathbf{c}_t$ and gates $\mathbf{f}_t,\mathbf{i}_t,\mathbf{o}_t$, candidates $\tilde{\mathbf{c}}_t,\tilde{\mathbf{h}}_t$, GRU gates $\boldsymbol{\upsilon}_t,\boldsymbol{\chi}_t$. |
 
 **When two sources collide, Fossen wins.** Fossen symbols are never renamed. A symbol from another source that clashes with Fossen is renamed, and the rename is recorded in the last column of §3.2. For example, Song et al. write the policy as $\pi_\theta(\mathbf{a}_t\mid\mathbf{o}_t)$. Here $\theta$ is pitch, so the weights are $\mathbf{w}_\pi$ and the policy is $\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)$. The structure still follows the source. Only the letter changes.
 
@@ -151,6 +152,9 @@ Fossen symbols are **reserved**. ML symbols have been renamed so they don't coll
 | $V(\mathbf{x}^e_t;\mathbf{w}_V)$ | critic | $\mathbb{R}$ | — |
 | $\mathbf{w}_{\pi},\mathbf{w}_V,\mathbf{w}_{\mathrm{enc}},\mathbf{w}_{\mathrm{dec}},\mathbf{w}_{\mathrm{DeFM}}$ | network weights | — | $\theta,\phi,\vartheta,\omega$ (all clash with Fossen) |
 | $\mathbf{h}_t$ | GRU hidden state | $\mathbb{R}^{n_h}$ | — |
+| $\mathbf{c}_t,\ \tilde{\mathbf{c}}_t$ | LSTM cell state / candidate (Background only) | $\mathbb{R}^{n_h}$ | $C_t$ (Coriolis $\mathbf{C}$) |
+| $\mathbf{f}_t,\ \mathbf{i}_t,\ \mathbf{o}_t$ | LSTM forget / input / output gates (Background only) | $(0,1)^{n_h}$ | — |
+| $\boldsymbol{\upsilon}_t,\ \boldsymbol{\chi}_t,\ \tilde{\mathbf{h}}_t$ | GRU update / reset gates, candidate state | $(0,1)^{n_h}$, $\mathbb{R}^{n_h}$ | $\mathbf{z}_t$, $\mathbf{r}_t$ (embedding $\mathbf{z}^e_t$, sonar $\mathbf{r}_t$) |
 | $R_t,\ R^{(k)}_t$ | reward and its terms | $\mathbb{R}$ | $r_t$ (yaw rate $r$, sonar $\mathbf{r}$) |
 | $\gamma,\ \lambda_{\mathrm{GAE}}$ | discount, GAE parameter | $[0,1)$, $[0,1]$ | — |
 | $\hat A_t,\ \hat G_t$ | advantage, return target | $\mathbb{R}$ | — |

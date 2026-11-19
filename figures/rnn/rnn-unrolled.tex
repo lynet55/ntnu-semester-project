@@ -1,0 +1,65 @@
+% !TEX root = ../../main.tex
+% Copied from bb_theme/latex/rnn (Overleaf does not fetch submodules).
+% Recurrent network as a loop, and unrolled in time. Options (\def before \input):
+%   \rnnunrolled  rolled | full | short | long
+%     rolled: the loop alone;  full: the loop = the unrolled chain;
+%     short / long: h_3 / h_{t+1} depends on the early inputs x_0, x_1 (highlighted).
+% Use:  \input{figures/rnn/rnn-unrolled.tex}
+\providecommand{\rnndir}{figures/rnn}
+\input{\rnndir/rnn-style.tex}
+\providecommand{\rnnunrolled}{full}
+\tikzset{
+  abox/.style={draw=vaeInk, line width=0.7pt, fill=vaeFill, rounded corners=4pt,
+    minimum width=1.05cm, minimum height=1.05cm},
+  ion/.style={io},
+  ionhl/.style={io, circle, draw=vaeSignal, line width=0.8pt, fill=vaeSignal!15, text=vaeInk,
+    inner sep=0.5pt, minimum size=0.62cm},
+}
+% \rnnA{name}{x}{input}{output}{input style}{output style}
+\providecommand{\rnnA}[6]{%
+  \node[abox] (#1) at (#2,0) {$A$};
+  \node[#5, anchor=north] (#1x) at (#2,-1.15) {$\rnnx_{#3}$};
+  \node[#6, anchor=south] (#1h) at (#2,1.15) {$\rnnh_{#4}$};
+  \draw[wire] (#1x) -- (#1);
+  \draw[wire] (#1) -- (#1h);}
+\begin{tikzpicture}[rnn]
+  \edef\rnnU{\rnnunrolled}\def\rnnUr{rolled}\def\rnnUf{full}\def\rnnUs{short}\def\rnnUl{long}
+  \ifx\rnnU\rnnUs
+    \foreach \k in {0,...,4} {
+      \ifnum\k<2 \def\sx{ionhl}\else\def\sx{ion}\fi
+      \ifnum\k=3 \def\sh{ionhl}\else\def\sh{ion}\fi
+      \rnnA{a\k}{1.9*\k}{\k}{\k}{\sx}{\sh}
+    }
+    \foreach \k [count=\n from 1] in {0,...,3} \draw[wire] (a\k) -- (a\n);
+    \draw[wire] (a4.east) -- ++(0.55,0);
+  \else\ifx\rnnU\rnnUl
+    \rnnA{a0}{0}{0}{0}{ionhl}{ion}
+    \rnnA{a1}{1.9}{1}{1}{ionhl}{ion}
+    \rnnA{a2}{3.8}{2}{2}{ion}{ion}
+    \rnnA{a3}{6.7}{t}{t}{ion}{ion}
+    \rnnA{a4}{8.6}{t+1}{t+1}{ion}{ionhl}
+    \draw[wire] (a0) -- (a1);
+    \draw[wire] (a1) -- (a2);
+    \draw[line] (a2) -- (4.75,0);
+    \node at (5.25,0) {$\cdots$};
+    \draw[wire] (5.75,0) -- (a3);
+    \draw[wire] (a3) -- (a4);
+    \draw[wire] (a4.east) -- ++(0.55,0);
+  \else
+    % the loop
+    \rnnA{r}{0}{t}{t}{ion}{ion}
+    \draw[wire] ([yshift=-0.25cm]r.east) to[out=0, in=0, min distance=0.95cm] ([yshift=0.25cm]r.east);
+    \ifx\rnnU\rnnUf
+      \node at (1.75,0) {$=$};
+      \rnnA{a0}{2.9}{0}{0}{ion}{ion}
+      \rnnA{a1}{4.8}{1}{1}{ion}{ion}
+      \rnnA{a2}{6.7}{2}{2}{ion}{ion}
+      \rnnA{a3}{9.6}{t}{t}{ion}{ion}
+      \draw[wire] (a0) -- (a1);
+      \draw[wire] (a1) -- (a2);
+      \draw[line] (a2) -- (7.65,0);
+      \node at (8.15,0) {$\cdots$};
+      \draw[wire] (8.65,0) -- (a3);
+    \fi
+  \fi\fi
+\end{tikzpicture}

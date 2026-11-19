@@ -1,0 +1,15 @@
+% !TEX root = ../../main.tex
+% Copied from bb_theme/latex/rnn (Overleaf does not fetch submodules).
+% One GRU cell (Cho et al., 2014), drawn like the LSTM cell.
+% Use:  \input{figures/rnn/gru-cell.tex}
+\providecommand{\rnndir}{figures/rnn}
+\input{\rnndir/rnn-style.tex}
+\begin{tikzpicture}[rnn]
+  \rnnGRU{0}{1}
+  \node[io, anchor=east] at (-0.75,3.9) {$\rnnh_{t-1}$};
+  \draw[wire] (-0.75,3.9) -- (0,3.9);
+  \node[io, anchor=north] (x) at (1.1,-0.65) {$\rnnx_t$};
+  \draw[wire] (x) -- (1.1,0);
+  \draw[wire] (7.5,3.9) -- (8.25,3.9) node[io, anchor=west] {$\rnnh_t$};
+  \draw[wire] (6.8,4.6) -- (6.8,5.25) node[io, anchor=south] {$\rnnh_t$};
+\end{tikzpicture}

@@ -131,6 +131,30 @@ Another popular varaition of the LSTM is a "Gated Recurrent Unit" (GRU) introduc
         \parencite{chung2014empirical}.
 \end{itemize}
 
+A recurrent network applies the same module $A$ at every time step and passes its hidden state on to the next step (Figure~\ref{fig:rnn}). The LSTM adds a cell state $\mathbf{c}_t$ that is changed only through gates (Figure~\ref{fig:lstm}); the GRU merges the cell and hidden states and uses two gates (Figure~\ref{fig:gru}).
+
+\begin{figure}[htbp]
+    \centering
+    \def\rnnunrolled{full}
+    \input{figures/rnn/rnn-unrolled.tex}
+    \caption{A recurrent network as a loop (left) and unrolled in time (right). The module $A$ and its weights are the same at every step; the hidden state $\mathbf{h}_t$ carries information from earlier inputs forward. After \textcite{olah2015lstm}.}
+    \label{fig:rnn}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/rnn/lstm-cell.tex}
+    \caption{An LSTM cell \parencite{hochreiter1997long}. Boxes are learned layers, circles are point-wise operations. The forget gate $\mathbf{f}_t$, input gate $\mathbf{i}_t$ and output gate $\mathbf{o}_t$ control what is removed from, written to and read from the cell state $\mathbf{c}_t$; $\tilde{\mathbf{c}}_t$ is the candidate update. After \textcite{olah2015lstm}.}
+    \label{fig:lstm}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \input{figures/rnn/gru-cell.tex}
+    \caption{A GRU cell \parencite{cho2014learning}. The reset gate $\boldsymbol{\chi}_t$ sets how much of $\mathbf{h}_{t-1}$ enters the candidate state $\tilde{\mathbf{h}}_t$, and the update gate $\boldsymbol{\upsilon}_t$ blends $\mathbf{h}_{t-1}$ and $\tilde{\mathbf{h}}_t$ into $\mathbf{h}_t$. After \textcite{olah2015lstm}.}
+    \label{fig:gru}
+\end{figure}
+
 \subsection{Convolutional neural networks}
 % Moved from Related Work (End-to-end encoders)
 Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. A convolutional encoder is illustrated in Figure~\ref{fig:cnn}.
