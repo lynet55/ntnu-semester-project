@@ -137,7 +137,7 @@ Convolutional Neural Networks were first introduced in\textcite{lecun1998gradien
 \begin{figure}[htbp]
     \centering
     \input{figures/cnn.tex}
-    \caption{Illustration of a convolutional encoder. Each convolution slides a small kernel over the input and shares its weights across positions. Strided convolutions reduce the resolution while the number of channels $C_i$ grows. The final feature map is flattened and mapped to a vector $\mathbf{z}$ by a linear layer. Sizes are illustrative.}
+    \caption{Illustration of a convolutional encoder. A small kernel (blue square) is slid over the depth image $D_t$ and shares its weights across positions. Strided convolutions halve the resolution while the number of channels $C_i$ (stacked maps) grows. The last feature map is flattened and mapped to a feature vector $\mathbf{z}$ by a linear layer. Sizes are illustrative.}
     \label{fig:cnn}
 \end{figure}
 

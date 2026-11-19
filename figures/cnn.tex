@@ -1,51 +1,80 @@
 % !TEX root = ../main.tex
-% Convolutional encoder: depth image -> conv/stride blocks -> flatten -> linear -> feature vector
-% Requires: \usepackage{tikz}, \usetikzlibrary{arrows.meta}
+% Convolutional encoder in the bb_theme figure style (palette, wires and vector cells
+% follow bb_theme/latex/vae-canonical/vae.tex). Illustrative sizes.
+% Use inside a figure environment:  \input{figures/cnn.tex}
+% Needs: tikz (arrows.meta), graphicx, amsmath, amssymb.
+\usetikzlibrary{positioning}
+\providecommand{\cnnimg}{figures/cnn_input.png}
+\definecolor{vaeInk}{HTML}{0F1B2D}
+\definecolor{vaeHatch}{HTML}{2F3FD0}
+\definecolor{vaeSignal}{HTML}{1D5FD1}
+\definecolor{vaeMuted}{HTML}{56677F}
+\definecolor{vaeFill}{HTML}{EEF3FB}
 \begin{tikzpicture}[
-    line width=0.8pt,
-    >={Latex[length=2mm]},
-    lbl/.style={font=\footnotesize, align=center},
-    fm/.style={draw, fill=blue!12, minimum width=#1},
-]
-  % Feature-map stack: \stack{x}{y}{width}{height}{depth}{fill}
-  \newcommand{\stack}[6]{%
-    \foreach \i in {1,...,#5} {%
-      \draw[fill=#6] ({#1+0.12*\i},{#2+0.12*\i}) rectangle ++(#3,#4);}%
+    font=\small, line cap=round, line join=round,
+    wire/.style={draw=vaeInk, line width=0.6pt, -{Stealth[length=4.5pt, width=3.5pt]}},
+    proj/.style={draw=vaeHatch, line width=0.4pt, dash pattern=on 2.5pt off 1.8pt},
+    net/.style={draw=vaeInk, line width=0.7pt, fill=vaeFill},
+    frame/.style={draw=vaeInk, line width=0.6pt},
+    vcap/.style={font=\footnotesize, text=vaeMuted, align=center},
+  ]
+  \def\cs{0.17}   % vector cell size
+  \def\d{0.11}    % offset between stacked channels
+
+  % ---------- input depth image ----------
+  \node[inner sep=0] (din) at (1.0,0) {\includegraphics[width=2.0cm, height=1.5cm]{\cnnimg}};
+  \draw[frame] (din.south west) rectangle (din.north east);
+  \node[above=2pt of din.north] {$D_t$};
+  \node[vcap, below=3pt of din.south] {$1{\times}H{\times}W$};
+  % kernel window on the input
+  \draw[vaeHatch, line width=0.8pt, fill=vaeHatch!15] (0.35,0.3) rectangle ++(0.34,0.34);
+
+  % ---------- feature maps: back to front ----------
+  % map 1
+  \foreach \i/\s in {3/12,2/22,1/32,0/45} {
+    \draw[frame, fill=vaeSignal!\s!white] (3.35+\d*\i,-0.62+\d*\i) rectangle ++(1.5,1.15);
   }
+  \node[vcap, below=3pt] at (3.35+0.75+0.17,-0.62) {conv, ReLU\\$C_1{\times}\frac{H}{2}{\times}\frac{W}{2}$};
+  % map 2
+  \foreach \i/\s in {4/12,3/22,2/32,1/45,0/60} {
+    \draw[frame, fill=vaeSignal!\s!white] (5.75+\d*\i,-0.4+\d*\i) rectangle ++(1.0,0.78);
+  }
+  \node[vcap, below=3pt] at (5.75+0.5+0.22,-0.4) {conv, ReLU\\$C_2{\times}\frac{H}{4}{\times}\frac{W}{4}$};
+  % map 3
+  \foreach \i/\s in {5/12,4/22,3/32,2/45,1/60,0/75} {
+    \draw[frame, fill=vaeSignal!\s!white] (7.65+\d*\i,-0.26) ++(0,\d*\i) rectangle ++(0.7,0.54);
+  }
+  \node[vcap, below=3pt] at (7.65+0.35+0.28,-0.26) {conv, ReLU\\$C_3{\times}\frac{H}{8}{\times}\frac{W}{8}$};
 
-  % Input depth image
-  \stack{0}{0}{0.25}{2.4}{1}{gray!20}
-  \node[lbl] at (0.5,-0.6) {Depth image\\$D_t$\\$1{\times}H{\times}W$};
+  % ---------- kernel projection onto the first map ----------
+  \draw[vaeHatch, line width=0.8pt, fill=vaeHatch!15] (3.35+0.5,-0.62+0.55) rectangle ++(0.13,0.13);
+  \draw[proj] (0.69,0.64) -- (3.85+0.0,-0.62+0.68);
+  \draw[proj] (0.69,0.30) -- (3.85+0.0,-0.62+0.55);
+  \node[font=\footnotesize, text=vaeHatch, anchor=south] at (2.1,1.05) {kernel};
 
-  % Conv block 1
-  \stack{1.9}{0.3}{0.25}{1.8}{3}{blue!15}
-  \node[lbl] at (2.4,-0.6) {Conv + ReLU\\stride 2\\$C_1{\times}\frac{H}{2}{\times}\frac{W}{2}$};
+  % ---------- wires between stages ----------
+  \draw[wire] (din.east) ++(0,-0.0) -- (3.2,0) node[midway, below=1pt, vcap] {stride 2};
+  \draw[wire] (5.05+0.0,0) -- (5.95-0.2,0);
+  \draw[wire] (7.05+0.2,0) -- (7.75-0.1,0);
 
-  % Conv block 2
-  \stack{3.9}{0.5}{0.25}{1.3}{4}{blue!25}
-  \node[lbl] at (4.5,-0.6) {Conv + ReLU\\stride 2\\$C_2{\times}\frac{H}{4}{\times}\frac{W}{4}$};
+  % ---------- flatten: grid of cells ----------
+  \foreach \i/\s in {0/25,1/60,2/40,3/80,4/15,5/50,6/70,7/30,8/55} {
+    \fill[vaeSignal!\s!white] (9.45,-0.7+\i*\cs) rectangle ++(\cs,\cs);
+  }
+  \draw[vaeInk, line width=0.5pt, step=\cs, shift={(9.45,-0.7)}] (0,0) grid (\cs,9*\cs);
+  \node[vcap, below=3pt] at (9.45+\cs/2,-0.7) {flatten};
+  \draw[wire] (8.5,0) -- (9.4,0);
 
-  % Conv block 3
-  \stack{5.9}{0.7}{0.25}{0.9}{5}{blue!35}
-  \node[lbl] at (6.6,-0.6) {Conv + ReLU\\stride 2\\$C_3{\times}\frac{H}{8}{\times}\frac{W}{8}$};
+  % ---------- linear layer ----------
+  \draw[net] (10.0,0.5) -- (11.0,0.3) -- (11.0,-0.3) -- (10.0,-0.5) -- cycle;
+  \node[font=\footnotesize] at (10.5,0) {Linear};
+  \draw[wire] (9.45+\cs,0) -- (10.0,0);
 
-  % Flatten vector
-  \draw[fill=orange!20] (8.3,0.2) rectangle ++(0.22,2.0);
-  \node[lbl] at (8.4,-0.6) {Flatten};
-
-  % Latent / feature vector
-  \draw[fill=green!25!black!15] (9.9,0.9) rectangle ++(0.22,0.8);
-  \node[lbl] at (10.0,-0.6) {Linear\\$\mathbf{z}\in\mathbb{R}^{d}$};
-
-  % Arrows
-  \draw[->] (0.95,1.2) -- (1.85,1.2);
-  \draw[->] (3.0,1.2)  -- (3.85,1.2);
-  \draw[->] (4.95,1.2) -- (5.85,1.2);
-  \draw[->] (7.0,1.2)  -- (8.25,1.2);
-  \draw[->] (8.6,1.2)  -- (9.85,1.2);
-
-  % Kernel illustration on the input
-  \draw[red!70!black, line width=0.9pt] (0.12,1.6) rectangle ++(0.25,0.5);
-  \node[font=\scriptsize, red!70!black] at (0.5,2.95) {kernel};
-  \draw[red!70!black, ->] (0.5,2.8) -- (0.3,2.15);
+  % ---------- feature vector z ----------
+  \foreach \i/\s in {0/55,1/20,2/70,3/35,4/45,5/10} {
+    \fill[vaeSignal!\s!white] (11.55,-3*\cs+\i*\cs) rectangle ++(\cs,\cs);
+  }
+  \draw[vaeSignal, line width=0.7pt, step=\cs, shift={(11.55,-3*\cs)}] (0,0) grid (\cs,6*\cs);
+  \draw[wire] (11.0,0) -- (11.55,0);
+  \node[anchor=south, inner sep=1pt] at (11.55+\cs/2,3*\cs+0.08) {$\mathbf{z}\in\mathbb{R}^{d}$};
 \end{tikzpicture}
