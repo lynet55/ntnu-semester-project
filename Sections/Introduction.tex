@@ -34,8 +34,60 @@ Navigation in underwater environments is traditionally done by keeping a safe di
 
 \paragraph{Reinforcement learning in underwater domains}
 
+\paragraph{Spatial representation}" in
+% Sections/Introduction.tex. Uses biblatex (\parencite/\textcite)
+% like the rest of the thesis. Bullets = points to write.
+% ============================================================
+
 \paragraph{Spatial representation}
-- Whats common: occupancy maps, voxel representaitos
+\begin{itemize}
+  \item Problem: a forward-looking camera/sonar only observes the present;
+        obstacles leave the field of view, so navigation is partially
+        observable and needs a representation of space beyond the current
+        frame.
+  \item Classical approach: explicit maps built from range data.
+        Occupancy grids \parencite{elfes1989occupancy}, octree maps
+        \parencite{hornung2013octomap}, and distance fields for planning in
+        clutter \parencite{oleynikova2017voxblox}. Used together with
+        motion planners.
+  \item Learned policies, simplest memory: stacking the last frames as input
+        \parencite{mnih2015human}.
+  \item Recurrent memory: LSTM \parencite{hochreiter1997long} replaces frame
+        stacking in deep RL \parencite{hausknecht2015deep}; LSTM agents
+        navigate 3D mazes from pixels \parencite{mirowski2017learning}.
+  \item GRU \parencite{cho2014learning}: fewer gates, comparable to LSTM
+        \parencite{chung2014empirical}. Common in recent robot RL:
+        DCE policy uses a 64-unit GRU \parencite{kulkarni2024dce};
+        recurrent belief encoders \parencite{miki2022learning};
+        navigation among moving obstacles \parencite{hoeller2021learning}.
+        Link to your own $\pi_{\mathrm{DCE}}$ (GRU, hidden size 64, Method).
+  \item Beyond plain recurrence: map-shaped learned memories
+        \parencite{gupta2017cognitive, parisotto2018neural}, modular
+        learned SLAM \parencite{chaplot2020learning}, and transformer memory
+        \parencite{parisotto2020stabilizing}.
+  \item Critical view: plain LSTM memory can form implicit maps
+        \parencite{wijmans2023emergence}, yet LSTM/GRU are argued to be weak
+        at spatial memorisation, motivating spatially-enhanced recurrent units
+        \parencite{yang2026spatially}.
+\end{itemize}
+
+\paragraph{Spatial representation in underwater robotics}
+\begin{itemize}
+  \item Underwater navigation in unknown environments has mainly used
+        explicit octree maps from sonar with online planners
+        \parencite{hernandez2019online}; planning-based approaches also
+        dominate in cluttered and aquaculture settings
+        \parencite{xanthidis2023resiplan, amundsen2025netpen}.
+  \item Learned underwater policies mostly act on low-dimensional range
+        input \parencite{havenstrom2021deep}; recurrent memory appears
+        occasionally, e.g.\ a GRU in AUV collision avoidance
+        \parencite{yuan2023auv}.
+  \item Compressed latents for marine RL have only recently appeared
+        \parencite{larsen2024variational}.
+  \item Gap (``to the author's knowledge''): compressed depth
+        representations combined with recurrent memory for underwater
+        navigation in clutter.
+\end{itemize}
 
 \subsection{Visual Navigation}
 \subsubsection{Extracting visual information}
