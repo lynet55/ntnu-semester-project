@@ -90,6 +90,28 @@ PPO \parencite{schulman2017ppo} alternates between collecting experience with th
 \end{algorithmic}
 \end{algorithm}
 
+
+\begin{balign}
+  \mathcal{L}^{\mathrm{PPO}}(\mathbf{w}_\pi,\mathbf{w}_V)
+    &= \Lc{clip} + \lambda_V\Lc{V} - \lambda_H\Lc{H}, \label{eq:ppo-total}\\
+  \Lc{clip} &= -\mathbb{E}_t\bigl[\min\bigl(\kappa_t\hat A_t,\
+     \operatorname{clip}(\kappa_t,1-\epsilon,1+\epsilon)\hat A_t\bigr)\bigr], \label{eq:ppo-clip}\\
+  \kappa_t &= \frac{\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)}
+                   {\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_{\pi,\mathrm{old}})}, \label{eq:ppo-ratio}\\
+  \Lc{V} &= \max\Bigl(\mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V_t\bigr)\bigr],\
+     \mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V^{\mathrm{clip}}_t\bigr)\bigr]\Bigr), \label{eq:ppo-value}\\
+  \Lc{H} &= \mathbb{E}_t\bigl[\mathcal{H}\bigl(\pi(\cdot\mid\mathbf{x}^e_t;\mathbf{w}_\pi)\bigr)\bigr] \label{eq:ppo-entropy}
+\end{balign}
+
+Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm{old}} + \operatorname{clip}(V_t - V_{t,\mathrm{old}}, -\epsilon, \epsilon)$, $\ell_{\mathrm{H}}$ is the Huber loss with threshold 10 and $\mathcal{H}$ is the entropy. The advantage $\hat A_t$ and the return target $\hat G_t$ follow from generalized advantage estimation \eqref{eq:ppo-gae}, with $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. $\hat A_t$ is normalised to zero mean and unit variance over the batch, and $\hat G_t$ by its running mean and variance.
+
+\begin{balign}
+  \delta_t &= R_t + \gamma V_{t+1} - V_t, \label{eq:ppo-td}\\
+  \hat A_t &= \delta_t + \gamma\lambda_{\mathrm{GAE}}\hat A_{t+1}, \qquad \hat G_t = \hat A_t + V_t \label{eq:ppo-gae}
+\end{balign}
+
+
+
 % TODO theory missing:
 \begin{itemize}
   \item Short intuition for GAE: $\lambda_{\mathrm{GAE}}$ trades bias against variance
@@ -104,34 +126,7 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 \label{sec:recurrent}
 In a POMDP the state of the state of the environment is only partially observable to the agent. Thus, an agent navigating an unknown environment should have some notion of memory of the previously seen observations. RNNs have seen great success in a variety of sequential problems such as speech recognition language modelling and translations. In robotics, variations of RNNs have been increasingly adopted for adding memory capabilities to polices for navigation. 
 
-RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state.
-
-An unfortunate downside of the canonical RNN, is that it struggles to produce good predicitons when the gap between current observations and previoulsy seen information grows too large. The problem was famously addressed by Hochreiter and Scmidhuber, with the introduction of Long Short Term Memory networks (LSTMs) and later refined by the work of many others. 
-
-Another popular varaition of the LSTM is a "Gated Recurrent Unit" (GRU) introduced by \cite{}.  It combies the forget and input gate into a single "update gate". 
-
-
-
-% TODO: why memory (POMDP), LSTM/GRU equations. Moved from Related Work:
-\begin{itemize}
-  \item A recurrent network carries a hidden state $\mathbf{h}_t$ that summarises past
-        observations, $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$; the policy acts on
-        $\mathbf{h}_t$ instead of a single frame.
-  \item Vanishing gradients in plain RNNs, and gating as the fix: LSTM
-        \parencite{hochreiter1997long}.
-  \item GRU update equations (update gate, reset gate, candidate state), with $\mathbf{h}_t$
-        as in the registry.
-  \item Training detail: truncated backpropagation through time over PPO rollout sequences,
-        and resetting $\mathbf{h}_t$ at episode boundaries.
-  \item Problem: a forward-looking camera/sonar only observes the present;
-        obstacles leave the field of view, so navigation is partially
-        observable and needs a representation of space beyond the current
-        frame.
-  \item GRU \parencite{cho2014learning}: fewer gates, comparable to LSTM
-        \parencite{chung2014empirical}.
-\end{itemize}
-
-A recurrent network applies the same module $A$ at every time step and passes its hidden state on to the next step (Figure~\ref{fig:rnn}). The LSTM adds a cell state $\mathbf{c}_t$ that is changed only through gates (Figure~\ref{fig:lstm}); the GRU merges the cell and hidden states and uses two gates (Figure~\ref{fig:gru}).
+RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state. A typical RNN is depicted in Figure ~\ref{fig:rnn}.
 
 \begin{figure}[htbp]
     \centering
@@ -141,6 +136,11 @@ A recurrent network applies the same module $A$ at every time step and passes it
     \label{fig:rnn}
 \end{figure}
 
+A downside of RNNs, is that it struggles to produce good predictions when the gap between current observations and previously seen information grows too large. Vanilla RNNs also suffer vanishing and exploding gradients i.e gradients becoming very small of extremely large during training, which makes long-term dependencies challenging to learn and can lead to optimization related issues.
+
+
+These problems are famously addressed by Hochreiter and Scmidhuber \textcite{hochreiter1997long}, with their introduction of Long Short Term Memory networks (LSTMs) which was also later refined by the work of others aswell \cite{olah2015lstm}. LTSMs manage a way to control what information is added or removed from a network, by introducing the idea of a cell state $\mathbf{c}_t$ where information is only modifed by linear interactions and a gate operation deciding how much information from one source can be combined with information from another. Specifically the gate operation controls this by passing one source of information through a sigmoid layer $\sigma$ and then pointwise multiplying it with the other source of information.
+
 \begin{figure}[htbp]
     \centering
     \input{figures/rnn/lstm-cell.tex}
@@ -148,7 +148,11 @@ A recurrent network applies the same module $A$ at every time step and passes it
     \label{fig:lstm}
 \end{figure}
 
-\begin{figure}[htbp]
+
+Another popular variation of the LSTM is a "Gated Recurrent Unit" (GRU) introduced by \cite{cho2014learning}. It combines the forget and input gate into a single "update gate". It merges the cell state and hidden state, in addition to some other changes resulting in a simpler model than the standard LSTM \cite{olah2015lstm} (Figure~\ref{fig:gru}). 
+
+(Figure~\ref{fig:gru}).
+\begin{figure}[H]
     \centering
     \input{figures/rnn/gru-cell.tex}
     \caption{A GRU cell \parencite{cho2014learning}. The reset gate $\boldsymbol{\chi}_t$ sets how much of $\mathbf{h}_{t-1}$ enters the candidate state $\tilde{\mathbf{h}}_t$, and the update gate $\boldsymbol{\upsilon}_t$ blends $\mathbf{h}_{t-1}$ and $\tilde{\mathbf{h}}_t$ into $\mathbf{h}_t$. After \textcite{olah2015lstm}.}
@@ -201,31 +205,121 @@ Another common way to compress data is with so called Auto Encoders (AE), which 
 
 \subsection{Collision images}
 % Moved from Related Work (Task-driven compression)
-These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimaly combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right.
+These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimately combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right.
 
 \subsection{Underwater vehicle model}
 \paragraph{Types of UUVs}
-% TODO theory missing:
-\begin{itemize}
-  \item ROV vs.\ AUV (tethered/piloted vs.\ autonomous), and torpedo-shaped
-        (under-actuated) vs.\ box-frame (over-/fully actuated) vehicles.
-  \item Where the BlueROV2 Heavy fits: 8 thrusters, actuated in all 6 DOF.
-\end{itemize}
 
 \paragraph{Sensor suite}
-% TODO theory missing:
-\begin{itemize}
-  \item Typical suite: IMU, DVL, pressure (depth) sensor, USBL/acoustic positioning,
-        cameras and sonar.
-  \item Forward-looking sonar: range--bearing measurements in a 2D fan, range and
-        bearing resolution, noise sources (multipath, speckle).
-  \item Cameras underwater: attenuation and backscatter limit range; why depth
-        images rather than RGB.
-\end{itemize}
+Sensors used for navigation in underwater environments are more limited than the sensors used for in air, because of the harsh nature of underwater environments.
+Underwater environments are affected by low visibility and obb. Notably electromagnetic waves attenuate in water, so satellite systems (GNNS) like GPS of little use and motivates the use of acoustic based sensors \cite{bogue2015underwater, haugalokken2024lowcost}. Sensors used for localization used in UUVs are therefore sensors such as ultra-short baseline (USBL), Dobbler Velocity Logger (DVL) and sonar \cite{evjemo2025aquaculture}. USBL works by calculating the reception time of the acoustic signal transmissions sent by the transponder a received by the transceivers \cite{evjemo2025aquaculture}. A DVL sends acoustic beams at a surface and measures the Dobbler shift on the returned beams, and the velocity relative to the object reflecting the beams is derived \cite{evjemo2025aquaculture}. Mechanical scanning (Imaging) sonars, use a single narrow beam rotated by a stepper motor to build up a 2D acoustic image of the surroundings. These require time to generate a good image, as increasing the step angle of the motor gives faster scans but crude results. Mechanical sensors may also produce smeared images if the vehicle moves between scans.The Multibeam forward-looking sonar (FLS) improves this, as it returns an instant image by forming many beams at once and is therefore particularly useful when it comes to collision avoidance \cite{bogue2015underwater}. Vision based sensors like stereo- and mono camera solutions are also used on a UUV. The mono-camera is often well suited for low-light and used for inspection, while a stereo camera can be used for detection and relative localization of multiple objects, in addition to point cloud representations of the environment. However, cameras are heavy effected by the water quality, illumination and scattering/absorption effects \cite{haugalokken2024lowcost}. The collected data may be applied to simultaneous localization and mapping (SLAM) and scene reconstruction and decision support for UUV operators \textcite{haugalokken2024lowcost}. Furthermore, internal states are measured using a inertial measurement unit (IMU) and vessel depth is usually inferred from a pressure sensor \cite{evjemo2025aquaculture}.
 
-% TODO theory missing: 6-DOF kinematics $\dot{\boldsymbol{\eta}} = \mathbf{J}_\Theta(\boldsymbol{\eta})\boldsymbol{\nu}$ and the NED/body frames, before the dynamics.
+\subsection{Vehicle model}
+A common approach to modelling underwater vehicles is based on Fossen's 6-DOF equations of motion \citep{fossen2021handbook}. The motion is described using two reference frames: an Earth-fixed North-East-Down (NED) frame $\{n\}$, which is treated as inertial, and a body-fixed frame $\{b\}$ with its origin at the vehicle centre and with $x_b$ pointing forward, $y_b$ to starboard and $z_b$
+down. The state of the vehicle is given by
+\begin{beqn}
+\begin{aligned}
+\boldsymbol{\eta} &= [x,\, y,\, z,\, \phi,\, \theta,\, \psi]^\top \in \mathbb{R}^6, \\
+\boldsymbol{\nu}  &= [u,\, v,\, w,\, p,\, q,\, r]^\top \in \mathbb{R}^6,
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\eta}$ is the position $(x, y, z)$ and orientation, given as the Euler angles roll $\phi$, pitch $\theta$ and yaw $\psi$, of the vehicle expressed in $\{n\}$. $\boldsymbol{\nu}$ is the vector of linear velocities (surge $u$, sway $v$, heave $w$) and angular velocities (roll rate $p$, pitch rate $q$, yaw rate $r$) expressed in $\{b\}$. The two are related by the kinematic equation
+\begin{beqn}
+\begin{aligned}
+\dot{\boldsymbol{\eta}} = \mathbf{J}_\Theta(\boldsymbol{\eta})\,\boldsymbol{\nu},
+\qquad
+\mathbf{J}_\Theta(\boldsymbol{\eta}) =
+\begin{bmatrix}
+\mathbf{R}^n_b(\boldsymbol{\Theta}) & \mathbf{0}_{3\times 3} \\
+\mathbf{0}_{3\times 3} & \mathbf{T}_\Theta(\boldsymbol{\Theta})
+\end{bmatrix} \in \mathbb{R}^{6\times 6},
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\Theta} = [\phi, \theta, \psi]^\top$, $\mathbf{R}^n_b \in \mathbb{R}^{3\times 3}$ is the rotation matrix from $\{b\}$ to $\{n\}$, and $\mathbf{T}_\Theta \in \mathbb{R}^{3\times 3}$ maps the body angular rates to Euler-angle rates.
 
-\paragraph{Vehicle dynamics} The system dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine budled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024aquaculture}. Where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and moments produced by the thrusters, $\boldsymbol{\nu} = [u, v, w, p, q, r]^\top$ is the vector of linear and angular velocities expressed in the body-fixed frame, and $\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^\top$ is the position and orientation (Euler angles) of the vehicle in the North-East-Down (NED) frame. The matrix $\mathbf{M}_{RB}$ is the rigid-body mass and inertia matrix, $\mathbf{C}_{RB}(\boldsymbol{\nu})$ contains the rigid-body Coriolis and centripetal terms, and $\mathbf{g}_{RB}(\boldsymbol{\eta})$ represents the gravitational force acting on the vehicle. The hydrodynamic contributions consist of the added mass matrix $\mathbf{M}_{A}$, which accounts for the inertia of the surrounding fluid accelerated with the vehicle, the corresponding added-mass Coriolis and centripetal matrix $\mathbf{C}_{A}(\boldsymbol{\nu})$, the hydrodynamic damping matrix $\mathbf{D}(\boldsymbol{\nu})$, which includes both linear and quadratic drag, and $\mathbf{g}_{A}(\boldsymbol{\eta})$, which represents the buoyancy force. Together, $\mathbf{g}_{RB}(\boldsymbol{\eta})$ and $\mathbf{g}_{A}(\boldsymbol{\eta})$ form the restoring forces and moments acting on the vehicle. The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model is forward stepped. This does not include forces and torques introduced by the actuators.
+The dynamics are given by
+\begin{beqn}
+\begin{aligned}
+\mathbf{M}\dot{\boldsymbol{\nu}}
++ \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu}
++ \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu}
++ \mathbf{g}(\boldsymbol{\eta})
+= \boldsymbol{\tau},
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and
+moments produced by the thrusters, and
+\begin{beqn}
+\begin{aligned}
+\mathbf{M} &= \mathbf{M}_{RB} + \mathbf{M}_A \in \mathbb{R}^{6\times 6}, \\
+\mathbf{C}(\boldsymbol{\nu}) &= \mathbf{C}_{RB}(\boldsymbol{\nu}) + \mathbf{C}_A(\boldsymbol{\nu}) \in \mathbb{R}^{6\times 6}, \\
+\mathbf{D}(\boldsymbol{\nu}) &= \mathbf{D}_L + \mathbf{D}_{NL}(\boldsymbol{\nu}) \in \mathbb{R}^{6\times 6}, \\
+\mathbf{g}(\boldsymbol{\eta}) &\in \mathbb{R}^{6}.
+\end{aligned}
+\end{beqn}
+The rigid-body terms depend only on the vehicle itself. $\mathbf{M}_{RB}$ is the
+rigid-body mass and inertia matrix, and $\mathbf{C}_{RB}(\boldsymbol{\nu})$
+contains the rigid-body Coriolis and centripetal terms. The hydrodynamic
+contributions come from the surrounding water. The added-mass matrix
+$\mathbf{M}_A$ accounts for the inertia of the fluid that is accelerated
+together with the vehicle, and $\mathbf{C}_A(\boldsymbol{\nu})$ contains the
+corresponding added-mass Coriolis and centripetal terms. The damping matrix
+$\mathbf{D}(\boldsymbol{\nu})$ combines linear skin friction $\mathbf{D}_L$ with
+quadratic drag $\mathbf{D}_{NL}(\boldsymbol{\nu})$, which grows with the
+velocity. Finally, $\mathbf{g}(\boldsymbol{\eta})$ is the vector of restoring
+forces and moments from gravity and buoyancy, which act at the centre of
+gravity and the centre of buoyancy respectively. Placing the centre of gravity
+below the centre of buoyancy gives the vehicle passive stability in roll and
+pitch.
+
+The control forces and moments are produced by the thrusters,
+\begin{beqn}
+\begin{aligned}
+\boldsymbol{\tau} = \mathbf{T}\mathbf{f}, \qquad
+\mathbf{T} \in \mathbb{R}^{6\times 8}, \quad \mathbf{f} \in \mathbb{R}^{8},
+\end{aligned}
+\end{beqn}
+where $\mathbf{f}$ holds the forces of the eight thrusters on the BlueROV2 Heavy
+and $\mathbf{T}$ is the thruster configuration matrix, determined by the
+position and direction of each thruster. Since
+$\operatorname{rank}(\mathbf{T}) = 6$, the vehicle is fully actuated in all six
+degrees of freedom. With eight thrusters for six degrees of freedom, it is in
+fact over-actuated, so the mapping from $\boldsymbol{\tau}$ to $\mathbf{f}$
+has redundancy.
+
+\subsection{Simulation}
+\label{sec:marinegym}
+MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
+
+\paragraph{Sensor emulation} Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
+
+\paragraph{FLS model}
+The forward-looking sonar is modelled as $N = 16$ beams with fixed angles
+\begin{beqn}
+\begin{aligned}
+\beta_j = -\frac{\alpha}{2} + (j-1)\frac{\alpha}{N-1}, \qquad j = 1, \dots, N,
+\end{aligned}
+\end{beqn}
+spread uniformly over the field of view $\alpha = 180^\circ$ in the body $x_b y_b$-plane. Each beam has the direction $\mathbf{d}^b_j = [\cos\beta_j,\, \sin\beta_j,\, 0]^\top$ in $\{b\}$, which is rotated into the NED frame by the vehicle's attitude, $\mathbf{d}^n_j = \mathbf{R}^n_b(\boldsymbol{\Theta})\,\mathbf{d}^b_j$. The measured range of beam $j$ is the distance to the first intersection of the ray with the set of obstacle surfaces $\mathcal{O}$:
+\begin{beqn}
+\begin{aligned}
+d_j &= \min \left\{ s > 0 \;:\; \mathbf{p}^n + s\,\mathbf{d}^n_j \in \mathcal{O} \right\}, \\
+r_j &=
+\begin{cases}
+d_j, & r_{\min} \le d_j \le r_{\max}, \\
+r_{\max}, & \text{otherwise},
+\end{cases}
+\end{aligned}
+\end{beqn}
+where $\mathbf{p}^n$ is the vehicle position, $r_{\max} = 10$\,m is the maximum range and $r_{\min} = 0.2$\,m models the sensor's blind zone. The sonar observation is the range vector $\mathbf{r} = [r_1, \dots, r_N]^\top \in \mathbb{R}^N$. The ray intersections are computed with the ray-casting functionality of the PhysX engine in MarineGym, following the ray-based approach commonly used in real-time sonar simulation \citep{demarco2015sonar, choi2021multibeam}.
+
+In this work, the model is not implemented directly. It is provided by
+MarineGym \citep{chu2025marinegym}, whose GPU-accelerated hydrodynamics plugin
+is based on Fossen's equations and includes the BlueROV2 Heavy as a predefined
+vehicle model.
+
+The vehicle dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine bundled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024aquaculture}.  The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model propagated to the next state. This does not include forces and torques introduced by the actuators.
+
 
 \begin{beqn}
 \boldsymbol{\tau} = \underbrace{\mathbf{M}_{RB}\dot{\boldsymbol{\nu}} + \mathbf{C}_{RB}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{RB}(\boldsymbol{\eta})}_{\text{Rigid-body term}} + \underbrace{\mathbf{M}_{A}\dot{\boldsymbol{\nu}} + \mathbf{C}_{A}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu} + \mathbf{g}_{A}(\boldsymbol{\eta})}_{\text{Hydrodynamic term}}
@@ -234,15 +328,6 @@ These images are generated by first detecting edges along the original image of 
 
 \paragraph{BlueRov2 Heavy in MarineGym}
 In MarineGym the actuator model is split into a rotor dynamics model simulating the time dependent response of the rotor system, and a thrust generation model simulating which maps actuator states to the forces and torques. The thrust generation model for propellers is represented as a quadratic function with a dead zone. In this zone the thrust is set to be proportional to the deviation of rotational speed within predefined thresholds to account for nonlinear efficency variations? Each actuator generates their own force based on the input command and the actuator model, before they are individually applied to the corresponding actuator frame. All actuator configurations are fully configurable in MarineGym, however a built-in configuration of the T200 thruster from Blue  Robotics which is used in the BlueROV2 Heavy.
-
-\subsection{Simulation}
-\label{sec:marinegym}
-
-MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
-
-\paragraph{Other candidate simulators} Stonefish etc.
-
-\paragraph{Sensor emulation} Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast.
 
 \paragraph{Sim-to-real gap and domain randomization}
 It is well documented that RL policies often perform worse when deployed in the real world than in the simulator they were trained in, which is called the \textit{sim-to-real gap}. This is commonly addressed by randomising the physical parameters of the simulator during training, called Domain Randomization (DR).

@@ -1,17 +1,31 @@
 % !TEX root = ../main.tex
 \section{Method}
-
 \subsection{Proposed method}
+To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure ~\ref{fig:nav-stack-online}. Guidance, obstacle avoidance and low-level control are thereby replaced by a single learned policy, without explicit mapping or trajectory planning. This is further formalized by denoting the recurrent policy as $\pi_{GRU}(a_t \mid s_t, o_t)$ producing actions $a_t \in [-1,1]^4 \in \mathbb{R}^{4}$ at every time instance,  and the agent internal state being denoted $s_t \in \mathbb{R}^{6}$ , and $o_t = ( \boldsymbol{z_t}, \mathbf{r}_t) \in \mathbb{R}^{30}$ denoting the latent space representation of the depth images $D_t$ from the camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$ with  $r_{\max} = 12\,\mathrm{m}$ denoting the maximum range from the FLS. An action is then applied as the desired reference input $u_d=Sa_t$ to a velocity controller.
 
-\subsection{Problem formulation}
-To answer the research question, we construct a underwater environment with a corridor filled with obstacles. An agent is introduced at an initial position A, and is tasked to navigate throught a cluttred environment to a goal position B, on opposite side of  a set of obstacles without colliding with them. The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
 
-\paragraph{State Space representation} The problem is formalized as follows. At each discrete time step $t$, the agent takes an action $a_t \in \mathbb{R}^{4}$ drawn from a policy $\pi(a_t \mid s_t, o_t)$. Here $s_t \in \mathbb{R}^{6}$ is the agent's internal state, and $o_t = (D_t, \mathbf{r}_t)$ is the observation. It contains a latent representation \bold{$x$}, representing a depth image $D_t \in \mathbb{R}^{96 \times 128}$ from a camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$, with $r_{\max} = 12\,\mathrm{m}$,from a forward-looking sonar (FLS). The agent is conditioned on a goal position $g \in \mathbb{R}^{3}$, which it must reach while avoiding a set of obstacles.
+% Compact form of the observation
+\begin{equation}
+\mathbf{o}_k =
+\begin{bmatrix}
+0.1\,\mathbf{g}^{b} &
+\sin e_\psi & \cos e_\psi &
+u & v & w & r & z & \phi & \theta &
+\tfrac{d_1}{12} & \cdots & \tfrac{d_{16}}{12} &
+\tfrac{d_f}{12} & c_{\mathrm{TTC}}
+\end{bmatrix}^{\!\top} \in \mathbb{R}^{30}
+\end{equation}
 
-Two approaches to navigating the environment are considered, an extension of \textcite{ } Deep Collision Encoding (DCE) and the navigation stack proposed in \textcite{} using DeFM. Except for the architectural differences which will further be discussed below, its worth addressing that the approaches differ in how depth and sonar measurements are inputted to the policy.
-
-% Requires: \usepackage{amsmath,amssymb,booktabs}
-
+%==========================================================
+% 2. Agent action
+%==========================================================
+\begin{equation}
+\mathbf{a}_k \in [-1,1]^4, \qquad
+\boldsymbol{\nu}^{*}_k =
+\begin{bmatrix} u^{*} \\ v^{*} \\ w^{*} \\ r^{*} \end{bmatrix}
+= S\,\mathbf{a}_k, \qquad
+S = \operatorname{diag}(0.45,\ 0.30,\ 0.25,\ 0.5)
+\end{equation}
 %==========================================================
 % 1. Observation vector during training (uuv-rl-env, sonar_goal.yaml)
 %==========================================================
@@ -38,46 +52,22 @@ Index & Symbol & Description & Frame / scaling & Dim \\
 \end{tabular}
 \end{table}
 
-% Sonar model behind indices 13--29 (ideal instantaneous raycast)
-\begin{equation}
-r_k^{(i)} = \min\!\Big(\operatorname{ray}\big(\mathbf{p}_k,\ \psi_k + \tfrac{2\pi i}{64}\big),\ 12\Big),
-\qquad i = 0,\dots,63,
-\end{equation}
-with hits below $0.2\,\mathrm{m}$ discarded (read as $12$), so $\mathbf{r}_k \in [0,12]^{64}$ at every decision time $t_k$.
+The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described in \cite{kulkarni2023task}. The VAE follows the architecture seen in \ref{fig:vae-layers} and is trained with the reconstruction\ref{eq:vae-loss}. 
 
-% Compact form of the observation
-\begin{equation}
-\mathbf{o}_k =
-\begin{bmatrix}
-0.1\,\mathbf{g}^{b} &
-\sin e_\psi & \cos e_\psi &
-u & v & w & r & z & \phi & \theta &
-\tfrac{d_1}{12} & \cdots & \tfrac{d_{16}}{12} &
-\tfrac{d_f}{12} & c_{\mathrm{TTC}}
-\end{bmatrix}^{\!\top} \in \mathbb{R}^{30}
-\end{equation}
+\subsection{Training environment}
+\label{sec:env}
+Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
 
-%==========================================================
-% 2. Agent action
-%==========================================================
-\begin{equation}
-\mathbf{a}_k \in [-1,1]^4, \qquad
-\boldsymbol{\nu}^{*}_k =
-\begin{bmatrix} u^{*} \\ v^{*} \\ w^{*} \\ r^{*} \end{bmatrix}
-= S\,\mathbf{a}_k, \qquad
-S = \operatorname{diag}(0.45,\ 0.30,\ 0.25,\ 0.5)
-\end{equation}
-with units $\mathrm{m/s}$ for $u^{*},v^{*},w^{*}$ and $\mathrm{rad/s}$ for $r^{*}$, in body FLU.
-The setpoint is held (zero-order hold) for one decision period:
-\begin{equation}
-\boldsymbol{\nu}^{*}(t) = \boldsymbol{\nu}^{*}_k, \qquad
-t \in [t_k,\ t_k + 8\Delta t), \quad \Delta t = 0.02\,\mathrm{s},\quad t_{k+1}-t_k = 0.16\,\mathrm{s}.
-\end{equation}
+ The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
 
-\subsection{Simulation setup}
-
-The navigational policy will be trained, and evaluated using the dynamics of the BlueRov2 Heavy, configured with a emulated mono camera returning a depth image and a FLS. The model parameters used for the dynamics ~\ref{eq:dynamics} are taken from the default parameters in MarineGym, and can be found in Table ~\ref{tab:bluerov_model}. 
-
+MarineGym is configured with the BlueROV2 Heavy model chosen because of its relevance discussed in {sec:simulators}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth, trim=1 1 1 1, clip]{figures/bluerov2heavy_marinegym.png}
+    \caption{BlueROV2 Heavy model}
+    \label{fig:bluerov2}
+\end{figure}
+ The model parameters are taken from the URDF used in MarineGym \ref{tab:bluerov_model}.
 \begin{table}[H]
   \centering
   \caption{BlueROV2 Heavy model parameters used in MarineGym.}
@@ -100,55 +90,14 @@ The navigational policy will be trained, and evaluated using the dynamics of the
     \bottomrule
   \end{tabular}
 \end{table}
-
-
-\subsection{Depth encoders}
-\subsubsection{Architecture} To compress the depth images into a suitable latent representation for the policy to observe the images, a VAE consiting of ... is trained to reconstruct images from 100,000 captured state-observation pairs collected from the simulator by sampling from older policy rollouts, and perturbing the samples with randomly sampled offsets. The depth images are then augmented to create Collision Images following the process described in \textcite{} yielding the images seen in \cref{fig:collision_image}
-
-\subsubsection{Losses}
-
-\begin{beqn}
-  \Lc{total} = \Lc{rec} + \lambda \Lc{KL}
-  \label{eq:loss}
-\end{beqn}
-
-\subsubsection{DeFM}
-% TODO: skeleton (new section from restructure)
-
-\subsection{Navigation policy}
-We train a policy to navigate the cluttered environment by formulating as POMDP. Policies were trained on Proximal Policy Optimization (PPO) \cite{schulman2017ppo} using the implementation provided in MarineGym \textcite{chu2025marinegym}, and given privileged state information about the location of the objects.
-
-
-\begin{balign}
-  \mathbf{h}_t &= f(\mathbf{x}_t, \mathbf{h}_{t-1}) \label{eq:h}\\
-  \mathbf{y}_t &= g(\mathbf{h}_t) \label{eq:y}
-\end{balign}
-
-\subsubsection{DCE policy}
-In the case of DCE, we denote the policy by $\pi_{DCE}$ and parametrize the MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64. 
-
-\subsection{Training}
-\subsubsection{Proprioceptive and exteroceptive sensor emulation}
-\paragraph{Proprioceptive sensors} 
-\paragraph{Exteroceptive sensors}
-
-Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore a simulated sonar is also available to the agent through an analytical implementation.
-
 \subsubsection{Sonar emulation}
+The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the theory in \ref{sec:fsl-model}. The ranges are directly used as a policy observation discussed in \ref{sec:rw-rl}.  
 
-
-
-\subsubsection{Sonar simulation}
-To evaluate the limitations of the methods proposed, we again consider the dynamics \ref{eq:dynamics} of a BlueROV2 Heavy in a corridor of obstacles. 
-
-
-
-
-
-\subsubsection{Reward shaping}
-At every policy decision the environment returns the reward $R_t \in \mathbb{R}$ in \eqref{eq:reward-total}, a sum of the shaping terms \eqref{eq:reward-progress}--\eqref{eq:reward-ttc} and the terminal term \eqref{eq:reward-terminal}.
+\subsection{Recurrent policy}
+The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64 and trained using Asymetric PPO (APPO) \textcite{schulman2017ppo} with rewards calculated using \ref{sec:env} and the rewards calculated as follows \ref{eq:rewards}.
 
 \begin{balign}
+\label{eq:rewards}
   R_t &= \textstyle\sum_{k} R^{(k)}_t, \label{eq:reward-total}\\
   R^{(\mathrm{prog})}_t &= \lambda_{\mathrm{prog}}\bigl(d^{\mathrm{goal}}_{t-1} - d^{\mathrm{goal}}_t\bigr), \label{eq:reward-progress}\\
   R^{(\mathrm{alive})}_t &= -\lambda_{\mathrm{alive}}, \label{eq:reward-alive}\\
@@ -195,69 +144,8 @@ Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^n_{\mathrm{goal}} - \mathbf{p}^n_t
 
 The policy and critic are trained on $R_t$ by minimising the PPO loss \eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$ and $\epsilon = 0.2$.
 
-\begin{balign}
-  \mathcal{L}^{\mathrm{PPO}}(\mathbf{w}_\pi,\mathbf{w}_V)
-    &= \Lc{clip} + \lambda_V\Lc{V} - \lambda_H\Lc{H}, \label{eq:ppo-total}\\
-  \Lc{clip} &= -\mathbb{E}_t\bigl[\min\bigl(\kappa_t\hat A_t,\
-     \operatorname{clip}(\kappa_t,1-\epsilon,1+\epsilon)\hat A_t\bigr)\bigr], \label{eq:ppo-clip}\\
-  \kappa_t &= \frac{\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)}
-                   {\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_{\pi,\mathrm{old}})}, \label{eq:ppo-ratio}\\
-  \Lc{V} &= \max\Bigl(\mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V_t\bigr)\bigr],\
-     \mathbb{E}_t\bigl[\ell_{\mathrm{H}}\bigl(\hat G_t - V^{\mathrm{clip}}_t\bigr)\bigr]\Bigr), \label{eq:ppo-value}\\
-  \Lc{H} &= \mathbb{E}_t\bigl[\mathcal{H}\bigl(\pi(\cdot\mid\mathbf{x}^e_t;\mathbf{w}_\pi)\bigr)\bigr] \label{eq:ppo-entropy}
-\end{balign}
-
-Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm{old}} + \operatorname{clip}(V_t - V_{t,\mathrm{old}}, -\epsilon, \epsilon)$, $\ell_{\mathrm{H}}$ is the Huber loss with threshold 10 and $\mathcal{H}$ is the entropy. The advantage $\hat A_t$ and the return target $\hat G_t$ follow from generalized advantage estimation \eqref{eq:ppo-gae}, with $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. $\hat A_t$ is normalised to zero mean and unit variance over the batch, and $\hat G_t$ by its running mean and variance.
-
-\begin{balign}
-  \delta_t &= R_t + \gamma V_{t+1} - V_t, \label{eq:ppo-td}\\
-  \hat A_t &= \delta_t + \gamma\lambda_{\mathrm{GAE}}\hat A_{t+1}, \qquad \hat G_t = \hat A_t + V_t \label{eq:ppo-gae}
-\end{balign}
-
-
-
 \subsection{Evaluation protocol}
 
 To evaluate policy robustness, we 
 
 \subsubsection{Evaluation simulator}
-
-
-
-%==========================================================
-% 3. Observation vector available from the Godot hi-fi sim
-%==========================================================
-% State (GroundTruth.sample), NED world frame
-\begin{equation}
-\mathbf{y}_t =
-\begin{bmatrix}
-\mathbf{p}^{n} \\ \operatorname{vec}(R_{nb}) \\ \mathbf{v} \\ \boldsymbol{\omega} \\ t_s
-\end{bmatrix}
-\in \mathbb{R}^{3+9+3+3+1} = \mathbb{R}^{19},
-\end{equation}
-where $\mathbf{p}^{n}$ is position (NED), $R_{nb}$ the body basis in world (\texttt{basis\_world}),
-$\mathbf{v},\boldsymbol{\omega}$ linear and angular velocity, and $t_s$ sim time.
-
-% Sonar (mechanically scanned MSIS): one ping per step
-\begin{equation}
-\mathbf{z}_j = \big(\beta_j,\ t_j,\ \mathbf{I}_j\big),\qquad
-\mathbf{I}_j \in \mathbb{R}^{N_{\mathrm{bins}}},\qquad
-\beta_j = \beta_0 + j\,\Delta\beta,\quad t_j = t_0 + j\,\Delta t_{\mathrm{ping}},
-\end{equation}
-\begin{equation}
-I_j[n] = \sum_{s} b(\beta_s - \beta_j,\ \varphi_s)\,\sigma_s\,
-\frac{e^{-2\alpha\rho_s}}{\rho_s^{2}}\, g(\rho_s - \rho_n) + \epsilon_j[n],
-\end{equation}
-so a full sweep takes $T_{\mathrm{sweep}} = \tfrac{2\pi}{\Delta\beta}\,\Delta t_{\mathrm{ping}}$
-(e.g.\ $400 \times 15.7\,\mathrm{ms} \approx 6.3\,\mathrm{s}$).
-
-% Mapping Godot outputs to the training observation
-\begin{align}
-\mathbf{p}^{\uparrow} &= C\,\mathbf{p}^{n}, &
-C &= \begin{bmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & -1 \end{bmatrix}, \\
-\boldsymbol{\nu}^{\mathrm{FLU}} &= D\,\boldsymbol{\nu}^{\mathrm{FRD}}, &
-D &= \operatorname{diag}(1,-1,-1)\ \text{(linear and angular parts)}, \\
-M_k &= \Phi\big(\{\mathbf{z}_j,\ \mathbf{y}(t_j)\}_{t_j \le t_k}\big), &
-\hat{\mathbf{r}}_k &= \mathcal{R}\big(M_k,\ \mathbf{y}(t_k)\big) \in [0,12]^{64}, \\
-\hat{\mathbf{o}}_k &= f\big(\mathbf{y}(t_k),\ \hat{\mathbf{r}}_k,\ \mathbf{g}\big) \in \mathbb{R}^{30}. & &
-\end{align}
