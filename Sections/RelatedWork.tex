@@ -2,20 +2,33 @@
 \section{Related Work}
 
 \subsection{Underwater navigation in clutter}
-Navigation in underwater environments is traditionally done by keeping a safe distance to the obstacles, doing so called "fly-overs" of the area of interest for AUV's \parencite[]{xanthidis2020navigation}. Systems are traditionally designed using classical motion planners, and path following controllers (Need source). When comes to navigation in cluttered environments, efforts have been made to use trajectory optimization to find good solutions (source) tough many of which are limited to planning in 2D, or with vertical releaf \cite{xanthidis2023resiplan}. Some efforts like AquaNav addresses the problem of 3D trajectory planning by incorporating visual features- and warm-restartung the planner \textcite{xanthidis2020navigation} . ResiPlan furthermore extends AquaNav's core with guarantees for environments with dynamic guarantees \parencite[]{xanthidis2023resiplan}.
+\paragraph{State of navigation in robotics}
+Learning-based approaches to robot navigation have predominantly targeted local planning and control, while classical map-based planners are often retained for global planning, leading to hybrid architectures \parencite{xiao2022motion}. Within learned local policies, a common structure is found across ground, aerial and legged platforms: high-dimensional exteroceptive observations are compressed into a compact latent, which is combined with proprioceptive and goal information and mapped by a policy network to motion commands \parencite{zhu2021deep, almahamid2022autonomous, ha2025learning}. Approaches differ mainly in how this compression is learned. One option is a convolutional encoder trained jointly with the policy, as in aerial \parencite{loquercio2018dronet} and legged locomotion from egocentric depth \parencite{agarwal2023legged}, and agile flight from low-resolution depth images \parencite{zhang2025learning}. Another is to pre-train the encoder separately with a reconstruction objective, typically as a variational autoencoder (VAE), and learn the policy on the resulting latent: \textcite{hoeller2021learning} compress depth images with a VAE before fusing the latents over time for quadruped navigation, and \textcite{yang2026spatially} use a VAE-pretrained depth encoder for long-range mapless navigation. The Deep Collision Encoder \parencite{kulkarni2023task, kulkarni2024dce} trains the latent on a task-driven objective, reconstructing a collision-aware image rather than the raw depth, and keeps it frozen during RL for aerial navigation. Where the exteroceptive input is already structured, such as height samples from an elevation map, multilayer perceptron (MLP) encoders are used \parencite{miki2022learning}, and transformers have been applied directly to raw point clouds \parencite{yuan2025reasan}. These choices determine whether the representation is shaped by the policy objective or fixed before policy learning \parencite{lesort2018state}.
 
-\subsection{Learning-based navigation and RL underwater}
-\paragraph{Reinforcement learning in underwater domains}
+\paragraph{Learning based navigation in underwater environments}
+While classical motion planners have dominated underwater navigation \parencite {hernandez2019online, xanthidis2020navigation, xanthidis2023resiplan}, several works have introduced learned components into the navigation stack. \textcite{deowan2026unified} combine a Voronoi planner (with RRT fallback) for long-horizon planning with a reinforcement learning policy for short-horizon path tracking and reactive avoidance. Sonar returns and depth-image consistency are fused into a persistent occupancy map, which serves as the system's spatial memory and is used by the planner rather than the policy. The policy itself is a feedforward network that observes path-tracking errors, body velocities and sectorized sonar features. It is augmented with two signals from a latent world model trained on sonar, depth, IMU, velocity and path observations: the one-step prediction residual and a predictive-uncertainty estimate. Memory therefore resides in the explicit map rather than in the policy. \textcite{yang2022monocular} train a PPO policy for mapless 3D waypoint navigation of a low-cost AUV, using depth images estimated from a monocular camera, single-beam echo-sounder readings, the relative goal and previous actions. Temporal context is provided by stacking the last five observations, and the stacked depth images are encoded by a convolutional network trained end-to-end with the policy. The approach is validated in simulation and on a real robot.
 
-\paragraph{State of the art}
+% xiao2022motion: https://doi.org/10.1007/s10514-022-10039-8
+% zhu2021deep: https://doi.org/10.26599/TST.2021.9010012
+% almahamid2022autonomous: https://doi.org/10.1016/j.engappai.2022.105321
+% ha2025learning: https://doi.org/10.1177/02783649241312698
+% loquercio2018dronet: https://doi.org/10.1109/LRA.2018.2795643
+% wijmans2020ddppo: https://arxiv.org/abs/1911.00357
+% agarwal2023legged: https://arxiv.org/abs/2211.07638
+% zhang2025learning: https://arxiv.org/abs/2407.10648
+% hoeller2021learning: https://doi.org/10.1109/LRA.2021.3068639
+% yang2026spatially: https://arxiv.org/abs/2506.05997
+% kulkarni2023task: https://arxiv.org/abs/2309.05289
+% kulkarni2024dce: https://arxiv.org/abs/2402.03947
+% miki2022learning: https://doi.org/10.1126/scirobotics.abk2822
+% yuan2025reasan: https://arxiv.org/abs/2512.09537
+% lesort2018state: https://doi.org/10.1016/j.neunet.2018.07.006
 
 \subsection{Depth perception underwater}
 For a robot to move freely in space, it becomes natural to incorporate 3D spatial information in the robots description framework to allow for planning in 3D. This is widely achieved by equipping the robotic platform with depth sensors, or by using methods for online depth estimation from camera images. This is commonly the preferred image representation as opposed to a RGB representation, which poses challenges in the context of sim-to-real transfer due to the visual complexities such as lighting, texture and color variation, of which depth is invariant to \parencite{patel2026defm}.
 
 \paragraph{Depth images in underwater domains}
 Capturing spatial information in 3D is a particular challenge for underwater robotics, as visibility is significantly reduced compared to in air. Visibility is reduced with depth, and debris in the water increases the turbidity of the water, making camera visibility even worse \parencite{evjemo2025aquaculture}. 
-
-learned depth estiators 
 
 \paragraph{Obtaining depth measurements underwater}
 Most commonly underwater robots are equipped with  a Forward Looking Sonar (FLS) which is limited to measuring depth information in a 2D plane. More recently, novel 3D multi-beam sonars entering the market but have not yet been fully adopted by the research community \cite{}.
@@ -40,15 +53,10 @@ The VAE filters out the inputs high frequency content and thus filters out noise
 \cite{hoeller2021learning}
 To bridge the reality gap, the VAE is trained with images from simulation and the real robot. We define the auto encoder's loss as the reconstruction error between the decoded image and a filtered version of the input image. The filtering operations are inspired by the IP-Basic algorithm [36], which performs simple depth completion. We extend this method to inflate objects and remove their level of detail to extract object bounds rather than exact shapes. As a result, we can mask the main shortcomings of real depth images compared to simulated ones: Missing information, loss of detail, and depth noise. The filter first performs a dilation and hole closing operation. This removes the noise in the planes and along the edges of objects. Next, a dilation with a large kernel is performed on the image but only applied to the remaining black pixels. Finally, a bilateral filter is applied to the resulting image to smooth out shapes. These steps are depicted in Fig. 3, which shows how missing information is recovered and the level of detail of objects reduced. The filtering operations could also be performed as a preprocessing step before passing the image to the VAE. However, this would require running the filtering operations at inference time, which would increase computational load on our mobile hardware. With our method, filtering is implicitly integrated into the VAE forward-pass and therefore incurs no additional computational cost. B. Fusing the sequence of i
 
-
-
 \paragraph{Task-driven compression}
 Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work using modifications of the traditional VAE by incorporating task specific compression. ORACLE predicts collision probabilities used by a motion planner, by using a set of predetermined action sequences (motion primitives) directly from an image and the robots velocity estimates\cite{nguyen2022motion}. Later, seVAE introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss ignoring the contributions of invalid pixels which are missing depth information \cite{kulkarni2023semantically}.  Another idea presented by the same authors for encoding depth images for collision free navigation, is by training the VAE on so called collision images. In a follow up paper, this method has even been combined with reinforcement learning for learning a policy capable of collision avoidance.
 
-Maybe mention the method from the locomotion paper. 
-
 \paragraph{Pretrained and foundation encoders}
-% TODO: skeleton (DINOv2, R3M, VC-1, domain-gap critique)
 \begin{itemize}
   \item DeFM \parencite{patel2026defm}: a depth foundation model pretrained on large
         depth datasets, giving a general-purpose embedding that can be frozen and fed to
@@ -58,54 +66,11 @@ Maybe mention the method from the locomotion paper.
         Future Work.
 \end{itemize}
 
-
-
-\subsection{Spatial representation and memory}
-\paragraph{Spatial representation}
-\begin{itemize}
-  \item Classical approach: explicit maps built from range data.
-        Occupancy grids \parencite{elfes1989occupancy}, octree maps
-        \parencite{hornung2013octomap}, and distance fields for planning in
-        clutter \parencite{oleynikova2017voxblox}. Used together with
-        motion planners.
-  \item Learned policies, simplest memory: stacking the last frames as input
-        \parencite{mnih2015human}.
-  \item Recurrent memory: LSTM \parencite{hochreiter1997long} replaces frame
-        stacking in deep RL \parencite{hausknecht2015deep}; LSTM agents
-        navigate 3D mazes from pixels \parencite{mirowski2017learning}.
-  \item Common in recent robot RL:
-        DCE policy uses a 64-unit GRU \parencite{kulkarni2024dce};
-        recurrent belief encoders \parencite{miki2022learning};
-        navigation among moving obstacles \parencite{hoeller2021learning}.
-        Link to your own $\pi_{\mathrm{DCE}}$ (GRU, hidden size 64, Method).
-  \item Beyond plain recurrence: map-shaped learned memories
-        \parencite{gupta2017cognitive, parisotto2018neural}, modular
-        learned SLAM \parencite{chaplot2020learning}, and transformer memory
-        \parencite{parisotto2020stabilizing}.
-  \item Critical view: plain LSTM memory can form implicit maps
-        \parencite{wijmans2023emergence}, yet LSTM/GRU are argued to be weak
-        at spatial memorisation, motivating spatially-enhanced recurrent units
-        \parencite{yang2026spatially}.
-\end{itemize}
-
-\paragraph{Spatial representation in underwater robotics}
-\begin{itemize}
-  \item Underwater navigation in unknown environments has mainly used
-        explicit octree maps from sonar with online planners
-        \parencite{hernandez2019online}; planning-based approaches also
-        dominate in cluttered and aquaculture settings
-        \parencite{xanthidis2023resiplan, amundsen2025netpen}.
-  \item Learned underwater policies mostly act on low-dimensional range
-        input \parencite{havenstrom2021deep}; recurrent memory appears
-        occasionally, e.g.\ a GRU in AUV collision avoidance
-        \parencite{yuan2023auv}.
-  \item Compressed latents for marine RL have only recently appeared
-        \parencite{larsen2024variational}.
-  \item Gap (``to the author's knowledge''): compressed depth
-        representations combined with recurrent memory for underwater
-        navigation in clutter.
-\end{itemize}
+\subsection{Recurrent memory in navigation policies}
+As mentioned in section \ref{sec:recurrent} recurrent units are used to address the problem of partial observability, which is the case in navigation form onboard depth perception.  Reviewing several works, the use of recurrent units in navigation using depth perception can be divided three predominant examples. In the first case state estimation becomes a part of the implicit part of the control policy \textcite{ha2025learning} , keeping memory inside of the policy and training on a specific task objective. Examples of architectures like this can be a MLP followed by a GRU  and a ELU activation layer like in \textcite{kulkarni2024dce}, or a GRU layered in-between fully connected layers (FC) and a ELU \parencite{ sawant2026crossmodal}. Another approach to use a recurrent unit as a state estimator, as seen in  \textcite{hoeller2021learning} where a LSTM is used to produce a predicted latent  representation  (belief state) which is further used to train a control policy.
 
 \subsection{Summary and research gap}
-% TODO: skeleton (new section from restructure)
-% short summary of the gap, pointing back to the research questions
+\begin{itemize}
+    \item Exploration of recurrent memory in underwater navigation
+    \item Exploiting sonar fused with depth camera
+\end{itemize}

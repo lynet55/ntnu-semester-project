@@ -818,8 +818,10 @@
   title   = {Deep Reinforcement Learning Controller for {3D} Path Following and Collision Avoidance by Autonomous Underwater Vehicles},
   author  = {Havenstr{\o}m, Simen Theie and Rasheed, Adil and San, Omer},
   journal = {Frontiers in Robotics and AI},
+  volume  = {7},
+  pages   = {566037},
   year    = {2021},
-  note    = {Add volume/article number from the publisher page}
+  doi     = {10.3389/frobt.2020.566037}
 }
 
 @inproceedings{yang2022monocular,
@@ -1029,4 +1031,181 @@
   pages     = {1735--1780},
   year      = {1997},
   doi       = {10.1162/neco.1997.9.8.1735}
+}
+% ------------------------------------------------------------
+% (F) LEARNED NAVIGATION: SURVEYS AND MEMORY (added Nov 2026)
+% ------------------------------------------------------------
+
+@article{xiao2022motion,
+  author  = {Xiao, Xuesu and Liu, Bo and Warnell, Garrett and Stone, Peter},
+  title   = {Motion Planning and Control for Mobile Robot Navigation Using Machine Learning: A Survey},
+  journal = {Autonomous Robots},
+  volume  = {46},
+  number  = {5},
+  pages   = {569--597},
+  year    = {2022},
+  doi     = {10.1007/s10514-022-10039-8},
+  eprint  = {2011.13112},
+  archivePrefix = {arXiv}
+}
+
+% CHECK: confirm year/volume/issue/pages on the IJRR page (DOI below)
+@article{ha2025learning,
+  author  = {Ha, Sehoon and Lee, Joonho and van de Panne, Michiel and Xie, Zhaoming and Yu, Wenhao and Khadiv, Majid},
+  title   = {Learning-Based Legged Locomotion: State of the Art and Future Perspectives},
+  journal = {The International Journal of Robotics Research},
+  year    = {2025},
+  doi     = {10.1177/02783649241312698},
+  eprint  = {2406.01152},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{morad2023popgym,
+  author    = {Morad, Steven and Kortvelesy, Ryan and Bettini, Matteo and Liwicki, Stephan and Prorok, Amanda},
+  title     = {{POPGym}: Benchmarking Partially Observable Reinforcement Learning},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023},
+  eprint    = {2303.01859},
+  archivePrefix = {arXiv}
+}
+
+% CHECK: add volume/pages from the publisher page (DOI below)
+@article{zhang2025learning,
+  author  = {Zhang, Yuang and Hu, Yu and Song, Yunlong and Zou, Danping and Lin, Weiyao},
+  title   = {Learning Vision-Based Agile Flight via Differentiable Physics},
+  journal = {Nature Machine Intelligence},
+  year    = {2025},
+  doi     = {10.1038/s42256-025-01048-0},
+  eprint  = {2407.10648},
+  archivePrefix = {arXiv}
+}
+% ------------------------------------------------------------
+% (G) MEMORY PLACEMENT IN LEARNED NAVIGATION (added Nov 2026)
+% ------------------------------------------------------------
+
+% CHECK: arXiv page says "Accepted to ..." - add the venue once confirmed
+@misc{malczyk2026active,
+  author        = {Malczyk, Grzegorz and Kulkarni, Mihir and Alexis, Kostas},
+  title         = {Reinforcement Learning for Active Perception in Autonomous Navigation},
+  year          = {2026},
+  eprint        = {2602.01266},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+@misc{sawant2026crossmodal,
+  author        = {Sawant, Omkar and Zanatta, Luca and Malczyk, Grzegorz and Alexis, Kostas},
+  title         = {Cross-Modal Reinforcement Learning for Navigation with Degraded Depth Measurements},
+  year          = {2026},
+  eprint        = {2603.22182},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% Note: different Yuan from yuan2023auv
+@misc{yuan2025reasan,
+  author        = {Yuan, Qihao and Cao, Ziyu and Cao, Ming and Li, Kailai},
+  title         = {{REASAN}: Learning Reactive Safe Navigation for Legged Robots},
+  year          = {2025},
+  eprint        = {2512.09537},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% CHECK: author list and workshop name on the arXiv page
+@misc{heess2015memory,
+  author        = {Heess, Nicolas and Hunt, Jonathan J. and Lillicrap, Timothy P. and Silver, David},
+  title         = {Memory-Based Control with Recurrent Neural Networks},
+  year          = {2015},
+  eprint        = {1512.04455},
+  archivePrefix = {arXiv},
+  note          = {NIPS 2015 Deep Reinforcement Learning Workshop}
+}
+
+% ------------------------------------------------------------
+% (H) LEARNED UNDERWATER NAVIGATION: MEMORY AND SENSOR FUSION (added Nov 2026)
+% ------------------------------------------------------------
+
+% Sonar-only D-DQN with an LSTM in the Q-network. Same group as yuan2023auv.
+% CHECK: whether the LSTM consumes a history of time steps.
+@article{yuan2021auv,
+  author  = {Yuan, Jianya and Wang, Hongjian and Zhang, Honghan and Lin, Changjian and Yu, Dan and Li, Chengfeng},
+  title   = {{AUV} Obstacle Avoidance Planning Based on Deep Reinforcement Learning},
+  journal = {Journal of Marine Science and Engineering},
+  volume  = {9},
+  number  = {11},
+  pages   = {1166},
+  year    = {2021},
+  doi     = {10.3390/jmse9111166}
+}
+
+% Camera + 3 stacked FLS frames, hierarchical RL (RLPD/SERL + SAC/HER), HoloOcean, no recurrence.
+@misc{shafer2026endtoend,
+  author        = {Shafer, Elisei and Gal, Oren},
+  title         = {Towards End to End Motion Planning and Execution for Autonomous Underwater Vehicles Using Reinforcement Learning},
+  year          = {2026},
+  eprint        = {2606.08513},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% Sonar + depth image, Isaac Sim, planner + PPO MLP policy, latent world model.
+% Main comparison for the proposed stack.
+@misc{deowan2026unified,
+  author        = {Deowan, Md Ether and Kelasidi, Eleni},
+  title         = {Unified Planning-Learning Framework for Robust {UUV} Navigation Under Partial Observability},
+  year          = {2026},
+  eprint        = {2608.05365},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% Monocular depth + single-beam echo sounder + goal + action history, Unity; compares
+% A2C/PPO/TRPO/SAC/TD3. Code: github.com/eather0056/BlueROV_Nav_DRL
+% CHECK: page numbers; how "historical actions" are used (stacking vs recurrence).
+@inproceedings{deowan2025optimizing,
+  author    = {Deowan, Md Ether and Yeasher Yousha, M. S. and Hossain, T. M. and Hassan, S. and Marxer, Ricard},
+  title     = {Optimizing Underwater Robot Navigation: A Study of {DRL} Algorithms and Multi-Modal Sensor Fusion},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2025}
+}
+
+% ------------------------------------------------------------
+% (I) SURVEYS FOR LEARNED NAVIGATION ARCHITECTURES (added Nov 2026)
+% Citation counts from OpenAlex, Nov 2026.
+% ------------------------------------------------------------
+
+% ~500 citations. CHECK: volume/issue/pages on the publisher page.
+@article{zhu2021deep,
+  author  = {Zhu, Kai and Zhang, Tao},
+  title   = {Deep Reinforcement Learning Based Mobile Robot Navigation: A Review},
+  journal = {Tsinghua Science and Technology},
+  volume  = {26},
+  number  = {5},
+  pages   = {674--691},
+  year    = {2021},
+  doi     = {10.26599/TST.2021.9010012}
+}
+
+% ~190 citations. CHECK: volume on the publisher page.
+@article{almahamid2022autonomous,
+  author        = {AlMahamid, Fadi and Grolinger, Katarina},
+  title         = {Autonomous Unmanned Aerial Vehicle Navigation using Reinforcement Learning: A Systematic Review},
+  journal       = {Engineering Applications of Artificial Intelligence},
+  volume        = {115},
+  pages         = {105321},
+  year          = {2022},
+  doi           = {10.1016/j.engappai.2022.105321},
+  eprint        = {2208.12328},
+  archivePrefix = {arXiv}
+}
+
+@article{frey2026advances,
+  author  = {Frey, Jonas and Mattamala, Mat{\'i}as and Park, Hae-Won and Mittal, Mayank and Martius, Georg and Osborne, Maike and Sparrow, Robert and Hutter, Marco},
+  title   = {Advances, Challenges, and Opportunities for Legged Robots},
+  journal = {Science Robotics},
+  volume  = {11},
+  pages   = {eaee0787},
+  year    = {2026},
+  doi     = {10.1126/scirobotics.aee0787}
 }

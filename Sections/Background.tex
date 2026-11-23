@@ -124,7 +124,7 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 
 \subsection{Recurrent policies}
 \label{sec:recurrent}
-In a POMDP the state of the state of the environment is only partially observable to the agent. Thus, an agent navigating an unknown environment should have some notion of memory of the previously seen observations. RNNs have seen great success in a variety of sequential problems such as speech recognition language modelling and translations. In robotics, variations of RNNs have been increasingly adopted for adding memory capabilities to polices for navigation. 
+Spatial navigation depends on mapping and planning explicitly or implicitly. Classical approaches rely on explicit representations of the map observed by the robot. In contrast, learned approaches to spatial navigation often achieves this implicitly through recurrent neural networks (RNNs) that fuse current and historical observations into a laten space used for planning \cite{yang2026spatially}? Machine learning based approaches like this have predominantly targeted local planning and control, while classical map based planners remain recommended for global planning, motivating hybrid systems. Within such learned policies, partial observability is commonly handled by frame stacking or recurrent units \textcite{ha2025learning, morad2023popgym}, and end-to-end navigation policies typically fuse current and past observations through a  recurrent network rather than an explicit map \parencite{yang2026spatially}. 
 
 RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state. A typical RNN is depicted in Figure ~\ref{fig:rnn}.
 
@@ -137,7 +137,6 @@ RNNs is a variation of a Neural Network which allows it to predict future outcom
 \end{figure}
 
 A downside of RNNs, is that it struggles to produce good predictions when the gap between current observations and previously seen information grows too large. Vanilla RNNs also suffer vanishing and exploding gradients i.e gradients becoming very small of extremely large during training, which makes long-term dependencies challenging to learn and can lead to optimization related issues.
-
 
 These problems are famously addressed by Hochreiter and Scmidhuber \textcite{hochreiter1997long}, with their introduction of Long Short Term Memory networks (LSTMs) which was also later refined by the work of others aswell \cite{olah2015lstm}. LTSMs manage a way to control what information is added or removed from a network, by introducing the idea of a cell state $\mathbf{c}_t$ where information is only modifed by linear interactions and a gate operation deciding how much information from one source can be combined with information from another. Specifically the gate operation controls this by passing one source of information through a sigmoid layer $\sigma$ and then pointwise multiplying it with the other source of information.
 
@@ -289,12 +288,20 @@ has redundancy.
 
 \subsection{Simulation}
 \label{sec:marinegym}
-MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps.
-
-\paragraph{Sensor emulation} Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
+MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps. Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
 
 \paragraph{FLS model}
-The forward-looking sonar is modelled as $N = 16$ beams with fixed angles
+The FLS can be be modelled with simplified ray cast model with sparse beams, neglecting the intensities returned by a real multi beam sonar.   
+
+
+
+
+\begin{figure}[H]\centering
+  \includegraphics[width=0.7\linewidth]{figures/fls_beam_geometry.pdf}
+  \caption{Beam geometry of the forward-looking sonar in $\{b\}$, $N = 16$, $\alpha = 180^\circ$.}
+  \label{fig:fls-beams}
+\end{figure}
+
 \begin{beqn}
 \begin{aligned}
 \beta_j = -\frac{\alpha}{2} + (j-1)\frac{\alpha}{N-1}, \qquad j = 1, \dots, N,
@@ -311,13 +318,8 @@ r_{\max}, & \text{otherwise},
 \end{cases}
 \end{aligned}
 \end{beqn}
-where $\mathbf{p}^n$ is the vehicle position, $r_{\max} = 10$\,m is the maximum range and $r_{\min} = 0.2$\,m models the sensor's blind zone. The sonar observation is the range vector $\mathbf{r} = [r_1, \dots, r_N]^\top \in \mathbb{R}^N$. The ray intersections are computed with the ray-casting functionality of the PhysX engine in MarineGym, following the ray-based approach commonly used in real-time sonar simulation \citep{demarco2015sonar, choi2021multibeam}.
 
-In this work, the model is not implemented directly. It is provided by
-MarineGym \citep{chu2025marinegym}, whose GPU-accelerated hydrodynamics plugin
-is based on Fossen's equations and includes the BlueROV2 Heavy as a predefined
-vehicle model.
-
+\paragraph{BlueRov2 Heavy in MarineGym}
 The vehicle dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine bundled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024aquaculture}.  The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model propagated to the next state. This does not include forces and torques introduced by the actuators.
 
 
@@ -326,7 +328,6 @@ The vehicle dynamics in MarineGym are handled by decomposing the dynamics into a
 \label{eq:dynamics}
 \end{beqn}
 
-\paragraph{BlueRov2 Heavy in MarineGym}
 In MarineGym the actuator model is split into a rotor dynamics model simulating the time dependent response of the rotor system, and a thrust generation model simulating which maps actuator states to the forces and torques. The thrust generation model for propellers is represented as a quadratic function with a dead zone. In this zone the thrust is set to be proportional to the deviation of rotational speed within predefined thresholds to account for nonlinear efficency variations? Each actuator generates their own force based on the input command and the actuator model, before they are individually applied to the corresponding actuator frame. All actuator configurations are fully configurable in MarineGym, however a built-in configuration of the T200 thruster from Blue  Robotics which is used in the BlueROV2 Heavy.
 
 \paragraph{Sim-to-real gap and domain randomization}
