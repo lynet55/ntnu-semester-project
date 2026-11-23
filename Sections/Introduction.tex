@@ -35,12 +35,10 @@ Motivated by the success of "end to end" robotic navigation in above water domai
     \item[RQ2] What are the domain-specific limitations of such a learned navigation policy for underwater robots?
     \item[RQ3] How does the memory of the policy (none, recurrent or spatially-enhanced recurrent) affect navigation under underwater partial observability?
 \end{description}
-% TODO
-% - RQ1 is the old "How can such a navigation stack be designed for the sensors
-%   commonly found on a UUV?", made specific to the compressed-depth approach.
-% - RQ2 is the old second question, unchanged in meaning.
-% - RQ3 is new and covers the no-memory / GRU / SRU comparison. Drop the SRU from the
-%   wording if that experiment does not make it into the thesis.
+% TODO (visible list; delete each item when done)
+\begin{todolist}
+  \item Decide whether to keep the SRU in RQ3; drop it from the wording if that experiment does not make it into the thesis.
+\end{todolist}
 
 \subsection{Contributions}
 \label{sec:contributions}
@@ -53,16 +51,13 @@ The main contributions of this thesis are:
     \item[C2] An extension of the learned underwater navigation of \textcite{deowan2026unified} with memory inside the policy, and a comparison of policies with no memory, a GRU and a spatially-enhanced recurrent unit \parencite{yang2026spatially}. (RQ3)
     \item[C3] A study of the limitations of this approach in the underwater domain. (RQ2)
 \end{description}
-% TODO
-% - C3: name the limitations once results exist (e.g. camera range in turbidity,
-%   sonar sparsity, slow dynamics and long horizons, sim-to-real of depth).
-% - C2: CHECK the exact relation to Ether's work. If the thesis reuses its environment,
-%   sonar features or policy, say so here ("builds on"); if it only compares against it,
-%   write "in contrast to" instead of "an extension of".
-% - Optional C4, only if true and released: open-source environment or sonar emulation
-%   for MarineGym.
-% - Order: C3 answers RQ2 but is listed last because it depends on C1 and C2. Either
-%   keep that order and say so, or swap RQ2 and RQ3 so the numbering matches.
+% TODO (visible list; delete each item when done)
+\begin{todolist}
+  \item C3: name the limitations once results exist (e.g.\ camera range in turbidity, sonar sparsity, slow dynamics and long horizons, sim-to-real of depth).
+  \item C2: check the exact relation to Ether's work. If the thesis reuses its environment, sonar features or policy, write ``builds on''; if it only compares against it, write ``in contrast to'' instead of ``an extension of''.
+  \item Optional C4, only if true and released: open-source environment or sonar emulation for MarineGym.
+  \item Order: C3 answers RQ2 but is listed last because it depends on C1 and C2. Either keep that order and say so, or swap RQ2 and RQ3 so the numbering matches.
+\end{todolist}
 
 
 \subsection{Outline}
