@@ -1,7 +1,15 @@
 % !TEX root = ../main.tex
 \section{Method}
 \subsection{Proposed method}
-To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure ~\ref{fig:nav-stack-online}. Guidance, obstacle avoidance and low-level control are thereby replaced by a single learned policy, without explicit mapping or trajectory planning. This is further formalized by denoting the recurrent policy as $\pi_{GRU}(a_t \mid s_t, o_t)$ producing actions $a_t \in [-1,1]^4 \in \mathbb{R}^{4}$ at every time instance,  and the agent internal state being denoted $s_t \in \mathbb{R}^{6}$ , and $o_t = ( \boldsymbol{z_t}, \mathbf{r}_t) \in \mathbb{R}^{30}$ denoting the latent space representation of the depth images $D_t$ from the camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$ with  $r_{\max} = 12\,\mathrm{m}$ denoting the maximum range from the FLS. An action is then applied as the desired reference input $u_d=Sa_t$ to a velocity controller.
+To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure~\ref{fig:nav-stack-online}.
+
+% TODO: placeholder -- replace with the actual navigation-stack figure
+\begin{figure}[ht]
+    \centering
+    \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering\textbf{TODO:} navigation-stack figure (depth camera $\to$ VAE encoder, FLS ranges $\to$ GRU policy $\to$ velocity controller)}}
+    \caption{Proposed online navigation stack (placeholder).}
+    \label{fig:nav-stack-online}
+\end{figure} Guidance, obstacle avoidance and low-level control are thereby replaced by a single learned policy, without explicit mapping or trajectory planning. This is further formalized by denoting the recurrent policy as $\pi_{GRU}(a_t \mid s_t, o_t)$ producing actions $a_t \in [-1,1]^4 \in \mathbb{R}^{4}$ at every time instance,  and the agent internal state being denoted $s_t \in \mathbb{R}^{6}$ , and $o_t = ( \boldsymbol{z_t}, \mathbf{r}_t) \in \mathbb{R}^{30}$ denoting the latent space representation of the depth images $D_t$ from the camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$ with  $r_{\max} = 12\,\mathrm{m}$ denoting the maximum range from the FLS. An action is then applied as the desired reference input $u_d=Sa_t$ to a velocity controller.
 
 
 % Compact form of the observation
@@ -52,11 +60,11 @@ Index & Symbol & Description & Frame / scaling & Dim \\
 \end{tabular}
 \end{table}
 
-The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described in \cite{kulkarni2023task}. The VAE follows the architecture seen in \ref{fig:vae-layers} and is trained with the reconstruction\ref{eq:vae-loss}. 
+The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described in \cite{kulkarni2023task}. The VAE follows the architecture seen in Figure~\ref{fig:vae} and is trained with the loss in \eqref{eq:vae-loss}. 
 
 \subsection{Training environment}
 \label{sec:env}
-Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
+Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{fossen2021handbook}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
 
  The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
 
@@ -91,13 +99,13 @@ MarineGym is configured with the BlueROV2 Heavy model chosen because of its rele
   \end{tabular}
 \end{table}
 \subsubsection{Sonar emulation}
-The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the theory in \ref{sec:fsl-model}. The ranges are directly used as a policy observation discussed in \ref{sec:rw-rl}.  
+The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the theory in \ref{sec:fsl-model}. The ranges are directly used as a policy observation listed in Table~\ref{tab:train_obs}.  
 
 \subsection{Recurrent policy}
 The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64 and trained using Asymetric PPO (APPO) \textcite{schulman2017ppo} with rewards calculated using \ref{sec:env} and the rewards calculated as follows \ref{eq:rewards}.
 
+\begin{subequations}\label{eq:rewards}
 \begin{balign}
-\label{eq:rewards}
   R_t &= \textstyle\sum_{k} R^{(k)}_t, \label{eq:reward-total}\\
   R^{(\mathrm{prog})}_t &= \lambda_{\mathrm{prog}}\bigl(d^{\mathrm{goal}}_{t-1} - d^{\mathrm{goal}}_t\bigr), \label{eq:reward-progress}\\
   R^{(\mathrm{alive})}_t &= -\lambda_{\mathrm{alive}}, \label{eq:reward-alive}\\
@@ -109,6 +117,7 @@ The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connecte
   R^{(\mathrm{ttc})}_t &= -\lambda_{\mathrm{ttc}}\operatorname{clip}\Bigl(1 - \frac{d^{\mathrm{obs}}_t}{t_{\mathrm{ttc}}\max(u_t,\,u_{\min})},\ 0,\ 1\Bigr), \label{eq:reward-ttc}\\
   R^{(\mathrm{end})}_t &= \lambda_{\mathrm{succ}}\,\mathbb{I}^{\mathrm{succ}}_t - \lambda_{\mathrm{fail}}\,\mathbb{I}^{\mathrm{fail}}_t \label{eq:reward-terminal}
 \end{balign}
+\end{subequations}
 
 Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^n_{\mathrm{goal}} - \mathbf{p}^n_t \rVert_2$ is the distance from the vehicle position $\mathbf{p}^n_t = [x_t, y_t, z_t]^\top$ to the goal, $d^{\mathrm{obs}}_t$ is the smallest distance to an obstacle, taken over the sonar ranges $\mathbf{r}_t$ and the obstacle set $\mathcal{B}$, and $U_t = \lVert \mathbf{v}^b_t \rVert_2$ is the speed of the body-frame velocity $\mathbf{v}^b_t = [u_t, v_t, w_t]^\top$. The indicator $\mathbb{I}^{\mathrm{succ}}_t \in \{0,1\}$ is set once $d^{\mathrm{goal}}_t \le d_{\mathrm{succ}}$ has held for three consecutive decisions, and $\mathbb{I}^{\mathrm{fail}}_t \in \{0,1\}$ when the vehicle collides ($d^{\mathrm{obs}}_t \le \SI{0.08}{\metre}$), has a time to collision below \SI{0.12}{\second}, or leaves the tank. Both end the episode. The weights and thresholds are listed in Table~\ref{tab:reward-weights}.
 

@@ -124,8 +124,9 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 
 \subsection{Recurrent policies}
 \label{sec:recurrent}
-Spatial navigation depends on mapping and planning explicitly or implicitly. Classical approaches rely on explicit representations of the map observed by the robot. In contrast, learned approaches to spatial navigation often achieves this implicitly through recurrent neural networks (RNNs) that fuse current and historical observations into a laten space used for planning \cite{yang2026spatially}? Machine learning based approaches like this have predominantly targeted local planning and control, while classical map based planners remain recommended for global planning, motivating hybrid systems. Within such learned policies, partial observability is commonly handled by frame stacking or recurrent units \textcite{ha2025learning, morad2023popgym}, and end-to-end navigation policies typically fuse current and past observations through a  recurrent network rather than an explicit map \parencite{yang2026spatially}. 
-
+% Moved to Related Work (Memory in navigation policies): the paragraph on explicit vs
+% implicit memory, citing yang2026spatially, ha2025learning and morad2023popgym.
+% TODO: one sentence motivating RNNs here (partial observability -> need for memory).
 RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state. A typical RNN is depicted in Figure ~\ref{fig:rnn}.
 
 \begin{figure}[htbp]
@@ -188,6 +189,15 @@ Another common way to compress data is with so called Auto Encoders (AE), which 
     \caption{Canonical Variational Auto Encoder (VAE)}
     \label{fig:vae}
 \end{figure}
+
+% Standard beta-VAE objective; expand in the TODO list below
+The VAE is trained by minimising the negative evidence lower bound, with the KL term weighted by $\beta$ \parencite{kingma2014auto},
+\begin{equation}
+  \mathcal{L}^{\mathrm{VAE}} = \mathbb{E}_{q(\mathbf{z}\mid D_t)}\bigl[\lVert D_t - \hat D_t \rVert_2^2\bigr]
+  + \beta\, D_{\mathrm{KL}}\bigl(q(\mathbf{z}\mid D_t)\,\Vert\,\mathcal{N}(\mathbf{0},\mathbf{I})\bigr),
+  \label{eq:vae-loss}
+\end{equation}
+where $\hat D_t$ is the image reconstructed by the decoder.
 
 % TODO theory missing:
 \begin{itemize}
@@ -291,6 +301,7 @@ has redundancy.
 MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps. Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
 
 \paragraph{FLS model}
+\label{sec:fsl-model}
 The FLS can be be modelled with simplified ray cast model with sparse beams, neglecting the intensities returned by a real multi beam sonar.   
 
 
