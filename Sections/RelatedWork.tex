@@ -19,163 +19,56 @@
 %   One home per key paper: hoeller2021learning -> 2.2 (VAE), referred back to in 2.3;
 %   kulkarni2024dce -> 2.2 (DCE), referred back to in 2.3 (GRU).
 % ======================================================================
-
 \subsection{Learned navigation from onboard perception}
 \label{sec:rw-navigation}
-% Purpose: one short paragraph of state of the art. Surveys carry the claims.
-% Moved here: first two sentences of the old "State of navigation in robotics".
-Learning-based approaches to robot navigation have predominantly targeted local planning and control, while classical map-based planners are often retained for global planning, leading to hybrid architectures \parencite{xiao2022motion}. Within learned local policies, a common structure is found across ground, aerial and legged platforms: high-dimensional exteroceptive observations are compressed into a compact latent, which is combined with proprioceptive and goal information and mapped by a policy network to motion commands \parencite{zhu2021deep, almahamid2022autonomous, ha2025learning}. Approaches differ mainly in how this compression is learned, and in how information from past observations is retained.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item One sentence on the state of the art in legged/aerial learned navigation \parencite{ha2025learning}; optionally Frey et al.\ 2026, Science Robotics (not in bib yet).
-  \item Closing sentence (gap 1): these results are demonstrated on aerial and legged platforms, with sensors and dynamics that differ from those of a UUV.
-\end{todolist}
+Learning-based navigation has been surveyed across ground, aerial and legged robots.
+Most work learns the navigation stack end-to-end, while approaches that learn only part
+of it have mainly targeted local planning; since a learned policy cannot yet fully
+replace a map-based global planner, hybrid architectures combining the two have been
+proposed \parencite{xiao2022motion}. Learned policies for local navigation from onboard
+sensing share a common structure: exteroceptive observations such as depth images are
+encoded by a neural network, either a convolutional network trained with the policy or a
+compressed representation learned separately, combined with proprioceptive and goal
+information, and mapped to motion commands \parencite{almahamid2022autonomous,
+ha2025learning}. Since a single observation rarely captures the full state, the policies
+also draw on past observations, either stacked as a history or processed by a sequence
+model \parencite{ha2025learning, almahamid2022autonomous}. The approaches therefore differ
+mainly along two axes: how observations are compressed \cref{sec:rw-representation} and how past observations are retained \cref{sec:rw-memory}. These results have been obtained on aerial and legged
+platforms, whose sensing and dynamics differ from those of a UUV, and how well the
+techniques transfer to underwater navigation remains an open question
 
 \subsection{Representing depth for the policy}
 \label{sec:rw-representation}
 % Purpose: a ladder from end-to-end CNNs to task-driven latents, ending at the DCE
-% lineage (the family this thesis builds on). The mechanics of CNNs, VAEs and
-% collision images live in Background; here only who did what.
+Using depth images is commonly motivated by their invariance to lighting, texture and color variation, and is therefore preferred over RGB representations which poses challenges to sim-to-real transfer because of this \parencite{patel2026defm}. The pixels of a depth image carries a lot of redundant information that is not directly relevant for collision avoidance and navigation, and are therefore compressed to a latent space suitable for collision avoidance and for minimizing the reality gap \parencite{hoeller2021learning}. Pixels are then compressed to keep only what relevant to the task, their general geometrical shape \parencite{hoeller2021learning}. In several works this encoding is achieved using a convolutional VAEs or a CNNs. Using low dimensional latent representations are also shown to improve the performance and speed of  policy learning algorithms such as RL, and decoupling this step from policy learning is further shown to be beneficial in \textcite{raffin2019decoupling}. 
 
-\paragraph{Why compress images at all}
-% Shortened from the old two paragraphs; raffin2019decoupling is cited once.
-% Moved here from old "Depth perception underwater": depth vs RGB (patel2026defm).
-When training a control policy to incorporate high dimensional sensor data such as images, decoupling the feature extraction from policy learning proves beneficial \parencite{raffin2019decoupling}. Such low dimensional representations help overcome the curse of dimensionality, and can improve the performance and speed of policy learning algorithms such as RL \parencite{raffin2019decoupling}. Depth is commonly preferred over RGB, since RGB poses challenges for sim-to-real transfer through lighting, texture and color variation, to which depth is invariant \parencite{patel2026defm}.
-
-\paragraph{End-to-end encoders}
-% FIX: wijmans2020ddppo is PointGoal navigation in Habitat, not drone navigation.
-% CHECK: is "reward is a poor teacher for vision" really in wijmans2020ddppo?
-% FIX: \textcite -> \parencite where the citation is not the sentence subject.
-The idea of training a CNN together with the RL loss was first shown to work for higher dimensional problems with the introduction of the Deep Q-Network (DQN), showing human-level control in the computer game Atari \textcite{mnih2015human}. In the aftermath of this, CNNs have been successfully applied to drone navigation \textcite{wijmans2020ddppo} similarly learning the weights of the CNN together with the weights of the control policy showing that end-to-end visual navigation. Notably \textcite{wijmans2020ddppo} states that the success of this comes at the cost of high sample inefficiency, and claims that reward is a poor teacher for vision. To address the issue of data inefficiency, the so called "student-teacher" approach has been adopted \parencite{agarwal2023legged, loquercio2021learning}. A policy is trained with access to full state information (Privileged Information) to navigate to the desired goal, this policy is called the teacher. Then a second policy is given access to the depth image and true sensor input, and is then trained to make the same action predictions as the privileged teacher, thus distilling a student policy.
-% Moved here from the old "State of navigation in robotics":
-Convolutional encoders trained jointly with the policy have been used in aerial navigation \parencite{loquercio2018dronet}, legged locomotion from egocentric depth \parencite{agarwal2023legged} and agile flight from low-resolution depth images \parencite{zhang2025learning}.
-
-\paragraph{Encoders trained on reconstruction}
-% CUT: what an AE/VAE is (already in Background, Autoencoders and VAEs).
-% Keep only who used VAEs for navigation and why.
-Since AEs and VAEs are only trained to reconstruct the input itself, they can be trained offline on available depth data, reducing reinforcement learning to policy optimization over the latent state. VAEs are used in real-world robotic navigation, for autonomous cars using camera and inertial measurements to generate speed and steering commands, and for quadrupeds navigating cluttered and dynamic environments from depth images only \parencite{kendall2019learning, hoeller2021learning}. In this type of task the VAE only needs to estimate the rough shape of obstacles, and it filters out high-frequency content and thus noise, which matters because depth from real images can be noisy \parencite{hoeller2021learning}. \textcite{yang2026spatially} likewise use a VAE-pretrained depth encoder for long-range mapless navigation.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item One sentence in your own words on Hoeller's filtered reconstruction target (dilation, hole filling), if it matters for the sim-to-real argument.
-\end{todolist}
-%
-% WARNING: the block below was pasted verbatim from hoeller2021learning.
-% Do not use it as-is (plagiarism). Kept commented out for reference only.
-% "To bridge the reality gap, the VAE is trained with images from simulation and the
-% real robot. We define the auto encoder's loss as the reconstruction error between the
-% decoded image and a filtered version of the input image. [...] With our method,
-% filtering is implicitly integrated into the VAE forward-pass and therefore incurs no
-% additional computational cost."
+Using CNNs to for control of higher dimensional problems with the introduction of the Deep Q-Network (DQN), showing human-level control in the computer game Atari \parencite{mnih2015human}, and is now seen in successfully applied to do aerial-, legged and underwater navigation \parencite{loquercio2018dronet, agarwal2023legged, yang2022monocular}. Convolutional VAEs are also successfully been applied in similar aerial- and legged robotic applications  \parencite{hoeller2021learning, kulkarni2024dce}. With \textcite{hoeller2021learning} reporting VAEs help filter out noise by removing high frequency content from the images. The difficult applications of VAEs in the context of underwater navigation is limited, convolutional encoders have been used in several works for underwater navigation using excising architectures such as ResNet-8 \textcite{manderson2020vision}, ResNet-10 \textcite{shafer2026endtoend} or simple convolutional layers to project features into a 1D vector \textcite{yang2025duvin}. In particular \textcite{deowan2026unified} encodes proprioceptive observations from depth images, sonar and DVL using a learned world model to be used in motion planning. 
 
 \paragraph{Task-driven compression}
-% The core paragraph of 2.2: the lineage this thesis builds on. Give it the most space.
-% FIX: Kostas Alexis' group is the Autonomous Robots Lab (ARL) at NTNU, not ASL.
-% Collision-image construction belongs in Background (Collision images); here only the idea.
-Since 2022 the Autonomous Systems Lab at NTNU have published a lineage of work using modifications of the traditional VAE by incorporating task specific compression. ORACLE predicts collision probabilities used by a motion planner, by using a set of predetermined action sequences (motion primitives) directly from an image and the robots velocity estimates\cite{nguyen2022motion}. Later, seVAE introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss ignoring the contributions of invalid pixels which are missing depth information \cite{kulkarni2023semantically}.  Another idea presented by the same authors for encoding depth images for collision free navigation, is by training the VAE on so called collision images. In a follow up paper, this method has even been combined with reinforcement learning for learning a policy capable of collision avoidance.
-% Moved here from the old "State of navigation in robotics":
-The Deep Collision Encoder \parencite{kulkarni2023task, kulkarni2024dce} trains the latent on a task-driven objective, reconstructing a collision-aware image rather than the raw depth, and keeps it frozen during RL for aerial navigation.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Merge the two DCE descriptions above into one, and add the missing citations: ``Another idea \ldots collision images'' \parencite{kulkarni2023task}; ``follow up paper'' \parencite{kulkarni2024dce}.
-  \item Describe the DCE policy in one sentence: frozen latent + state + goal $\rightarrow$ MLP $\rightarrow$ GRU $\rightarrow$ velocity commands. This sets up the memory subsection.
-\end{todolist}
+Following the idea mentioned of only keeping information relevant to collision avoidance and navigation as the latent representation \cref{sec:rw-navigation}, several works from the Autonomous Robots Lab at NTNU are relevant. \textcite{kulkarni2023semantically} introduced a VAE trained on real and simulated depth images and trains the VAE by a reconstruction loss weighted by a semantically informed loss, ignoring the contributions of  missing depth information (invalid pixels) \cite{kulkarni2023semantically}. The Deep Collision Encoder \parencite{kulkarni2023task, kulkarni2024dce} trains the latent on a task-driven objective, reconstructing a collision-aware image rather than the raw depth, and keeps it frozen during RL for aerial navigation. A similar task driven approach was taken by  \textcite{hoeller2021learning} , where they notably note that the dataset collected for training the VAE was collected by spawning the camera at random locations in random environments in simulation and from different real-world deployments of the robot. In their case, around 50,000 images from simulation and 20,000 images from real deployment. The images were then processed and used for training, notably this is only a indication of the amount of data typically used for training such a VAE and the processing is an independent linage of work from what was done at NTNU. 
 
 \paragraph{Other encoders}
-% Moved here from the old "State of navigation in robotics" and "Pretrained and
-% foundation encoders" (itemize turned into prose).
 Where the exteroceptive input is already structured, such as height samples from an elevation map, multilayer perceptron (MLP) encoders are used \parencite{miki2022learning}, and transformers have been applied directly to raw point clouds \parencite{yuan2025reasan}. Depth foundation models such as DeFM \parencite{patel2026defm} offer a general-purpose embedding pretrained on large depth datasets, which can be frozen and fed to a policy without task-specific training. These choices determine whether the representation is shaped by the policy objective or fixed before policy learning \parencite{lesort2018state}.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Note that DeFM is trained mostly on terrestrial data (pointer to Future Work).
-  \item Closing sentence (gap 2): these pipelines use depth as the only exteroceptive input, and were developed and evaluated on aerial and ground robots.
-\end{todolist}
 
 \subsection{Memory in navigation policies}
 \label{sec:rw-memory}
-% Purpose: a ladder from no memory to spatially-aware memory. This sets up the
-% no-memory / GRU / SRU comparison WITHOUT naming it. Mechanics of RNN/LSTM/GRU
-% (and SRU, if added) live in Background, Recurrent policies.
-% Moved here from Background, Recurrent policies (first paragraph):
 Spatial navigation depends on mapping and planning, explicitly or implicitly. Classical approaches rely on explicit representations of the map observed by the robot. In contrast, learned approaches to spatial navigation often achieve this implicitly through recurrent neural networks (RNNs) that fuse current and historical observations into a latent space used for planning \parencite{yang2026spatially}. Within such learned policies, partial observability is commonly handled by frame stacking or recurrent units \parencite{ha2025learning, morad2023popgym}.
 
-% Existing paragraph, kept. FIX: "three predominant examples" lists two; the ladder
-% below adds the missing ones. FIX: \textcite{ha2025learning} -> \parencite.
 As mentioned in section \ref{sec:recurrent} recurrent units are used to address the problem of partial observability, which is the case in navigation form onboard depth perception.  Reviewing several works, the use of recurrent units in navigation using depth perception can be divided three predominant examples. In the first case state estimation becomes a part of the implicit part of the control policy \textcite{ha2025learning} , keeping memory inside of the policy and training on a specific task objective. Examples of architectures like this can be a MLP followed by a GRU  and a ELU activation layer like in \textcite{kulkarni2024dce}, or a GRU layered in-between fully connected layers (FC) and a ELU \parencite{ sawant2026crossmodal}. Another approach to use a recurrent unit as a state estimator, as seen in  \textcite{hoeller2021learning} where a LSTM is used to produce a predicted latent  representation  (belief state) which is further used to train a control policy.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Restructure the paragraph above into this ladder, one or two sentences each:
-  \item No memory: reactive, feedforward policies (common in underwater DRL; cite examples from the underwater subsection).
-  \item Frame stacking as the cheap form of memory \parencite{yang2022monocular}; \textcite{miki2022learning} uses a history of proprioception (check).
-  \item Recurrent memory inside the policy \parencite{kulkarni2024dce, sawant2026crossmodal}; refer back to the representation subsection, do not re-describe DCE.
-  \item Recurrent belief estimator \parencite{hoeller2021learning}; refer back to the representation subsection.
-  \item Explicit maps as the classical alternative \parencite{elfes1989occupancy, hornung2013octomap, oleynikova2017voxblox}; one clause pointing to \textcite{deowan2026unified} as the underwater case, details in the underwater subsection.
-  \item Spatially-enhanced recurrence \parencite{yang2026spatially}: standard LSTM/GRU struggle with the spatial part of memory (relating past observations to the current pose under ego-motion); the SRU addresses this. Check which baselines they compare against. Give this the most weight.
-  \item Optional: \textcite{wijmans2023emergence} (maps emerge in the memory of blind agents), \textcite{mirowski2017learning}, \textcite{parisotto2020stabilizing} (transformers in RL).
-  \item Closing sentence (gap 3): these comparisons are made with depth on terrestrial and aerial platforms; whether the memory architecture matters with a narrow field-of-view camera, sparse sonar and slow, drift-prone underwater dynamics is open.
-\end{todolist}
 
 \subsection{Learned navigation underwater}
 \label{sec:rw-underwater}
-% Purpose: what has been done underwater, ordered from classical to learned, ending
-% with the closest work (deowan2026unified).
+Underwater navigation has traditionally relied on a modular pipeline, in which a global planner computes a path around known obstacles and a local method avoids obstacles that are unknown or moving [sha2021path]. Traditional planning methods adapt poorly to dynamic and unstructured environments, and learning-based methods have gradually been applied to underwater path planning [an2023intelligent]. With recent advances in deep reinforcement learning (DRL), end-to-end methods that map raw sensor data directly to control outputs have also emerged for underwater robots [yang2022monocular].
 
-\paragraph{Sensing constraints}
-% Condensed from the old "Depth perception underwater". The sensor physics (FLS,
-% turbidity, DVL, USBL) is already in Background, Sensor suite: refer back, do not repeat.
-Capturing spatial information in 3D is a particular challenge for underwater robotics, as visibility is significantly reduced compared to in air. Visibility is reduced with depth, and debris in the water increases the turbidity of the water, making camera visibility even worse \parencite{evjemo2025aquaculture}. Most commonly underwater robots are equipped with a Forward Looking Sonar (FLS) which is limited to measuring depth information in a 2D plane. More recently, novel 3D multi-beam sonars entering the market but have not yet been fully adopted by the research community \cite{archieri2026insso3d}. Furthermore the challenges related to visibility in underwater environments have motivated the development of foundation models for stereo cameras like \textcite{wu2025stereoadapter} and complete SLAM systems \textcite{surfslam} fusing inertial- and barometer measurements with predictions from such depth prediction models.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Cut the first two sentences down to one, with a pointer to Background (Sensor suite).
-  \item Fill the empty citation for 3D multibeam sonars (\textcite{archieri2026insso3d} may fit), or drop the sentence.
-\end{todolist}
+Learned navigation policies have been demonstrated with both range and visual input. With range sensing, Havenstrøm et al. [havenstrom2021deep] train a PPO policy for three-dimensional path following and collision avoidance, in which the range grid of a simulated forward-looking sonar is pooled and passed together with the vehicle state to a feedforward network. Yuan et al. [yuan2021auv, yuan2023auv] navigate from grouped active-sonar returns with a value-based and an actor-critic method, respectively. With vision, Yang et al. [yang2022monocular] train a PPO policy for mapless three-dimensional waypoint navigation of a low-cost AUV from depth images estimated from a monocular camera, single-beam echo-sounder readings, the relative goal and previous actions. More recently, Shafer and Gal [shafer2026endtoend] combine a camera image with forward-looking sonar images in a hierarchical policy whose high level uses a pretrained ResNet-10 image encoder. Of these, only Yang et al. [yang2022monocular] validate the policy on a real vehicle; the others are evaluated in simulation.
 
-\paragraph{Classical and learned navigation}
-% Existing paragraph, split: deowan2026unified moved to its own paragraph below.
-While classical motion planners have dominated underwater navigation \parencite {hernandez2019online, xanthidis2020navigation, xanthidis2023resiplan}, several works have introduced learned components into the navigation stack. \textcite{yang2022monocular} train a PPO policy for mapless 3D waypoint navigation of a low-cost AUV, using depth images estimated from a monocular camera, single-beam echo-sounder readings, the relative goal and previous actions. Temporal context is provided by stacking the last five observations, and the stacked depth images are encoded by a convolutional network trained end-to-end with the policy. The approach is validated in simulation and on a real robot.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Survey anchor for ``classical planners dominate'': Sha et al.\ 2021, Ocean Engineering ($\sim$370 citations; not in bib yet).
-  \item \textcite{deowan2025optimizing} (ICRA 2025, same first author): DRL algorithms and sensor fusion with action history. Check stacking vs recurrence (see the bib comment).
-  \item \textcite{havenstrom2021deep} and \textcite{larsen2024variational}: further learned examples, one sentence each. Fix the Larsen entry to its OMAE 2024 proceedings version.
-  \item \textcite{singh2025ariel} (Alexis lab, underwater): check whether its stack is learned or planning-based, then place it with the planners or the learned methods.
-\end{todolist}
+Across these works a recurring architecture can be identified. Exteroceptive measurements are reduced to a compact vector, either by hand, by grouping or pooling sonar ranges, or by a convolutional encoder that is trained with the policy or pretrained. This vector is concatenated with the relative goal and the vehicle state and mapped to motion commands by a feedforward network trained with an actor-critic or value-based DRL method. Where temporal context is provided, it usually comes from stacking recent observations, five steps in Yang et al. [yang2022monocular] and three sonar frames in Shafer and Gal [shafer2026endtoend], rather than from a recurrent unit. Recurrent units do appear in underwater DRL: Yuan et al. [yuan2021auv] use an LSTM as part of the Q-network and Yuan et al. [yuan2023auv] a GRU in the actor and critic, both with sonar as the only exteroceptive input, and Wang et al. [wang2024adversarial] combine an LSTM with an MLP in a depth-tracking controller. None of these, however, combine recurrence with depth images.
 
 \paragraph{Closest work}
-% The work this thesis extends. Describe it on the axes where this thesis differs:
-% (1) where memory lives (map vs policy), (2) whether depth reaches the policy,
-% (3) hybrid planner + policy vs one policy. Sonar features are similar, so do not
-% present sonar as a difference. Cite as a preprint (arXiv 2608.05365, Aug 2026);
-% check for a published version before submission.
-\textcite{deowan2026unified} combine a Voronoi planner (with RRT fallback) for long-horizon planning with a reinforcement learning policy for short-horizon path tracking and reactive avoidance. Sonar returns and depth-image consistency are fused into a persistent occupancy map, which serves as the system's spatial memory and is used by the planner rather than the policy. The policy itself is a feedforward network that observes path-tracking errors, body velocities and sectorized sonar features. It is augmented with two signals from a latent world model trained on sonar, depth, IMU, velocity and path observations: the one-step prediction residual and a predictive-uncertainty estimate. Memory therefore resides in the explicit map rather than in the policy.
-% TODO (visible list; delete each item when done)
-\begin{todolist}
-  \item Closing sentence (gap 4), written about the literature, not about this thesis: ``Partial observability is thus addressed outside the policy, through an explicit map and world-model signals; the policy itself is memoryless and does not observe depth directly. Whether memory learned within the policy can take over this role has not been examined.''
-\end{todolist}
-
-% Source links
-% xiao2022motion: https://doi.org/10.1007/s10514-022-10039-8
-% zhu2021deep: https://doi.org/10.26599/TST.2021.9010012
-% almahamid2022autonomous: https://doi.org/10.1016/j.engappai.2022.105321
-% ha2025learning: https://doi.org/10.1177/02783649241312698
-% loquercio2018dronet: https://doi.org/10.1109/LRA.2018.2795643
-% wijmans2020ddppo: https://arxiv.org/abs/1911.00357
-% agarwal2023legged: https://arxiv.org/abs/2211.07638
-% zhang2025learning: https://arxiv.org/abs/2407.10648
-% hoeller2021learning: https://doi.org/10.1109/LRA.2021.3068639
-% yang2026spatially: https://arxiv.org/abs/2506.05997
-% kulkarni2023task: https://arxiv.org/abs/2309.05289
-% kulkarni2024dce: https://arxiv.org/abs/2402.03947
-% miki2022learning: https://doi.org/10.1126/scirobotics.abk2822
-% yuan2025reasan: https://arxiv.org/abs/2512.09537
-% lesort2018state: https://doi.org/10.1016/j.neunet.2018.07.006
-% deowan2026unified: https://arxiv.org/abs/2608.05365
+\textcite{deowan2026unified} combine a Voronoi planner (with RRT fallback) for long-horizon planning with a reinforcement learning policy for short-horizon path tracking and reactive avoidance. Sonar returns and depth-image consistency are fused into a persistent occupancy map, which serves as the system's spatial memory and is used by the planner rather than the policy. The policy itself is a feedforward network that observes path-tracking errors, body velocities and sectorized sonar features. It is augmented with two signals from a latent world model trained on sonar, depth, IMU, velocity and path observations: the one-step prediction residual and a predictive-uncertainty estimate. Partial observability is therefore addressed outside of the policy, through an explicit map and signals from the world model. The policy is therefore without memory, and differs from the architectures discussed in \cref{sec:rw-memory}. The role of memory in underwater navigation has not been studied.
 
 \subsection{Research gap}
 \label{sec:rw-gap}
-% Two or three sentences that gather the closing sentences of 2.1-2.4, then point to
-% the research questions (Introduction, Research questions). Keep the memory claim
-% narrow: deowan2026unified addresses partial observability, so the gap is memory
-% learned INSIDE the policy and the effect of the memory ARCHITECTURE.
 \begin{itemize}
     \item Compressed-depth navigation policies (2.2) are demonstrated on aerial and
           legged robots, with depth as the only exteroceptive input; they have not been

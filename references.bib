@@ -1235,3 +1235,106 @@
   archivePrefix = {arXiv},
   primaryClass  = {cs.RO}
 }
+
+
+% ------------------------------------------------------------
+% (J) IMAGE ENCODERS (VAE / CNN / PRETRAINED) IN THE UNDERWATER DOMAIN
+% (added Nov 2026, for sec:rw-representation)
+% ------------------------------------------------------------
+
+% CNN trained by supervised learning on human-labelled images; Aqua AUV, coral reef,
+% ~1000 m collision-free in the open ocean.
+% CHECK: page numbers on IEEE Xplore.
+@inproceedings{manderson2018vision,
+  author    = {Manderson, Travis and Gamboa Higuera, Juan Camilo and Cheng, Ran and Dudek, Gregory},
+  title     = {Vision-Based Autonomous Underwater Swimming in Dense Coral for Combined Collision Avoidance and Target Selection},
+  booktitle = {IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2018},
+  doi       = {10.1109/IROS.2018.8594410}
+}
+
+% Nav2Goal: ResNet-18, behaviour cloning + hindsight relabelling, open-ocean deployment.
+@inproceedings{manderson2020vision,
+  author        = {Manderson, Travis and Gamboa Higuera, Juan Camilo and Wapnick, Stefan and Tremblay, Jean-Fran{\c{c}}ois and Shkurti, Florian and Meger, David and Dudek, Gregory},
+  title         = {Vision-Based Goal-Conditioned Policies for Underwater Navigation in the Presence of Obstacles},
+  booktitle     = {Robotics: Science and Systems (RSS)},
+  year          = {2020},
+  doi           = {10.15607/RSS.2020.XVI.048},
+  eprint        = {2006.16235},
+  archivePrefix = {arXiv}
+}
+
+% Cross-modal VAE (image -> latent) + behaviour-cloned velocity policy for robotic fish;
+% simulation only (Unreal Engine / AirSim).
+% Note: first author is Wang (Gao is last author), so the key is wang2024novel.
+@article{wang2024novel,
+  author  = {Wang, Ruilong and Wang, Ming and Zhao, Qianchuan and Gong, Yanling and Zuo, Lingchen and Zheng, Xuehan and Gao, He},
+  title   = {A Novel Obstacle Traversal Method for Multiple Robotic Fish Based on Cross-Modal Variational Autoencoders and Imitation Learning},
+  journal = {Biomimetics},
+  volume  = {9},
+  number  = {4},
+  pages   = {221},
+  year    = {2024},
+  doi     = {10.3390/biomimetics9040221}
+}
+
+% Frozen pretrained Depth Anything V2 encoder + 1x1-conv compressor -> diffusion policy
+% (imitation of MPC expert); encoder adapted by self-supervised underwater depth estimation.
+@misc{yang2025duvin,
+  author        = {Yang, Jinghe and Le, Minh-Quan and Gong, Mingming and Pu, Ye},
+  title         = {{DUViN}: Diffusion-Based Underwater Visual Navigation via Knowledge-Transferred Depth Features},
+  year          = {2025},
+  eprint        = {2509.02983},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+
+% VAE translating simulated sonar images to real-sonar texture (data generation, not control).
+% CHECK: DOI and pages on IEEE Xplore.
+@inproceedings{panisilvam2022conditioned,
+  author    = {Panisilvam, Jeygopi and Castill{\'o}n, Miguel and Lawrance, Nicholas and Siegwart, Roland},
+  title     = {Conditioned Deep Feature Consistent Variational Autoencoder for Simulating Realistic Sonar Images},
+  booktitle = {OCEANS 2022, Hampton Roads},
+  publisher = {IEEE},
+  year      = {2022}
+}
+
+% SCOPE: VAE-based compression + artifact correction for streaming imaging-sonar video.
+@misc{qian2025scope,
+  author        = {Qian, Rongsheng and Xu, Chi and Ma, Xiaoqiang and Fang, Hao and Jin, Yili and Atlas, William I. and Liu, Jiangchuan},
+  title         = {Self-Supervised Compression and Artifact Correction for Streaming Underwater Imaging Sonar},
+  year          = {2025},
+  eprint        = {2511.13922},
+  archivePrefix = {arXiv},
+  primaryClass  = {eess.IV}
+}
+
+% CE-VAE: capsule-enhanced VAE for underwater image enhancement + compression.
+% CHECK: whether a peer-reviewed venue exists.
+@misc{pucci2024cevae,
+  author        = {Pucci, Rita and Martinel, Niki},
+  title         = {{CE-VAE}: Capsule Enhanced Variational AutoEncoder for Underwater Image Enhancement},
+  year          = {2024},
+  eprint        = {2406.01294},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV}
+}
+
+@article{zhu2025machinery,
+  author  = {Zhu, Wenxi and Cui, Weicheng},
+  title   = {From Machinery to Biology: A Review on Mapless Autonomous Underwater Navigation},
+  journal = {Journal of Marine Science and Engineering},
+  volume  = {13},
+  number  = {11},
+  pages   = {2202},
+  year    = {2025},
+  doi     = {10.3390/jmse13112202}
+}
+
+@article{tian2025reinforcement,
+  author  = {Tian, Zinuo and Deng, Sai and Wu, Zhengxing and Zhou, Chao},
+  title   = {Reinforcement Learning Applications in Unmanned Underwater Vehicles: A Review},
+  journal = {Journal of Marine Science and Application},
+  year    = {2025},
+  doi     = {10.1007/s11804-025-00723-3}
+}

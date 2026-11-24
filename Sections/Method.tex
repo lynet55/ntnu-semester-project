@@ -3,6 +3,8 @@
 \subsection{Proposed method}
 To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure~\ref{fig:nav-stack-online}.
 
+\paragraph{Choice of observation space and action space}
+
 % TODO: placeholder -- replace with the actual navigation-stack figure
 \begin{figure}[ht]
     \centering
