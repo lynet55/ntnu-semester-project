@@ -1,89 +1,227 @@
 % !TEX root = ../main.tex
+% Notation follows deowan2026unified for the problem formulation, the observation groups
+% and the policy features (xi), with the symbols renamed where they clash with Fossen
+% (see NOTATION_STYLE.md). Numbers are from uuv-rl-env: cfg/policy/sonar_goal.yaml,
+% cfg/train/sonar_goal_ppo.yaml, cfg/reward/sonar_goal.yaml.
 \section{Method}
 \label{sec:method}
-\subsection{Proposed method}
-To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure~\ref{fig:nav-stack-online}.
 
-\paragraph{Choice of observation space and action space}
+To address the research questions, a navigation policy is proposed that guides a UUV through a corridor filled with obstacles to a goal position, using only a forward-looking sonar (FLS) and depth images from a camera. A variational autoencoder (VAE) encodes each depth image into a compact latent, and a recurrent policy based on a gated recurrent unit (GRU) maps the sequence of latents, sonar features and vehicle states directly to velocity commands (Figure~\ref{fig:nav-stack-online}). Guidance, obstacle avoidance and the choice of velocity references are thereby replaced by a single learned policy, without explicit mapping or trajectory planning. The formulation follows \textcite{deowan2026unified}, on whose work this project builds, and differs from it in that the policy is mapless and holds its own memory.
 
-% TODO: placeholder -- replace with the actual navigation-stack figure
 \begin{figure}[ht]
     \centering
-    \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering\textbf{TODO:} navigation-stack figure (depth camera $\to$ VAE encoder, FLS ranges $\to$ GRU policy $\to$ velocity controller)}}
-    \caption{Proposed online navigation stack (placeholder).}
+    \input{figures/nav-stack.tex}
+    \caption{Proposed navigation stack. The frozen depth encoder and the sector features turn the depth image $D_t$ and the sonar ranges $\mathbf{r}_t$ into the feature groups $\xi^{\mathrm{depth}}_t$ and $\xi^{\mathrm{sonar}}_t$, which form the policy input $\mathbf{x}_t$ together with the vehicle states and the goal. The recurrent policy outputs the action $\mathbf{a}_t$, which is scaled to the velocity reference $\boldsymbol{\nu}^{*}_t$ for the velocity controller. Dimensions are given below the wires. All sensors are emulated: the depth image is rendered by Isaac Sim, the sonar ranges follow the ray-cast model of Section~\ref{sec:fls-model}, and the IMU, DVL and pressure readings are taken from the vehicle state in MarineGym (Section~\ref{sec:marinegym}).}
     \label{fig:nav-stack-online}
-\end{figure} Guidance, obstacle avoidance and low-level control are thereby replaced by a single learned policy, without explicit mapping or trajectory planning. This is further formalized by denoting the recurrent policy as $\pi_{GRU}(a_t \mid s_t, o_t)$ producing actions $a_t \in [-1,1]^4 \in \mathbb{R}^{4}$ at every time instance,  and the agent internal state being denoted $s_t \in \mathbb{R}^{6}$ , and $o_t = ( \boldsymbol{z_t}, \mathbf{r}_t) \in \mathbb{R}^{30}$ denoting the latent space representation of the depth images $D_t$ from the camera and range readings $\mathbf{r}_t \in [0, r_{\max}]^{64}$ with  $r_{\max} = 12\,\mathrm{m}$ denoting the maximum range from the FLS. An action is then applied as the desired reference input $u_d=Sa_t$ to a velocity controller.
+\end{figure}
 
-
-% Compact form of the observation
+\subsection{Problem formulation}
+\label{sec:problem}
+Following \textcite{deowan2026unified}, navigation is posed as a partially observable stochastic control problem. The environment state $\mathbf{s}_t$ evolves with the action $\mathbf{a}_t$, and the policy only receives an observation $o_t$ of it,
 \begin{equation}
-\mathbf{o}_k =
-\begin{bmatrix}
-0.1\,\mathbf{g}^{b} &
-\sin e_\psi & \cos e_\psi &
-u & v & w & r & z & \phi & \theta &
-\tfrac{d_1}{12} & \cdots & \tfrac{d_{16}}{12} &
-\tfrac{d_f}{12} & c_{\mathrm{TTC}}
-\end{bmatrix}^{\!\top} \in \mathbb{R}^{30}
+  \mathbf{s}_{t+1} \sim \mathcal{P}(\mathbf{s}_{t+1} \mid \mathbf{s}_t, \mathbf{a}_t), \qquad
+  o_t \sim p(o_t \mid \mathbf{s}_t), \qquad
+  o_t = \bigl[\, o^{\mathrm{sonar}}_t,\ o^{\mathrm{depth}}_t,\ o^{\mathrm{imu}}_t,\ o^{\mathrm{vel}}_t,\ o^{\mathrm{goal}}_t \,\bigr],
+  \label{eq:observation}
 \end{equation}
-
-%==========================================================
-% 2. Agent action
-%==========================================================
+where the groups are the sonar ranges, the depth image, the attitude and depth from the inertial measurement unit (IMU) and pressure sensor, the body velocities, and the goal position. The objective is to maximise the expected discounted return over an episode of length $T$,
 \begin{equation}
-\mathbf{a}_k \in [-1,1]^4, \qquad
-\boldsymbol{\nu}^{*}_k =
-\begin{bmatrix} u^{*} \\ v^{*} \\ w^{*} \\ r^{*} \end{bmatrix}
-= S\,\mathbf{a}_k, \qquad
-S = \operatorname{diag}(0.45,\ 0.30,\ 0.25,\ 0.5)
+  \max_{\theta}\ \mathbb{E}_{\pi_\theta}\Bigl[\,\sum_{t=0}^{T} \gamma^t R_t \Bigr],
+  \qquad \mathbf{a}_t \sim \pi_\theta(\mathbf{a}_t \mid o_{\le t}),
+  \label{eq:objective}
 \end{equation}
-%==========================================================
-% 1. Observation vector during training (uuv-rl-env, sonar_goal.yaml)
-%==========================================================
+where the policy may depend on the whole observation history $o_{\le t}$, since a single observation does not determine $\mathbf{s}_t$. As in \textcite{deowan2026unified}, the subscript $\theta$ of $\pi_\theta$ denotes the weights of the policy network, and $\theta_{\mathrm{old}}$ the weights before an update. It should not be confused with the pitch angle, which in this section always carries its time index, $\theta_t$. \textcite{deowan2026unified} implement this policy as a feedforward network on features of the current step, and handle partial observability with an occupancy map and a learned world model. Here, the dependence on $o_{\le t}$ is instead learned by a recurrent policy (Section~\ref{sec:policy}). One policy decision is taken every \SI{0.16}{\second}, and an episode lasts at most 750 decisions (\SI{120}{\second}).
+
+\paragraph{Coordinate frames}
+As in \textcite{deowan2026unified}, vehicle quantities are expressed in the body frame $\{b\}$. Both works are implemented in NVIDIA Isaac Sim, and its frame conventions are used here. Positions are given in a world frame $\{w\}$ with the $z$-axis pointing up, so that $z_t < 0$ below the surface, and the body frame has its $x$-axis forward, $y$-axis to port and $z$-axis up. The vehicle notation in Section~\ref{sec:marinegym} and Appendix~\ref{app:vehicle-model} follows \textcite{fossen2021handbook}, with a north-east-down frame $\{n\}$ and a body frame with $y$ to starboard and $z$ down. The two body frames differ by a rotation of \SI{180}{\degree} about the $x$-axis, so that surge $u$, roll $\phi$ and roll rate $p$ are the same in both, while sway, heave, pitch, yaw and their rates change sign.
+
+\subsection{Policy input}
+\label{sec:policy-input}
+As in \textcite[Eq.~13]{deowan2026unified}, the observation is processed into groups of features before it reaches the policy. The policy input is
+\begin{equation}
+  \mathbf{x}_t = \bigl[\, \Delta\mathbf{p}^b_{\mathrm{goal},t},\ \sin e^\psi_t,\ \cos e^\psi_t,\ \mathbf{v}^b_t,\ r_t,\ z_t,\ \phi_t,\ \theta_t,\ \xi^{\mathrm{sonar}}_t,\ \xi^{\mathrm{depth}}_t \,\bigr] \in \mathbb{R}^{94},
+  \label{eq:policy-input}
+\end{equation}
+where $\Delta\mathbf{p}^b_{\mathrm{goal},t}$ is the goal position relative to the vehicle, expressed in the body frame and scaled by 0.1, $e^\psi_t$ is the yaw error towards the goal, $\mathbf{v}^b_t = [u_t, v_t, w_t]^\top$ the body linear velocity, $r_t$ the yaw rate, $z_t$ the vertical position in $\{w\}$, and $\phi_t$ and $\theta_t$ the roll and pitch angles. The method is mapless, so the lookahead displacement and cross-track error that \textcite{deowan2026unified} take from their planner are replaced by the goal vector.
+
+The sonar features $\xi^{\mathrm{sonar}}_t \in \mathbb{R}^{18}$ follow the sectorised range and time-to-collision (TTC) features of \textcite{deowan2026unified}. The $N_r = 64$ sonar ranges $\mathbf{r}_t$ are divided into 16 sectors of four rays, and each sector contributes its minimum range $d_{s,t} = \min_{i \in \mathcal{S}_s} r_{t,i}$. A front minimum $d_{f,t}$ over the rays within $\pm 30^\circ$ of the bow, and a front TTC risk $c^{\mathrm{TTC}}_t$, complete the group. Ranges are divided by $r_{\max} = \SI{12}{\metre}$. \textcite{deowan2026unified} use TTC features without giving a formula; here the risk is the time to collision at the current surge speed, mapped to $[0,1]$,
+\begin{equation}
+  c^{\mathrm{TTC}}_t = \operatorname{clip}\Bigl(1 - \frac{d_{f,t}}{t_{\mathrm{ttc}}\max(u_t,\,u_{\min})},\ 0,\ 1\Bigr),
+  \label{eq:ttc-risk}
+\end{equation}
+with the horizon $t_{\mathrm{ttc}} = \SI{3}{\second}$ and the minimum surge speed $u_{\min} = \SI{0.05}{\metre\per\second}$, so that $c^{\mathrm{TTC}}_t = 0$ when a collision is more than \SI{3}{\second} away and approaches 1 as it becomes imminent. The reward uses the same form (Equation~\eqref{eq:reward-ttc}), but with the nearest obstacle in any direction, $d^{\mathrm{obs}}_t$, instead of the front minimum.
+
+The depth features $\xi^{\mathrm{depth}}_t$ take the place of the world-model features $\xi^{\mathrm{wm}}_t$ of \textcite{deowan2026unified}. Instead of a latent learned from all sensors by a predictive objective, they are the mean of a VAE latent learned from the depth image alone (Section~\ref{sec:depth-encoder}),
+\begin{equation}
+  \xi^{\mathrm{depth}}_t = \boldsymbol{\mu}^{\mathrm{VAE}}_t\bigl(o^{\mathrm{depth}}_t\bigr) \in \mathbb{R}^{64}.
+  \label{eq:depth-features}
+\end{equation}
+All groups are listed in Table~\ref{tab:train_obs}.
+
 \begin{table}[ht]
 \centering
-\caption{Policy observation $o_k \in \mathbb{R}^{30}$ during training. World frame Z-up, body frame FLU.}
+\caption{Policy input $\mathbf{x}_t \in \mathbb{R}^{94}$, grouped as in \textcite{deowan2026unified}. Frames as in Section~\ref{sec:problem}: world frame $\{w\}$ with $z$ up, body frame $\{b\}$ forward-left-up.}
 \label{tab:train_obs}
-\begin{tabular}{@{}clllc@{}}
+\begin{tabular}{@{}llp{0.48\linewidth}c@{}}
 \toprule
-Index & Symbol & Description & Frame / scaling & Dim \\
+Group & Symbol & Description and scaling & Dim \\
 \midrule
-1--3   & $0.1\,\mathbf{g}^{b}$       & Goal vector, $R_{bw}(\mathbf{g}-\mathbf{p})$ & Body FLU, $\times 0.1$ & 3 \\
-4--5   & $\sin e_\psi,\ \cos e_\psi$ & Yaw error to goal                            & --                     & 2 \\
-6--8   & $u,\ v,\ w$                 & Body linear velocity                         & Body FLU, m/s          & 3 \\
-9      & $r$                         & Yaw rate                                     & Body FLU, rad/s        & 1 \\
-10     & $z$                         & Vertical position (raw)                      & World Z-up, m          & 1 \\
-11--12 & $\phi,\ \theta$             & Roll, pitch                                  & rad                    & 2 \\
-13--28 & $d_s/12,\ s=1,\dots,16$     & Sector minimum range, $d_s=\min_{i\in S_s} r^{(i)}$, $|S_s|=4$ & $\div 12$ & 16 \\
-29     & $d_f/12$                    & Front minimum, $d_f=\min_{|\theta_i|\le 30^\circ} r^{(i)}$ & $\div 12$ & 1 \\
-30     & $c_{\mathrm{TTC}}$          & Front time-to-collision risk                 & --                     & 1 \\
+Goal     & $\Delta\mathbf{p}^b_{\mathrm{goal},t}$ & Goal relative to the vehicle, body frame, $\times 0.1$ & 3 \\
+         & $\sin e^\psi_t,\ \cos e^\psi_t$ & Yaw error towards the goal & 2 \\
+Velocity & $\mathbf{v}^b_t$ & Body linear velocity, \si{\metre\per\second} & 3 \\
+         & $r_t$ & Yaw rate, \si{\radian\per\second} & 1 \\
+IMU, depth & $z_t$ & Vertical position, \si{\metre} & 1 \\
+         & $\phi_t,\ \theta_t$ & Roll and pitch, \si{\radian} & 2 \\
+Sonar    & $\xi^{\mathrm{sonar}}_t$ & 16 sector minima $d_{s,t}$, front minimum $d_{f,t}$ (both $\div r_{\max}$), front TTC risk $c^{\mathrm{TTC}}_t$ & 18 \\
+Depth    & $\xi^{\mathrm{depth}}_t$ & VAE latent mean $\boldsymbol{\mu}^{\mathrm{VAE}}_t$ & 64 \\
 \midrule
-       &                             &                                              & Total                  & 30 \\
+         &  & Total & 94 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described by \textcite{kulkarni2023task}. The VAE follows the architecture seen in Figure~\ref{fig:vae} and is trained with the loss in Equation~\eqref{eq:vae-loss}. 
+\begin{todolist}
+  \item The trained checkpoints so far use the first 30 values only (no $\xi^{\mathrm{depth}}_t$); update when the VAE latent is added to the observation in \texttt{uuv-rl-env}.
+\end{todolist}
+
+\subsection{Depth encoder}
+\label{sec:depth-encoder}
+% source: uuv-rl-env (worktree environment): encoder/dce.py, encoder/dce.yaml,
+%         encoder/datasets.md, experiments/encoders/dce/dce_D001_box_25903576/config.yaml
+The depth encoder is a Deep Collision Encoder (DCE), a VAE that takes a depth image as input and reconstructs a collision image \parencite{kulkarni2023task, kulkarni2024dce}. The camera faces forward with a horizontal field of view of \SI{90}{\degree} and a resolution of $72\times128$ pixels. Each pixel holds the range along its ray, divided by the maximum range of \SI{10}{\metre}, so that $D_t \in [0,1]^{72\times128}$, where 1 means no surface within range.
+
+\paragraph{Collision image}
+The reconstruction target is the collision image $D^{\mathrm{col}}_t$, which holds, for every pixel, how far the vehicle can travel along that pixel's ray before its body touches a surface \parencite[Sec.~3.2]{kulkarni2023task}. It is computed by placing a box the size of the vehicle on sampled edge points of the depth image, ray casting these boxes, and taking the pixel-wise minimum with the depth image moved closer by the part of the vehicle ahead of the camera. The box has a half-width of \SI{0.30}{\metre} and a half-height of \SI{0.15}{\metre}, and extends \SI{0.10}{\metre} ahead of and \SI{0.45}{\metre} behind the camera, roughly the BlueROV2 Heavy. The latent therefore keeps the free space that matters for collisions rather than every detail of the depth. The steps are shown in Figure~\ref{fig:collision-pipeline}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/collision_pipeline.png}
+    \caption{From depth image to collision image, for three validation images of the dataset: (1) the depth image; (2) edge pixels on the near side of a silhouette, of which half are sampled (red); (3) the range to vehicle-sized boxes placed on the sampled points, ray cast along every pixel ray; (4) the depth image moved closer by the part of the vehicle ahead of the camera; (5) their pixel-wise minimum, the collision image used as the reconstruction target. Rendered by \texttt{scripts/render\_collision\_pipeline.py}.}
+    \label{fig:collision-pipeline}
+\end{figure}
+
+\paragraph{Architecture}
+The architecture is listed in Table~\ref{tab:dce}. A strided $5\times5$ convolution and three residual blocks reduce the image to a $256\times5\times8$ feature map, from which two linear layers give the latent mean $\boldsymbol{\mu}^{\mathrm{VAE}}_t$ and log-variance, both in $\mathbb{R}^{64}$. Each residual block halves the resolution: its main path is a $3\times3$ convolution with stride 2, an ELU and a second $3\times3$ convolution, its skip path a $1\times1$ convolution with stride 2 that matches the shape, and the two paths are summed before a final ELU. The decoder mirrors the encoder with a linear layer and four stages of upsampling and $3\times3$ convolution, and a sigmoid gives $\hat D^{\mathrm{col}}_t \in [0,1]^{72\times128}$.
+
+\begin{table}[ht]
+\centering
+\caption{Architecture of the depth encoder (DCE). Shapes are channels $\times$ height $\times$ width; every convolution except the last is followed by an ELU.}
+\label{tab:dce}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Stage & Layer & Output \\
+\midrule
+Input     & Normalised depth image $D_t$ & $1\times72\times128$ \\
+Encoder   & Conv $5\times5$, stride 2 & $32\times36\times64$ \\
+          & Residual block, stride 2 & $64\times18\times32$ \\
+          & Residual block, stride 2 & $128\times9\times16$ \\
+          & Residual block, stride 2 & $256\times5\times8$ \\
+Latent    & Linear to $\boldsymbol{\mu}^{\mathrm{VAE}}_t$ and log-variance & $64$, $64$ \\
+Decoder   & Linear, reshape & $256\times5\times8$ \\
+          & $4\times$ (upsample $\times2$, conv $3\times3$) & $32\times80\times128$ \\
+          & Conv $3\times3$, resize, sigmoid & $1\times72\times128$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Dataset and training}
+The training data were collected along rollouts of earlier sonar-and-goal policies, using six checkpoints of one training run, in eight scenes ranging from open water to dense mazes, cluttered 3D obstacles and moving obstacles. Every fifth decision a depth image was stored as an anchor, together with two views from perturbed camera poses (\SI{0.4}{\metre} in position, \SI{0.2}{\metre} in depth, \SI{30}{\degree} in yaw and \SI{6}{\degree} in tilt), so that the encoder also sees poses the policy itself rarely visits. The resulting dataset holds 100,406 depth images: 35,178 anchors and 65,228 perturbed views. Perturbed views in which more than \SI{90}{\percent} of the target lies within \SI{0.05}{\metre} of the camera are left out (485 images), and the remaining images are split by episode into 90,221 for training and 9,700 for validation.
+
+The VAE is trained with the loss in Equation~\eqref{eq:vae-loss}, with the collision image as target, the squared error summed over the pixels and $\beta = 1$. To make the encoder robust to the missing and noisy returns of a real depth sensor, the input, but not the target, is augmented with Gaussian noise with a standard deviation of \SI{0.1}{\metre}, \SI{2}{\percent} pixel dropout and up to two rectangular holes. Training uses AdamW with a learning rate of $3\times10^{-4}$ with cosine decay, a weight decay of $10^{-4}$ and a batch size of 256 for 250 epochs. The best epoch reaches a validation root-mean-square error of \SI{0.56}{\metre} on the collision image. After training, the encoder is frozen, and only the latent mean $\boldsymbol{\mu}^{\mathrm{VAE}}_t$ is passed to the policy (Equation~\eqref{eq:depth-features}).
+
+\begin{todolist}
+  \item Background, Collision images, is marked as not right: align it with the definition above, or shorten it to a pointer here.
+\end{todolist}
+
+\subsection{Recurrent policy and action}
+\label{sec:policy}
+The policy realises the dependence on $o_{\le t}$ in Equation~\eqref{eq:objective} with a GRU, whose hidden state $\mathbf{h}_t$ summarises the observations seen so far in the episode,
+\begin{equation}
+  \mathbf{h}_t = \mathrm{GRU}\bigl(\mathbf{h}_{t-1},\ \mathrm{MLP}(\mathbf{x}_t);\ \theta\bigr), \qquad
+  \mathbf{a}_t \sim \pi_\theta(\mathbf{a}_t \mid \mathbf{h}_t), \qquad \mathbf{h}_0 = \mathbf{0}.
+  \label{eq:recurrent-policy}
+\end{equation}
+The input $\mathbf{x}_t$ passes through a multilayer perceptron (MLP) with layers of 256 and 128 units, a GRU with hidden size $n_h = 128$, and a further layer of 256 units, before a Gaussian head whose samples are squashed into $[-1,1]$ by a $\tanh$. The hidden state is reset at the start of every episode. The critic $V(\mathbf{x}_t;\mathbf{w}_V)$ is an MLP with three layers of 256 units and has no memory.
+
+The action $\mathbf{a}_t \in [-1,1]^4$ is scaled to a velocity reference for the vehicle's velocity controller,
+\begin{equation}
+  \boldsymbol{\nu}^{*}_t = \bigl[u^{*}_t,\ v^{*}_t,\ w^{*}_t,\ r^{*}_t\bigr]^\top = \mathbf{S}\,\mathbf{a}_t, \qquad
+  \mathbf{S} = \operatorname{diag}(0.45,\ 0.30,\ 0.25,\ 0.5),
+  \label{eq:action}
+\end{equation}
+in \si{\metre\per\second} for surge, sway and heave and \si{\radian\per\second} for yaw rate. The velocity controller runs every \SI{0.02}{\second} simulation step and holds the reference between decisions.
+
+\subsection{Reward}
+\label{sec:reward}
+The reward follows the form of \textcite[Eq.~14]{deowan2026unified}, a weighted sum of terms,
+\begin{equation}
+  R_t = -w_{\mathrm{alive}} + w_p\,\Delta d_t - w_z\,Z_t - w_c\,C_t - w_{\mathrm{ttc}}\,T_t - w_v\,V_t - w_{\mathrm{tilt}}\,\Theta_t - w_{\mathrm{eff}}\,E_t + w_s\,\iota^{\mathrm{succ}}_t - w_f\,\iota^{\mathrm{fail}}_t,
+  \label{eq:rewards}
+\end{equation}
+where the terms are
+\begin{subequations}\label{eq:reward-terms}
+\begin{balign}
+  \Delta d_t &= d^{\mathrm{goal}}_{t-1} - d^{\mathrm{goal}}_t, &
+  Z_t &= \lvert z_{\mathrm{goal}} - z_t\rvert, \label{eq:reward-progress}\\
+  C_t &= \max\bigl(0,\ d_{\mathrm{safe}} - d^{\mathrm{obs}}_t\bigr), &
+  T_t &= \operatorname{clip}\Bigl(1 - \frac{d^{\mathrm{obs}}_t}{t_{\mathrm{ttc}}\max(u_t,\,u_{\min})},\ 0,\ 1\Bigr), \label{eq:reward-ttc}\\
+  V_t &= \max\bigl(0,\ U_t - U_{\max}\bigr)^2, &
+  \Theta_t &= \sqrt{\phi_t^2 + \theta_t^2}, \label{eq:reward-tilt}\\
+  E_t &= \tfrac{1}{4}\lVert\mathbf{a}_t\rVert_1, & & \label{eq:reward-effort}
+\end{balign}
+\end{subequations}
+for progress towards the goal, depth error, clearance, time to collision, overspeed, tilt and control effort. The indicators $\iota^{\mathrm{succ}}_t, \iota^{\mathrm{fail}}_t \in \{0,1\}$ mark success and failure. The terms are the same behaviours as in \textcite{deowan2026unified}, without their path-following terms, since the method has no path, and the reward is written $R_t$ because $r_t$ is the yaw rate. Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^w_{\mathrm{goal}} - \mathbf{p}^w_t \rVert_2$ is the distance from the vehicle position $\mathbf{p}^w_t = [x_t, y_t, z_t]^\top$ in $\{w\}$ to the goal, $d^{\mathrm{obs}}_t$ is the smallest distance to an obstacle, taken over the sonar ranges $\mathbf{r}_t$ and the obstacle set $\mathcal{B}$, and $U_t = \lVert \mathbf{v}^b_t \rVert_2$ is the speed. The indicator $\iota^{\mathrm{succ}}_t$ is set once $d^{\mathrm{goal}}_t \le d_{\mathrm{succ}}$ has held for three consecutive decisions, and $\iota^{\mathrm{fail}}_t$ when the vehicle collides ($d^{\mathrm{obs}}_t \le \SI{0.08}{\metre}$), has a time to collision below \SI{0.12}{\second}, or leaves the tank. Both end the episode. The weights and thresholds are listed in Table~\ref{tab:reward-weights}.
+
+% source: uuv-rl-env/cfg/reward/sonar_goal.yaml (weights),
+%         uuv-rl-env/cfg/train/train_bluerov_isaaclab_hover_vel_distill.yaml (thresholds)
+\begin{table}[H]
+  \centering
+  \caption{Reward weights and thresholds. Weights are per policy decision.}
+  \label{tab:reward-weights}
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    Parameter & Symbol & Value & Unit \\
+    \midrule
+    Goal progress          & $w_p$  & 10.0 & \si{\per\metre} \\
+    Time                   & $w_{\mathrm{alive}}$ & 0.01 & -- \\
+    Depth error            & $w_z$ & 2.0  & \si{\per\metre} \\
+    Tilt                   & $w_{\mathrm{tilt}}$  & 0.05 & \si{\per\radian} \\
+    Effort                 & $w_{\mathrm{eff}}$   & 0.01 & -- \\
+    Overspeed              & $w_v$   & 1.0  & \si{\second\squared\per\metre\squared} \\
+    Clearance              & $w_c$   & 0.1  & \si{\per\metre} \\
+    Time to collision      & $w_{\mathrm{ttc}}$   & 0.3  & -- \\
+    Success                & $w_s$  & 20.0 & -- \\
+    Failure                & $w_f$  & 20.0 & -- \\
+    \midrule
+    Speed limit            & $U_{\max}$                 & 0.7  & \si{\metre\per\second} \\
+    Soft clearance         & $d_{\mathrm{safe}}$        & 0.9  & \si{\metre} \\
+    Time-to-collision horizon & $t_{\mathrm{ttc}}$      & 3.0  & \si{\second} \\
+    Minimum surge speed    & $u_{\min}$                 & 0.05 & \si{\metre\per\second} \\
+    Success distance       & $d_{\mathrm{succ}}$        & 1.0  & \si{\metre} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Training}
+\label{sec:training}
+The policy and critic are trained with PPO \parencite{schulman2017ppo} by minimising the loss in Equation~\eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$, $\epsilon = 0.2$, $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. With one decision every \SI{0.16}{\second}, the discount gives an effective horizon of about 200 decisions, or \SI{32}{\second}. Training runs for 2000 iterations, each collecting 64 decisions in 16 parallel environments, followed by 4 epochs over 8 minibatches with a learning rate of $3\times10^{-4}$. Because the actor is recurrent, the rollout is replayed in chunks of 16 consecutive decisions, each started from the stored hidden state, instead of as shuffled single steps.
 
 \subsection{Training environment}
 \label{sec:env}
-Dynamics, sensor simulation and reward computation is handled by MarineGym \parencite{chu2025marinegym}. As discussed in Section~\ref{sec:marinegym}, the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{fossen2021handbook}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
+Dynamics, sensor simulation and reward computation are handled by MarineGym \parencite{chu2025marinegym}. As discussed in Section~\ref{sec:marinegym}, the dynamics are shared between NVIDIA PhysX and MarineGym's hydrodynamics plug-in, which is based on \textcite{fossen2021handbook}. None of the sensors in Figure~\ref{fig:nav-stack-online} is a hardware model: depth images are rendered with the NVIDIA RTX renderer, the sonar is emulated by ray casting (Section~\ref{sec:sonar-emulation}), and the attitude, velocities and depth are read from the simulated vehicle state. The obstacles are geometric primitives, namely rectangular prisms, spheres and capsules, placed with random position, orientation and size.
 
- The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
-
-MarineGym is configured with the BlueROV2 Heavy model chosen because of its relevance discussed in Section~\ref{sec:marinegym}.
+MarineGym is configured with the BlueROV2 Heavy (Figure~\ref{fig:bluerov2}), chosen because of its relevance discussed in Section~\ref{sec:marinegym}. The model parameters are taken from the URDF used in MarineGym (Table~\ref{tab:bluerov_model}).
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.5\linewidth, trim=1 1 1 1, clip]{figures/bluerov2heavy_marinegym.png}
-    \caption{BlueROV2 Heavy model}
+    \includegraphics[width=0.5\linewidth, trim=42 42 42 42, clip]{figures/bluerov2heavy_marinegym.png}
+    \caption{BlueROV2 Heavy model in MarineGym.}
     \label{fig:bluerov2}
 \end{figure}
- The model parameters are taken from the URDF used in MarineGym (Table~\ref{tab:bluerov_model}).
 \begin{table}[H]
   \centering
   \caption{BlueROV2 Heavy model parameters used in MarineGym.}
   \label{tab:bluerov_model}
-  \begin{tabular}{lllll}
+  \begin{tabular}{llll}
     \toprule
     Parameter & Symbol & Value & Unit \\
     \midrule
@@ -101,61 +239,21 @@ MarineGym is configured with the BlueROV2 Heavy model chosen because of its rele
     \bottomrule
   \end{tabular}
 \end{table}
+\begin{todolist}
+  \item Check the vehicle: the training config (\texttt{cfg/task/hover\_vel\_stable\_goal.yaml}) loads MarineGym's 6-thruster \texttt{BlueROV} asset, the same as \textcite{deowan2026unified}, not the Heavy. Its displaced volume is \SI{0.0113459}{\metre\cubed}, not the 0.0116499 in this table; mass and inertia come from the asset's URDF and are not in any config.
+\end{todolist}
+
 \subsubsection{Sonar emulation}
-The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the model in Section~\ref{sec:fls-model}. The ranges are directly used as a policy observation listed in Table~\ref{tab:train_obs}.  
+\label{sec:sonar-emulation}
+The sonar is implemented as a planar ray cast following the model in Section~\ref{sec:fls-model}, with $N_r = 64$ rays spread over \SI{360}{\degree}, a minimum range of $r_{\min} = \SI{0.2}{\metre}$ and a maximum range of $r_{\max} = \SI{12}{\metre}$. The ranges $\mathbf{r}_t$ are reduced to the sonar features $\xi^{\mathrm{sonar}}_t$ of Section~\ref{sec:policy-input}.
 
-\subsection{Recurrent policy}
-The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64 and trained using Asymetric PPO (APPO) \parencite{schulman2017ppo} in the environment of Section~\ref{sec:env}, with the rewards given in Equation~\eqref{eq:rewards}.
-
-\begin{subequations}\label{eq:rewards}
-\begin{balign}
-  R_t &= \textstyle\sum_{k} R^{(k)}_t, \label{eq:reward-total}\\
-  R^{(\mathrm{prog})}_t &= \lambda_{\mathrm{prog}}\bigl(d^{\mathrm{goal}}_{t-1} - d^{\mathrm{goal}}_t\bigr), \label{eq:reward-progress}\\
-  R^{(\mathrm{alive})}_t &= -\lambda_{\mathrm{alive}}, \label{eq:reward-alive}\\
-  R^{(\mathrm{depth})}_t &= -\lambda_{\mathrm{depth}}\,\lvert z_{\mathrm{goal}} - z_t\rvert, \label{eq:reward-depth}\\
-  R^{(\mathrm{tilt})}_t &= -\lambda_{\mathrm{tilt}}\sqrt{\phi_t^2 + \theta_t^2}, \label{eq:reward-tilt}\\
-  R^{(\mathrm{eff})}_t &= -\lambda_{\mathrm{eff}}\,\tfrac{1}{4}\lVert\mathbf{a}_t\rVert_1, \label{eq:reward-effort}\\
-  R^{(\mathrm{vel})}_t &= -\lambda_{\mathrm{vel}}\max\bigl(0,\ U_t - U_{\max}\bigr)^2, \label{eq:reward-speed}\\
-  R^{(\mathrm{clr})}_t &= -\lambda_{\mathrm{clr}}\max\bigl(0,\ d_{\mathrm{safe}} - d^{\mathrm{obs}}_t\bigr), \label{eq:reward-clearance}\\
-  R^{(\mathrm{ttc})}_t &= -\lambda_{\mathrm{ttc}}\operatorname{clip}\Bigl(1 - \frac{d^{\mathrm{obs}}_t}{t_{\mathrm{ttc}}\max(u_t,\,u_{\min})},\ 0,\ 1\Bigr), \label{eq:reward-ttc}\\
-  R^{(\mathrm{end})}_t &= \lambda_{\mathrm{succ}}\,\mathbb{I}^{\mathrm{succ}}_t - \lambda_{\mathrm{fail}}\,\mathbb{I}^{\mathrm{fail}}_t \label{eq:reward-terminal}
-\end{balign}
-\end{subequations}
-
-Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^n_{\mathrm{goal}} - \mathbf{p}^n_t \rVert_2$ is the distance from the vehicle position $\mathbf{p}^n_t = [x_t, y_t, z_t]^\top$ to the goal, $d^{\mathrm{obs}}_t$ is the smallest distance to an obstacle, taken over the sonar ranges $\mathbf{r}_t$ and the obstacle set $\mathcal{B}$, and $U_t = \lVert \mathbf{v}^b_t \rVert_2$ is the speed of the body-frame velocity $\mathbf{v}^b_t = [u_t, v_t, w_t]^\top$. The indicator $\mathbb{I}^{\mathrm{succ}}_t \in \{0,1\}$ is set once $d^{\mathrm{goal}}_t \le d_{\mathrm{succ}}$ has held for three consecutive decisions, and $\mathbb{I}^{\mathrm{fail}}_t \in \{0,1\}$ when the vehicle collides ($d^{\mathrm{obs}}_t \le \SI{0.08}{\metre}$), has a time to collision below \SI{0.12}{\second}, or leaves the tank. Both end the episode. The weights and thresholds are listed in Table~\ref{tab:reward-weights}.
-
-% source: uuv-rl-env/cfg/reward/sonar_goal.yaml (weights),
-%         uuv-rl-env/cfg/train/train_bluerov_isaaclab_hover_vel_distill.yaml (thresholds)
-\begin{table}[H]
-  \centering
-  \caption{Reward weights and thresholds. Weights are per policy decision.}
-  \label{tab:reward-weights}
-  \begin{tabular}{@{}llll@{}}
-    \toprule
-    Parameter & Symbol & Value & Unit \\
-    \midrule
-    Goal progress          & $\lambda_{\mathrm{prog}}$  & 10.0 & \si{\per\metre} \\
-    Time                   & $\lambda_{\mathrm{alive}}$ & 0.01 & -- \\
-    Depth error            & $\lambda_{\mathrm{depth}}$ & 2.0  & \si{\per\metre} \\
-    Tilt                   & $\lambda_{\mathrm{tilt}}$  & 0.05 & \si{\per\radian} \\
-    Effort                 & $\lambda_{\mathrm{eff}}$   & 0.01 & -- \\
-    Overspeed              & $\lambda_{\mathrm{vel}}$   & 1.0  & \si{\second\squared\per\metre\squared} \\
-    Clearance              & $\lambda_{\mathrm{clr}}$   & 0.1  & \si{\per\metre} \\
-    Time to collision      & $\lambda_{\mathrm{ttc}}$   & 0.3  & -- \\
-    Success                & $\lambda_{\mathrm{succ}}$  & 20.0 & -- \\
-    Failure                & $\lambda_{\mathrm{fail}}$  & 20.0 & -- \\
-    \midrule
-    Speed limit            & $U_{\max}$                 & 0.7  & \si{\metre\per\second} \\
-    Soft clearance         & $d_{\mathrm{safe}}$        & 0.9  & \si{\metre} \\
-    Time-to-collision horizon & $t_{\mathrm{ttc}}$      & 3.0  & \si{\second} \\
-    Minimum surge speed    & $u_{\min}$                 & 0.05 & \si{\metre\per\second} \\
-    Success distance       & $d_{\mathrm{succ}}$        & 1.0  & \si{\metre} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The policy and critic are trained on $R_t$ by minimising the PPO loss in Equation~\eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$ and $\epsilon = 0.2$.
+\begin{todolist}
+  \item The FLS model in Background uses $N = 16$ beams over $\alpha = 180^\circ$; the training sonar uses 64 rays over \SI{360}{\degree}. Align the two, or say that the training sonar is a wider idealisation.
+\end{todolist}
 
 \subsection{Evaluation protocol}
-
-To evaluate policy robustness, we 
+\label{sec:evaluation}
+\begin{todolist}
+  \item Metrics (success rate, collision rate, time to goal, path length) and the test scenes.
+  \item The memory comparison of RQ3: the same input with an MLP actor (no memory), the GRU actor, and a spatially-enhanced recurrent unit \parencite{yang2026spatially}, if included.
+\end{todolist}

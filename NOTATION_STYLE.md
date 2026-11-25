@@ -53,10 +53,11 @@ Each topic takes its notation from one reference. Write that topic the way its r
 | POMDP formulation | Song, Romero, Müller, Koltun and Scaramuzza, *Reaching the limit in autonomous racing* | `song2023reaching` | The split between the state and the observation $o_t$, and a policy that acts on observations instead of the full state. |
 | Depth images and the DeFM encoder | DeFM | **missing — add** | Depth image $D_t$ and its size $H\times W$, the log-scaled 3-channel preprocessing $\Gamma(\cdot)$, the embedding $\mathbf{z}^{\mathrm{DeFM}}_t$. |
 | Collision images and the VAE encoder | Deep Collision Encoding (DCE) | **missing — add** | Collision image $D^{\mathrm{col}}_t$, its reconstruction, the VAE loss in §4. |
+| Problem formulation, observation groups, policy features | Deowan and Kelasidi, *Unified Planning-Learning Framework for Robust UUV Navigation Under Partial Observability* | `deowan2026unified` | Partially observable control problem with $\pi(\mathbf{a}_t\mid o_{\le t})$; observation groups $o^{(\cdot)}_t$; feature groups $\xi^{(\cdot)}_t$ in the policy input. Their symbols that clash with Fossen ($\pi_\theta$, $\varphi_t$, $r_t$, $x_t$, $\nu_t$, $\omega_t$, $w_\cdot$) are replaced by the registry symbols below. |
 | PPO and GAE | Schulman et al., *Proximal Policy Optimization Algorithms*; Schulman et al., GAE | `schulman2017ppo`; GAE **missing — add** | Clipped objective, clip range $\epsilon$, advantage $\hat A_t$, TD residual $\delta_t$, $\lambda_{\mathrm{GAE}}$. |
 | Recurrent networks (RNN, LSTM, GRU) | Hochreiter and Schmidhuber (LSTM); Cho et al. (GRU); figures after Olah, *Understanding LSTM Networks* | `hochreiter1997long`; `cho2014learning`; `olah2015lstm` | Hidden state $\mathbf{h}_t$, LSTM cell state $\mathbf{c}_t$ and gates $\mathbf{f}_t,\mathbf{i}_t,\mathbf{o}_t$, candidates $\tilde{\mathbf{c}}_t,\tilde{\mathbf{h}}_t$, GRU gates $\boldsymbol{\upsilon}_t,\boldsymbol{\chi}_t$. |
 
-**When two sources collide, Fossen wins.** Fossen symbols are never renamed. A symbol from another source that clashes with Fossen is renamed, and the rename is recorded in the last column of §3.2. For example, Song et al. write the policy as $\pi_\theta(\mathbf{a}_t\mid\mathbf{o}_t)$. Here $\theta$ is pitch, so the weights are $\mathbf{w}_\pi$ and the policy is $\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)$. The structure still follows the source. Only the letter changes.
+**When two sources collide, Fossen wins.** Fossen symbols are never renamed. A symbol from another source that clashes with Fossen is renamed, and the rename is recorded in the last column of §3.2. For example, Song et al. write the policy as $\pi_\theta(\mathbf{a}_t\mid\mathbf{o}_t)$. The structure still follows the source; only clashing letters change. **One deliberate exception (2026-11-25):** the policy weights are $\theta$, as in Song et al. and Deowan and Kelasidi, written only as the subscript of $\pi_\theta$ (and in $\max_\theta$, $\mathrm{GRU}(\cdot;\theta)$), while pitch always carries its time index $\theta_t$ or sits in $\boldsymbol\eta$. The Method states this once.
 
 A new topic needs a row in this table before its notation is used.
 
@@ -139,13 +140,21 @@ Fossen symbols are **reserved**. ML symbols have been renamed so they don't coll
 | $\mathbf{a}_t$ | action | $\mathbb{R}^{n_a}$ | — |
 | $\mathbf{p}^n_{\mathrm{goal}}$ | goal position | $\mathbb{R}^3$ | $g$ (collides with $\mathbf{g}(\boldsymbol\eta)$ and gravity $g$) |
 | $\mathcal{B}=\{\mathcal{B}_k\}_{k=1}^{N_{\mathcal{B}}}$ | obstacle set | $\mathcal{B}_k\subset\mathbb{R}^3$ | $K$ (collides with roll moment $K$) |
-| $D_t$ | planar depth image | $\mathbb{R}_{\ge0}^{H\times W}$, $H{\times}W = 96{\times}128$ | — (kept to match DeFM) |
+| $D_t$ | depth image, range per pixel divided by the \SI{10}{\metre} max range | $[0,1]^{H\times W}$, $H{\times}W = 72{\times}128$ | — (kept to match DeFM) |
+| $r_{\mathrm{robot}}$ | half-edge of the robot cube in the collision image | \SI{0.3}{\metre} | — |
 | $R^{\mathrm{img}}_t$ | raw range image | $\mathbb{R}_{\ge0}^{72\times128}$ | — |
 | $\tilde{\mathbf{r}}_t$, $\mathbf{r}_t$ | noisy / clean sonar ranges | $[0,r_{\max}]^{N_r}$, $N_r=64$ | $\mathbf{s}_t$ (collides with state) |
 | $\alpha_i$ | bearing of sonar ray $i$ | $[0,2\pi)$ | $\beta_i$ / $\psi_i$ (KL weight / yaw) |
 | $\sigma_r,\ \zeta_{t,i}$ | sonar noise std. and noise sample | $\mathbb{R}_{>0}$, $\mathbb{R}$ | $\epsilon$, $\nu$ (PPO clip / velocity) |
 | $p_{\mathrm{drop}},\ p_{\mathrm{spur}}$ | sonar drop / spurious probabilities | $[0,1]$ | — |
-| $o_t=(D_t,\tilde{\mathbf{r}}_t)$ | raw observation | $\mathcal{O}$ | — |
+| $o_t=[o^{\mathrm{sonar}}_t,o^{\mathrm{depth}}_t,o^{\mathrm{imu}}_t,o^{\mathrm{vel}}_t,o^{\mathrm{goal}}_t]$ | raw observation, grouped as in `deowan2026unified` | $\mathcal{O}$ | — |
+| $\xi^{\mathrm{sonar}}_t$ | sonar features: 16 sector minima, front minimum, front TTC risk | $\mathbb{R}^{18}$ | — (Deowan's $\xi^{\mathrm{sonar}}_t$) |
+| $d_{s,t},\ d_{f,t}$ | sonar sector minimum, front minimum ($\pm30^\circ$) | $[0,r_{\max}]$ | — |
+| $c^{\mathrm{TTC}}_t$ | front TTC risk, $\operatorname{clip}(1-d_{f,t}/(t_{\mathrm{ttc}}\max(u_t,u_{\min})),0,1)$ | $[0,1]$ | — (Deowan uses TTC features without a formula) |
+| $\xi^{\mathrm{depth}}_t=\boldsymbol{\mu}^{\mathrm{VAE}}_t$ | depth features (VAE latent mean); takes the place of Deowan's $\xi^{\mathrm{wm}}_t$ | $\mathbb{R}^{64}$ | — |
+| $\Delta\mathbf{p}^b_{\mathrm{goal},t}$ | goal relative to the vehicle, body frame | $\mathbb{R}^3$ | Deowan's lookahead $\Delta\mathbf{p}^{\mathrm{lh}}_t$ (no planner here) |
+| $e^\psi_t$ | yaw error towards the goal | $\mathbb{S}$ | — (Deowan) |
+| $\boldsymbol{\nu}^{*}_t,\ \mathbf{S}$ | velocity reference $[u^*_t,v^*_t,w^*_t,r^*_t]^\top=\mathbf{S}\mathbf{a}_t$, action scaling | $\mathbb{R}^4$, $\mathbb{R}^{4\times4}$ | — |
 | $e\in\{\mathrm{DeFM},\mathrm{VAE}\}$ | encoder/method index | — | $m$ (mass) |
 | $E^{e}$ | depth encoder of method $e$ | $\mathbb{R}^{H\times W}\!\to\mathbb{R}^{d_e}$ | — |
 | $\mathbf{z}^{e}_t$ | depth embedding / latent | $\mathbb{R}^{d_e}$ | bold to separate from heave position $z$ |
@@ -156,28 +165,32 @@ Fossen symbols are **reserved**. ML symbols have been renamed so they don't coll
 | $D^{\mathrm{col}}_t,\ \hat D^{\mathrm{col}}_t$ | collision image / reconstruction | $\mathbb{R}^{H\times W}$ | $C_t$ (Coriolis $\mathbf{C}$) |
 | $\Omega_t$ | valid-pixel mask | $\{0,1\}^{H\times W}$ | $M_t$ (mass matrix $\mathbf{M}$) |
 | $\beta$ | KL weight | $\mathbb{R}_{>0}$ | — |
-| $\mathbf{x}^{e}_t$ | policy input $[\mathbf{z}^e_t,\tilde{\mathbf{r}}_t,\mathbf{s}_t,\mathbf{p}^n_{\mathrm{goal}},\mathbf{a}_{t-1}]$ | $\mathbb{R}^{n_x}$ | bold to separate from north position $x$ |
-| $\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)$ | policy | — | $\pi_\theta$ ($\theta$ = pitch) |
-| $V(\mathbf{x}^e_t;\mathbf{w}_V)$ | critic | $\mathbb{R}$ | — |
-| $\mathbf{w}_{\pi},\mathbf{w}_V,\mathbf{w}_{\mathrm{enc}},\mathbf{w}_{\mathrm{dec}},\mathbf{w}_{\mathrm{DeFM}}$ | network weights | — | $\theta,\phi,\vartheta,\omega$ (all clash with Fossen) |
+| $\mathbf{x}_t$ | policy input $[\Delta\mathbf{p}^b_{\mathrm{goal},t},\sin e^\psi_t,\cos e^\psi_t,\mathbf{v}^b_t,r_t,z_t,\phi_t,\theta_t,\xi^{\mathrm{sonar}}_t,\xi^{\mathrm{depth}}_t]$ | $\mathbb{R}^{94}$ | Deowan's $\varphi_t$ ($\phi$ = roll); bold to separate from north position $x$ |
+| $\pi_\theta(\mathbf{a}_t\mid o_{\le t})$, $\pi_\theta(\mathbf{a}_t\mid\mathbf{h}_t)$ | policy (history form / recurrent form) | — | $\pi_\theta$ ($\theta$ = pitch) |
+| $V(\mathbf{x}_t;\mathbf{w}_V)$ | critic (MLP, no memory) | $\mathbb{R}$ | — |
+| $\theta$ (as subscript of $\pi_\theta$), $\theta_{\mathrm{old}}$ | policy weights, following `deowan2026unified` (user decision 2026-11-25) | — | EXCEPTION to the Fossen rule: pitch is $\theta$ too. Pitch always carries its time index ($\theta_t$) or sits in $\boldsymbol\eta$; the policy weights only appear as the subscript of $\pi$, in $\max_\theta$ and in $\mathrm{GRU}(\cdot;\theta)$. |
+| $\mathbf{w}_V,\mathbf{w}_{\mathrm{enc}},\mathbf{w}_{\mathrm{dec}},\mathbf{w}_{\mathrm{DeFM}}$ | critic / encoder / decoder / DeFM weights | — | $\phi,\vartheta,\omega$ (clash with Fossen) |
 | $\mathbf{h}_t$ | GRU hidden state | $\mathbb{R}^{n_h}$ | — |
 | $\mathbf{c}_t,\ \tilde{\mathbf{c}}_t$ | LSTM cell state / candidate (Background only) | $\mathbb{R}^{n_h}$ | $C_t$ (Coriolis $\mathbf{C}$) |
 | $\mathbf{f}_t,\ \mathbf{i}_t,\ \mathbf{o}_t$ | LSTM forget / input / output gates (Background only) | $(0,1)^{n_h}$ | — |
 | $\boldsymbol{\upsilon}_t,\ \boldsymbol{\chi}_t,\ \tilde{\mathbf{h}}_t$ | GRU update / reset gates, candidate state | $(0,1)^{n_h}$, $\mathbb{R}^{n_h}$ | $\mathbf{z}_t$, $\mathbf{r}_t$ (embedding $\mathbf{z}^e_t$, sonar $\mathbf{r}_t$) |
-| $R_t,\ R^{(k)}_t$ | reward and its terms | $\mathbb{R}$ | $r_t$ (yaw rate $r$, sonar $\mathbf{r}$) |
+| $R_t$ | reward, $R_t=-w_{\mathrm{alive}}+w_p\Delta d_t-w_zZ_t-w_cC_t-w_{\mathrm{ttc}}T_t-w_vV_t-w_{\mathrm{tilt}}\Theta_t-w_{\mathrm{eff}}E_t+w_s\iota^{\mathrm{succ}}_t-w_f\iota^{\mathrm{fail}}_t$ (form of `deowan2026unified`, Eq. 14) | $\mathbb{R}$ | $r_t$ (yaw rate $r$, sonar $\mathbf{r}$) |
+| $w_p,w_z,w_c,w_{\mathrm{ttc}},w_v,w_{\mathrm{tilt}},w_{\mathrm{eff}},w_s,w_f,w_{\mathrm{alive}}$ | reward weights (always with a word or letter subscript) | $\mathbb{R}_{>0}$ | Deowan's $w_\cdot$; replaces $\lambda_{\mathrm{prog}},\dots$ (heave $w_t$ carries a time index) |
+| $\Delta d_t, Z_t, C_t, T_t, V_t, \Theta_t, E_t$ | reward terms: progress, depth error, clearance, TTC, overspeed, tilt, effort (scalars, non-bold) | $\mathbb{R}$ | Deowan's symbols; scalar and time-indexed, unlike bold $\mathbf{C}$, $\mathbf{T}$, $\boldsymbol\Theta$ (Fossen) |
 | $\gamma,\ \lambda_{\mathrm{GAE}}$ | discount, GAE parameter | $[0,1)$, $[0,1]$ | — |
 | $\hat A_t,\ \hat G_t$ | advantage, return target | $\mathbb{R}$ | — |
 | $\kappa_t$ | PPO probability ratio | $\mathbb{R}_{>0}$ | $\rho_t$ (water density $\rho$) |
 | $\epsilon$ | PPO clip range | $\mathbb{R}_{>0}$ | — |
-| $\lambda_V,\lambda_H,\lambda_k$ | loss / reward weights (always subscripted) | $\mathbb{R}_{>0}$ | — |
+| $\lambda_V,\lambda_H$ | PPO loss weights (always subscripted) | $\mathbb{R}_{>0}$ | — |
 | $\mathbf{p}^n_t=[x_t,y_t,z_t]^\top$, $\mathbf{v}^b_t=[u_t,v_t,w_t]^\top$ | vehicle position in $\{n\}$, linear velocity in $\{b\}$ | $\mathbb{R}^3$ | — (Fossen; parts of $\boldsymbol\eta$, $\boldsymbol\nu$) |
+| $\{w\}$, $\mathbf{p}^w_t$, $\mathbf{p}^w_{\mathrm{goal}}$ | simulator world frame ($z$ up) and positions in it; Method only. Body frame $\{b\}$ in the Method is forward-left-up (Isaac Sim, as in `deowan2026unified`); Background's $\{b\}$ is Fossen's forward-starboard-down. They differ by \SI{180}{\degree} about $x$. | $\mathbb{R}^3$ | — |
 | $U_t,\ U_{\max}$ | speed $\lVert\mathbf{v}^b_t\rVert_2$ and its soft limit | $\mathbb{R}_{\ge0}$ | — (Fossen's speed $U$) |
 | $d^{\mathrm{goal}}_t,\ d^{\mathrm{obs}}_t$ | distance to the goal / to the nearest obstacle (word superscript; subscripted $d_e$ stays a dimension) | $\mathbb{R}_{\ge0}$ | — (code: `dist`, `min_clear`) |
 | $d_{\mathrm{safe}},\ d_{\mathrm{succ}}$ | soft-clearance and success distances | $\mathbb{R}_{>0}$ | — |
 | $t_{\mathrm{ttc}},\ u_{\min}$ | time-to-collision horizon, minimum surge speed in the TTC term | $\mathbb{R}_{>0}$ | — |
-| $\mathbb{I}^{\mathrm{succ}}_t,\ \mathbb{I}^{\mathrm{fail}}_t$ | success / failure indicators | $\{0,1\}$ | $\mathbb{1}$ (needs an extra font package) |
+| $\iota^{\mathrm{succ}}_t,\ \iota^{\mathrm{fail}}_t$ | success / failure indicators | $\{0,1\}$ | Deowan's $\iota$; was $\mathbb{I}$ |
 | $\delta_t$ | TD residual in GAE | $\mathbb{R}$ | — (Schulman et al., GAE) |
-| $V_t,\ V^{\mathrm{clip}}_t$ | critic value $V(\mathbf{x}^e_t;\mathbf{w}_V)$ and its clipped version | $\mathbb{R}$ | — (PPO value clipping) |
+| $V_t,\ V^{\mathrm{clip}}_t$ | critic value $V(\mathbf{x}_t;\mathbf{w}_V)$ and its clipped version | $\mathbb{R}$ | — (PPO value clipping) |
 | $\ell_{\mathrm{H}},\ \mathcal{H}$ | Huber loss, entropy | — | — |
 
 ---
@@ -201,12 +214,12 @@ Reference losses (keep these forms):
 \end{beqn}
 
 \begin{balign}
-  \mathcal{L}^{\mathrm{PPO}}(\mathbf{w}_\pi,\mathbf{w}_V)
+  \mathcal{L}^{\mathrm{PPO}}(\theta,\mathbf{w}_V)
     &= \Lc{clip} + \lambda_V\Lc{V} - \lambda_H\Lc{H}, \label{eq:ppo-total}\\
   \Lc{clip} &= -\mathbb{E}_t\bigl[\min\bigl(\kappa_t\hat A_t,\
      \operatorname{clip}(\kappa_t,1-\epsilon,1+\epsilon)\hat A_t\bigr)\bigr], \label{eq:ppo-clip}\\
-  \kappa_t &= \frac{\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_\pi)}
-                   {\pi(\mathbf{a}_t\mid\mathbf{x}^e_t;\mathbf{w}_{\pi,\mathrm{old}})} \label{eq:ppo-ratio}
+  \kappa_t &= \frac{\pi_\theta(\mathbf{a}_t\mid\mathbf{x}_t)}
+                   {\pi_{\theta_{\mathrm{old}}}(\mathbf{a}_t\mid\mathbf{x}_t)} \label{eq:ppo-ratio}
 \end{balign}
 ```
 

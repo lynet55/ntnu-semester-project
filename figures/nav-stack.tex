@@ -1,0 +1,77 @@
+% !TEX root = ../main.tex
+% Proposed navigation stack in the bb_theme figure style (palette and wires follow
+% bb_theme/latex/vae-canonical/vae.tex and figures/cnn.tex).
+% Use inside a figure environment:  \input{figures/nav-stack.tex}
+% Needs: tikz with arrows.meta (loaded in main.tex), amsmath, amssymb. Loads no other
+% TikZ library, so it cannot change how later figures are parsed.
+\definecolor{vaeInk}{HTML}{0F1B2D}
+\definecolor{vaeHatch}{HTML}{2F3FD0}
+\definecolor{vaeSignal}{HTML}{1D5FD1}
+\definecolor{vaeMuted}{HTML}{56677F}
+\definecolor{vaeFill}{HTML}{EEF3FB}
+\begin{tikzpicture}[
+    font=\footnotesize, line cap=round, line join=round,
+    wire/.style={draw=vaeInk, line width=0.6pt, -{Stealth[length=4.5pt, width=3.5pt]}},
+    blk/.style={draw=vaeInk, line width=0.7pt, fill=vaeFill, rounded corners=2pt,
+                minimum width=2.1cm, minimum height=0.85cm, align=center, inner sep=2pt},
+    sens/.style={blk, fill=white},
+    frozen/.style={blk, fill=white, dash pattern=on 2.5pt off 1.8pt},
+    lbl/.style={font=\scriptsize, text=vaeInk, inner sep=1.5pt},
+    dim/.style={font=\scriptsize, text=vaeMuted, inner sep=1.5pt},
+  ]
+  % ---------- learned policy (background) ----------
+  \fill[vaeSignal!7, rounded corners=4pt] (6.45,-1.05) rectangle (11.65,1.55);
+  \node[anchor=north west, text=vaeSignal, font=\scriptsize] at (6.5,1.52)
+       {recurrent policy $\pi_\theta$};
+
+  % ---------- emulated sensors (background) ----------
+  \draw[vaeMuted, line width=0.5pt, dash pattern=on 2pt off 1.5pt, rounded corners=4pt]
+       (-1.25,-2.15) rectangle (1.25,2.4);
+  \node[anchor=north west, text=vaeMuted, font=\scriptsize] at (-1.2,2.37) {emulated};
+
+  % ---------- sensors ----------
+  \node[sens] (cam) at (0,1.5)  {Depth camera};
+  \node[sens] (fls) at (0,0)    {FLS};
+  \node[sens] (ins) at (0,-1.5) {IMU, DVL,\\pressure, goal};
+
+  % ---------- feature extraction ----------
+  \node[frozen] (dce) at (3.1,1.5) {DCE encoder\\(frozen)};
+  \node[blk]    (sec) at (3.1,0)   {Sector\\features};
+
+  % ---------- policy input ----------
+  \draw[draw=vaeInk, line width=0.7pt, fill=vaeSignal!25] (5.35,-1.85) rectangle (5.65,1.85);
+  \coordinate (xin) at (5.65,0);
+  \node[lbl, anchor=south] at (5.5,1.85) {$\mathbf{x}_t$};
+  \node[dim, anchor=north] at (5.5,-1.85) {94};
+
+  % ---------- recurrent policy ----------
+  \node[blk, minimum width=1.3cm] (mlp)  at (7.25,0)  {MLP};
+  \node[blk, minimum width=1.3cm, fill=vaeSignal!20] (gru) at (9.0,0) {GRU};
+  \node[blk, minimum width=1.3cm] (head) at (10.75,0) {Gaussian\\head};
+
+  % ---------- vehicle loop ----------
+  \node[blk] (scl)  at (10.75,-2.9) {Scaling $\mathbf{S}$};
+  \node[blk] (ctrl) at (7.25,-2.9)  {Velocity\\controller};
+  \node[sens] (veh) at (3.1,-2.9)   {BlueROV2 Heavy\\(MarineGym)};
+
+  % ---------- wires: sensors to features ----------
+  \draw[wire] (cam) -- node[lbl, above] {$D_t$} (dce);
+  \draw[wire] (fls) -- node[lbl, above] {$\mathbf{r}_t$} node[dim, below] {64} (sec);
+  \draw[wire] (dce.east) -- node[lbl, above] {$\xi^{\mathrm{depth}}_t$} node[dim, below] {64} (5.35,1.5);
+  \draw[wire] (sec.east) -- node[lbl, above] {$\xi^{\mathrm{sonar}}_t$} node[dim, below] {18} (5.35,0);
+  \draw[wire] (ins.east) -- node[lbl, above, pos=0.5] {states, goal} node[dim, below, pos=0.5] {12} (5.35,-1.5);
+
+  % ---------- wires: policy ----------
+  \draw[wire] (xin) -- (mlp);
+  \draw[wire] (mlp) -- (gru);
+  \draw[wire] (gru) -- node[lbl, above] {$\mathbf{h}_t$} (head);
+  % recurrence: h_{t-1} fed back into the GRU
+  \draw[wire] (gru.north east) ++(-0.2,0) -- ++(0,0.45) -- ++(-0.9,0)
+        node[lbl, above, pos=0.5] {$\mathbf{h}_{t-1}$} -- ++(0,-0.45);
+
+  % ---------- wires: action to vehicle and back ----------
+  \draw[wire] (head) -- node[lbl, right] {$\mathbf{a}_t$} (scl);
+  \draw[wire] (scl) -- node[lbl, above] {$\boldsymbol{\nu}^{*}_t$} (ctrl);
+  \draw[wire] (ctrl) -- node[lbl, above] {$\boldsymbol{\tau}$} (veh);
+  \draw[wire] (veh.west) -- (0,-2.9) -- node[lbl, right, pos=0.5] {$o_{t+1}$} (ins.south);
+\end{tikzpicture}

@@ -11,7 +11,6 @@
 %   6 Partial observability camera sees only part of the scene -> sonar + memory
 %   7 RQs, 8 contributions, 9 scope, 10 outline
 %
-% Keys written as \texttt{...} are not in references.bib yet.
 %
 % CITATION STYLE (whole project): \textcite{key} when the authors are part of the
 % sentence ("\textcite{x} show ..."); \parencite{key} otherwise, placed before the
@@ -25,77 +24,39 @@
 \subsection{Motivation}
 \label{sec:motivation}
 
-\paragraph{Application}
-% Step 1. Short: one paragraph. Aquaculture is the main example, but the argument
-% below does not depend on it.
-Efforts to improve underwater inspection using Unmanned Underwater Vehicles (UUV's) has potenial to unlock great economical- and ecologial value for the Norwegian fish farming industry.  Such UUV's are commonly used in the process of inspection, maintenance and intervention tasks in fish farms, and have already proven an indispensible tool for Norwegian fish farmes as they have replaced divers for monitoring and inspection operations inside of the cage \parencite{amundsen2024aquaculture}. Specifically operations such as net inspection, biofouling removing, mooring line inspection and fish monitoring \parencite{amundsen2025netpen}. However of these operations, net inspection is likely the most important operation, as such failures would represent produciton loss and environmental conserns as fish that have escaped may impact the wild fish population.
+% Step 1: application
+% PRIMARY SOURCE (TODO): the 2022 production figures (aquaculture overtaking capture
+% fisheries, 51 percent) originate from FAO, The State of World Fisheries and Aquaculture
+% 2024: Blue Transformation in Action, Rome, doi:10.4060/cd0683en. amundsen2025netpen
+% repeats them; cite FAO for the numbers once it is in references.bib. FAO's 51 percent
+% refers to aquatic animal production (excluding algae).
+Unmanned underwater vehicles (UUVs) are increasingly used for operations close to underwater structures, such as offshore installations, harbours and aquaculture net pens. Aquaculture is a prominent example: in 2022, aquaculture surpassed capture fisheries in global production, accounting for 51 percent of global seafood production \parencite{amundsen2025netpen}, and it has grown to become Norway's second-largest export industry after oil and gas \parencite{amundsen2024aquaculture}. In Norwegian fish farms, UUVs have replaced divers for inspection and monitoring inside the cage \parencite{amundsen2024aquaculture}, and are used for net inspection, biofouling removal, mooring-line inspection and fish monitoring \parencite{amundsen2025netpen}. Of these, net inspection is among the most important, as a damaged net can lead to fish escapes, with economic losses and possible consequences for wild fish populations. Common to these operations is that the vehicle must move safely through confined, cluttered three-dimensional space, close to the structures it is inspecting.
 
-In 2022 aquaculture production surpassed capture of fisheries in global production, accounting for 51 percent of global seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \parencite{amundsen2025netpen}.
+% Step 2: navigating in 3D clutter needs 3D spatial information
+To navigate such environments safely, a vehicle must avoid obstacles not only ahead of it, but also above and below, and therefore needs to perceive the geometry of its surroundings in three dimensions. Underwater, this information must come from onboard sensors: satellite positioning is unavailable, as radio signals attenuate rapidly in water, and acoustic and optical sensors each come with their own limitations \parencite{paull2014auv}. The question is therefore which onboard sensors can provide the three-dimensional information needed for collision-free navigation.
 
-The economical impact is especially significant for Norway as aquaculture has grown to be Norway's second-largest export industry behind the oil and gas industry \parencite{amundsen2024aquaculture}.
+% Step 3: sonar alone does not provide it
+Forward-looking sonars (FLS) are widely used on underwater vehicles, as they offer long-range imaging in turbid water, where optical cameras have a limited range \parencite{westman2020volumetric}. However, an FLS measures the range and bearing of each return but not its elevation: each pixel of a sonar image covers an arc of possible elevation angles, so the three-dimensional scene is collapsed onto a two-dimensional image \parencite{westman2020volumetric, mcconnell2020fusing}. Recovering the elevation requires additional sonars, observations from multiple viewpoints or assumptions about the scene \parencite{mcconnell2020fusing}. Sonars that measure in three dimensions are emerging \parencite{archieri2026insso3d}, but remain less common.
 
+% Step 4: depth images provide dense 3D structure
+A depth image offers a complementary source of spatial information. By assigning a range to every pixel along a known ray, it provides dense three-dimensional structure within the camera's field of view. Cameras are low-cost and already part of the standard sensor suite of many UUVs \parencite{haugalokken2024lowcost}. Infrared-based depth cameras such as the Kinect do not work underwater, since water absorbs infrared light too strongly to reach distances beyond a few centimetres \parencite{massotcampos2015optical}, so depth must instead be obtained from stereo cameras or learned estimation. Recent stereo depth models and SLAM systems adapted to underwater scenes make this increasingly feasible \parencite{wu2025stereoadapter, surfslam}. Depth is also a favourable representation for learning in simulation: unlike colour images, it is invariant to lighting, colour and texture, which eases the transfer from simulation to reality \parencite{patel2026defm}.
+
+% Step 5: RL and learned navigation from depth
+Reinforcement learning (RL) offers a way to obtain navigation behaviour from such data without engineering it by hand, providing a framework for behaviours that are difficult to design explicitly \parencite{kober2013reinforcement}. Deep RL has led to real-world successes, most maturely in quadruped locomotion \parencite{tang2025deep}, where it has become one of the two dominant control approaches alongside optimal control \parencite{ha2025learning}. A key advantage is that the policy can take high-dimensional sensory data directly as input, largely removing the need for a separate state-estimation module \parencite{ha2025learning}. Depth images are a common such input: learned policies for legged and aerial robots take depth images directly as exteroceptive input \parencite{ha2025learning}, and several navigate cluttered environments by compressing them into a compact latent representation that is mapped, together with the robot state and goal, to motion commands \parencite{kulkarni2024dce, hoeller2021learning}. Underwater, control has long relied on model-based methods, whose effectiveness depends on accurate models of the vehicle and its environment, whereas RL can learn unknown dynamics from simulation or experimental data without an explicit model \parencite{hong2025control}. Learning-based methods have accordingly been applied increasingly to underwater path planning \parencite{an2023intelligent}, and GPU-parallel underwater simulators now make it practical to train such policies at scale \parencite{chu2025marinegym}.
+
+% Step 6: partial observability -> sonar + memory
+Underwater, however, a camera sees only a small part of the scene. Scattering and light diffusion limit its range \parencite{massotcampos2015optical, westman2020volumetric}, and its field of view is narrow, so a single observation rarely captures all nearby obstacles. As for robotic tasks in general, the problem is therefore partially observable \parencite{ha2025learning}. Two complementary remedies follow. A sonar can cover the longer ranges and wider horizontal field that the camera lacks, and memory allows the policy to retain obstacles that have left the camera's view. How this memory is represented affects performance \parencite{morad2023popgym, yang2026spatially}, yet learned underwater navigation has so far either kept memory in an explicit map outside the policy \parencite{deowan2026unified} or relied on stacking recent observations \parencite{yang2022monocular}. To the author's knowledge, a navigation policy that combines depth images and sonar and learns its memory internally has not been studied for underwater vehicles.
 
 \begin{todolist}
-  \item Cut this down to one paragraph: aquaculture as the main example, plus one clause on other close-proximity operations (offshore infrastructure, harbours).
-  \item End with the lead-in: these operations require a vehicle that moves safely through cluttered 3D space.
-  \item Replace second-hand statistics with primary sources: FAO, \emph{The State of World Fisheries and Aquaculture 2024} (production figures); Statistics Norway or the Norwegian Seafood Council (export rank). Verify each before citing.
-  \item \parencite{evjemo2025aquaculture} is a submitted preprint: check whether it is published.
-  \item The long verbatim quote from \textcite{evjemo2025aquaculture} in the old Introduction must not be reused as-is. Paraphrase the useful part (planners assume rigid bodies and ignore uncertainty) in step 3 or 6, citing \textcite{xanthidis2023resiplan} and \textcite{amundsen2025netpen}.
-\end{todolist}
-
-\paragraph{Navigating in 3D clutter requires 3D spatial information}
-% Step 2.
-\begin{todolist}
-  \item To avoid obstacles above, below and ahead, the vehicle must perceive the geometry around it in three dimensions.
-  \item Underwater, GNSS is unavailable, so navigation relies on onboard sensing (\texttt{paull2014auv}, IEEE JOE).
-  \item Lead-in: which onboard sensors can provide this 3D information?
-\end{todolist}
-
-\paragraph{Sonar alone does not provide it}
-% Step 3. Background (FLS model) explains the sensor; here only the consequence.
-\begin{todolist}
-  \item The forward-looking sonar (FLS) is the standard obstacle sensor: long range, works in turbid water.
-  \item It measures range and bearing but not elevation, so the 3D scene collapses onto a 2D image (\texttt{westman2020volumetric}, ICRA 2020; \texttt{mcconnell2020fusing}, IROS 2020).
-  \item Recovering 3D from sonar requires additional sonars, vehicle motion or scene assumptions (\texttt{mcconnell2020fusing}).
-  \item True 3D sonars are emerging but costly and not yet widely adopted, e.g.\ \textcite{archieri2026insso3d}.
-\end{todolist}
-
-\paragraph{Depth images provide dense 3D structure}
-% Step 4. Do not claim depth images are standard underwater; claim they provide what
-% sonar lacks and are becoming available.
-\begin{todolist}
-  \item A depth image assigns a range to every pixel along a known ray, giving dense 3D structure within the camera's field of view.
-  \item Cameras are low-cost and already standard on UUVs \parencite{haugalokken2024lowcost}.
-  \item Off-the-shelf RGB-D cameras fail underwater because water absorbs infrared (\texttt{massotcampos2015optical}, Sensors), so depth must come from stereo or learned estimation.
-  \item Recent stereo depth models and SLAM systems adapted to underwater scenes make this increasingly feasible \parencite{wu2025stereoadapter, surfslam}. Both are preprints: add a peer-reviewed source, e.g.\ from \texttt{gonzalezsabbagh2023survey} (ACM Computing Surveys).
-  \item Depth transfers from simulation to reality better than RGB, being invariant to lighting, colour and texture \parencite{patel2026defm}; this matters more underwater, where colour and lighting vary strongly.
-\end{todolist}
-
-\paragraph{Depth is the input learned navigation already uses}
-% Step 5. One sentence per idea; the detail is in Related Work.
-\begin{todolist}
-  \item In air and on land, learned policies navigate clutter by compressing depth images into a latent and acting on it \parencite{kulkarni2024dce, hoeller2021learning}; surveys \parencite{ha2025learning, xiao2022motion}.
-  \item Depth input underwater therefore makes these methods transferable.
-  \item GPU-parallel underwater simulation makes training them practical \parencite{chu2025marinegym}.
-\end{todolist}
-
-\paragraph{The camera sees only part of the scene}
-% Step 6. Turns the camera's weakness into the motivation for sonar and memory.
-% Keep the gap short here; the argued version is in Related Work (Sec. \ref{sec:rw-gap}).
-\begin{todolist}
-  \item Underwater, camera range is short because of turbidity and lighting \parencite{evjemo2025aquaculture}, (\texttt{paull2014auv}), and its field of view is narrow.
-  \item Each observation therefore shows only part of the surroundings: the problem is partially observable.
-  \item Two remedies: sonar covers long range and a wide horizontal field; memory retains obstacles that have left the camera's view.
-  \item The memory architecture affects performance \parencite{yang2026spatially, morad2023popgym}.
-  \item Learned underwater navigation so far keeps memory in an explicit map or uses frame stacking \parencite{deowan2026unified, yang2022monocular}.
-  \item Lead-in to the research questions.
+  \item \textcite{wu2025stereoadapter} and \textcite{surfslam} are preprints: add a peer-reviewed source for underwater depth estimation.
+  \item Candidate strong source for RL in underwater path planning: Lai et al.\ 2026, \emph{Journal of Field Robotics} (not yet read).
 \end{todolist}
 
 \subsection{Research Questions}
 \label{sec:rq}
 % Each RQ answers one gap in Related Work (Sec. \ref{sec:rw-gap}) and is answered by one
 % contribution below. Keep the three in this order everywhere (gap, RQ, C, Results).
-Motivated by the success of "end to end" robotic navigation in above water domains seen in collision free navigation with drones and quadrupedal robots, a natural future extension transferability of this approach for underwater robotics. This motivated the following research questions:
+Motivated by the success of learned navigation from depth images on aerial and legged robots, this project investigates how such an approach can be transferred to an underwater vehicle, and what role memory plays under underwater partial observability. This leads to the following research questions:
 \begin{description}
     \item[RQ1] How can a learned navigation policy built on compressed depth, as used for aerial and legged robots, be adapted to the sensors commonly found on a UUV?
     \item[RQ2] What are the domain-specific limitations of such a learned navigation policy for underwater robots?
@@ -127,15 +88,11 @@ The main contributions of this project are:
 
 \subsection{Scope and limitations}
 \label{sec:scope}
+The work is limited to simulation, and no experiments are performed on a real vehicle. This is a common limitation of deep RL in robotics, where the most notable milestones have so far been achieved in simulation \parencite{tang2025deep}. The policy is trained and evaluated in generic obstacle environments, which serve as a stand-in for cluttered, close-proximity settings such as net pens, rather than a model of a specific site. Depth images are rendered by the simulator and are not estimated from a real camera, so the effects of underwater depth estimation are not studied.
 \begin{todolist}
-  \item Simulation only; no real-vehicle experiments.
-  \item A generic obstacle course stands in for close-proximity environments such as net pens.
-  \item Depth images are simulated, not estimated from a real camera.
-  \item State how currents and disturbances are handled (none or randomised).
+  \item One sentence on currents and disturbances (none or randomised).
 \end{todolist}
 
 \subsection{Outline}
 \label{sec:outline}
-\begin{todolist}
-  \item One sentence per chapter: Background, Related Work, Method, Results, Discussion, Conclusion.
-\end{todolist}
+Section~\ref{sec:background} introduces the theory used in this project, covering reinforcement learning, recurrent networks, image encoders and the underwater vehicle model. Section~\ref{sec:related-work} reviews related work on learned navigation, depth representations, memory in navigation policies and learned underwater navigation. Section~\ref{sec:method} presents the proposed method and training environment, and Section~\ref{sec:results} the results. These are discussed in Section~\ref{sec:discussion}, and Section~\ref{sec:conclusion} concludes the project.

@@ -1,8 +1,55 @@
 % !TEX root = ../main.tex
 \section{Results}
 \label{sec:results}
+
+\subsection{Depth encoder}
+\label{sec:results-encoder}
+% source: uuv-rl-env (worktree environment) experiments/logs/dce_train_{25888723,25888960,25903576}.out,
+%         encoder/datasets.md, encoder/docs/dce_D001_box_recon.png
+The depth encoder of Section~\ref{sec:depth-encoder} was trained on the 90,221 training images of the dataset and evaluated on the 9,700 validation images. Three runs were made (Table~\ref{tab:dce-results}). The first two use the original collision image of \textcite{kulkarni2023task}, with a cube of half-edge \SI{0.3}{\metre} as the robot; the second continues the first for 150 more epochs with a restarted learning rate. The final run uses the box-shaped robot of Section~\ref{sec:depth-encoder}, which is closer to the shape of the vehicle, and is the encoder used by the policy.
+
+\begin{table}[ht]
+\centering
+\caption{Training runs of the depth encoder on the validation set, at the epoch with the lowest validation loss. The loss is the per-image sum of squared errors of the collision image (normalised to $[0,1]$) plus the KL term; the RMSE is the reconstruction error in metres. The two targets differ, so their errors are only roughly comparable.}
+\label{tab:dce-results}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Target & Epochs & Best epoch & Loss & Reconstruction & KL & RMSE (\si{\metre}) \\
+\midrule
+Cube                & 100 & 100 & 55.83 & 33.65 & 22.17 & 0.604 \\
+Cube, resumed       & 250 & 248 & 52.05 & 30.64 & 21.41 & 0.577 \\
+Box (final)         & 250 & 244 & 52.37 & 28.94 & 23.43 & 0.560 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The validation error falls quickly in the first 50 epochs and levels out at around \SI{0.56}{\metre} (Figure~\ref{fig:dce-curve}). The box target gives the lowest reconstruction error, although its KL term is higher, meaning that the latent carries slightly more information. Training the final run took about \SI{30}{\minute} on one GPU.
+
+\begin{figure}[ht]
+    \centering
+    \input{figures/dce-curve.tex}
+    \caption{Validation RMSE of the depth encoder per epoch. The cube run was resumed after 100 epochs with a restarted learning rate.}
+    \label{fig:dce-curve}
+\end{figure}
+
+Figure~\ref{fig:dce-recon} shows the final encoder on six validation images. The target in the second column differs visibly from the depth image in the first, because it is not the depth image but the collision image $D^{\mathrm{col}}_t$ of Section~\ref{sec:depth-encoder}: for each pixel, the distance the vehicle can travel along that pixel's ray before its body touches a surface. Every range is therefore shortened by the size of the vehicle, and obstacles grow sideways by about its half-width, so that the target always lies at or below the depth image. When the camera is close to a surface, nearly the whole image is within the vehicle's size of it, and the collision image is close to zero everywhere, as in the fourth and fifth rows, even though the depth image still shows structure further away. Open space and the outlines of the inflated obstacles are reconstructed. The decoded images are smoother than the targets: the largest errors are at sharp edges, such as the boundary between an obstacle and open water. Views taken close to an obstacle, where almost the whole collision image is near zero, are reconstructed with an error of about \SI{0.1}{\metre}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{figures/dce_recon.png}
+    \caption{Final depth encoder (best epoch) on six validation images with clean input. Columns: the depth image given to the encoder, the collision image it is trained to reconstruct, the reconstruction and the absolute error, with the RMSE of each image on the right. Each row is labelled on the left with its kind and the minimum range in the depth image: an anchor is a view from the policy rollout, a Gaussian view is taken from a randomly perturbed camera pose, and a toward view from a pose moved along the shortest sonar ray, facing the nearest obstacle.}
+    \label{fig:dce-recon}
+\end{figure}
+
+\begin{todolist}
+  \item Policy training results (success rate, collisions) and the memory comparison of RQ3.
+\end{todolist}
 \subsection{Quantitative Results}
 
 \subsection{Qualitative Results}
 
 \subsection{Ablation Study}
+
+% Place all Results figures before the Discussion (the reconstruction figure otherwise
+% floats past the bibliography into the appendix).
+\clearpage

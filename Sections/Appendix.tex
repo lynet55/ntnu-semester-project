@@ -1,0 +1,76 @@
+% !TEX root = ../main.tex
+% Moved from Background (Vehicle model) on 2026-11-25. Background keeps one sentence on the
+% notation (Simulation, BlueROV2 Heavy in MarineGym) and points here.
+\section{Vehicle model}
+\label{app:vehicle-model}
+A common approach to modelling underwater vehicles is based on Fossen's 6-DOF equations of motion \parencite{fossen2021handbook}. The motion is described using two reference frames: an Earth-fixed North-East-Down (NED) frame $\{n\}$, which is treated as inertial, and a body-fixed frame $\{b\}$ with its origin at the vehicle centre and with $x_b$ pointing forward, $y_b$ to starboard and $z_b$
+down. The state of the vehicle is given by
+\begin{beqn}
+\begin{aligned}
+\boldsymbol{\eta} &= [x,\, y,\, z,\, \phi,\, \theta,\, \psi]^\top \in \mathbb{R}^6, \\
+\boldsymbol{\nu}  &= [u,\, v,\, w,\, p,\, q,\, r]^\top \in \mathbb{R}^6,
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\eta}$ is the position $(x, y, z)$ and orientation, given as the Euler angles roll $\phi$, pitch $\theta$ and yaw $\psi$, of the vehicle expressed in $\{n\}$. $\boldsymbol{\nu}$ is the vector of linear velocities (surge $u$, sway $v$, heave $w$) and angular velocities (roll rate $p$, pitch rate $q$, yaw rate $r$) expressed in $\{b\}$. The two are related by the kinematic equation
+\begin{beqn}
+\begin{aligned}
+\dot{\boldsymbol{\eta}} = \mathbf{J}_\Theta(\boldsymbol{\eta})\,\boldsymbol{\nu},
+\qquad
+\mathbf{J}_\Theta(\boldsymbol{\eta}) =
+\begin{bmatrix}
+\mathbf{R}^n_b(\boldsymbol{\Theta}) & \mathbf{0}_{3\times 3} \\
+\mathbf{0}_{3\times 3} & \mathbf{T}_\Theta(\boldsymbol{\Theta})
+\end{bmatrix} \in \mathbb{R}^{6\times 6},
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\Theta} = [\phi, \theta, \psi]^\top$, $\mathbf{R}^n_b \in \mathbb{R}^{3\times 3}$ is the rotation matrix from $\{b\}$ to $\{n\}$, and $\mathbf{T}_\Theta \in \mathbb{R}^{3\times 3}$ maps the body angular rates to Euler-angle rates.
+
+The dynamics are given by
+\begin{beqn}
+\begin{aligned}
+\mathbf{M}\dot{\boldsymbol{\nu}}
++ \mathbf{C}(\boldsymbol{\nu})\boldsymbol{\nu}
++ \mathbf{D}(\boldsymbol{\nu})\boldsymbol{\nu}
++ \mathbf{g}(\boldsymbol{\eta})the FAO primary source for the production figures;
+= \boldsymbol{\tau},
+\end{aligned}
+\end{beqn}
+where $\boldsymbol{\tau} \in \mathbb{R}^6$ is the vector of control forces and
+moments produced by the thrusters, and
+\begin{beqn}
+\begin{aligned}
+\mathbf{M} &= \mathbf{M}_{RB} + \mathbf{M}_A \in \mathbb{R}^{6\times 6}, \\
+\mathbf{C}(\boldsymbol{\nu}) &= \mathbf{C}_{RB}(\boldsymbol{\nu}) + \mathbf{C}_A(\boldsymbol{\nu}) \in \mathbb{R}^{6\times 6}, \\
+\mathbf{D}(\boldsymbol{\nu}) &= \mathbf{D}_L + \mathbf{D}_{NL}(\boldsymbol{\nu}) \in \mathbb{R}^{6\times 6}, \\
+\mathbf{g}(\boldsymbol{\eta}) &\in \mathbb{R}^{6}.
+\end{aligned}
+\end{beqn}
+The rigid-body terms depend only on the vehicle itself. $\mathbf{M}_{RB}$ is the
+rigid-body mass and inertia matrix, and $\mathbf{C}_{RB}(\boldsymbol{\nu})$
+contains the rigid-body Coriolis and centripetal terms. The hydrodynamic
+contributions come from the surrounding water. The added-mass matrix
+$\mathbf{M}_A$ accounts for the inertia of the fluid that is accelerated
+together with the vehicle, and $\mathbf{C}_A(\boldsymbol{\nu})$ contains the
+corresponding added-mass Coriolis and centripetal terms. The damping matrix
+$\mathbf{D}(\boldsymbol{\nu})$ combines linear skin friction $\mathbf{D}_L$ with
+quadratic drag $\mathbf{D}_{NL}(\boldsymbol{\nu})$, which grows with the
+velocity. Finally, $\mathbf{g}(\boldsymbol{\eta})$ is the vector of restoring
+forces and moments from gravity and buoyancy, which act at the centre of
+gravity and the centre of buoyancy respectively. Placing the centre of gravity
+below the centre of buoyancy gives the vehicle passive stability in roll and
+pitch.
+
+The control forces and moments are produced by the thrusters,
+\begin{beqn}
+\begin{aligned}
+\boldsymbol{\tau} = \mathbf{T}\mathbf{f}, \qquad
+\mathbf{T} \in \mathbb{R}^{6\times 8}, \quad \mathbf{f} \in \mathbb{R}^{8},
+\end{aligned}
+\end{beqn}
+where $\mathbf{f}$ holds the forces of the eight thrusters on the BlueROV2 Heavy
+and $\mathbf{T}$ is the thruster configuration matrix, determined by the
+position and direction of each thruster. Since
+$\operatorname{rank}(\mathbf{T}) = 6$, the vehicle is fully actuated in all six
+degrees of freedom. With eight thrusters for six degrees of freedom, it is in
+fact over-actuated, so the mapping from $\boldsymbol{\tau}$ to $\mathbf{f}$
+has redundancy.
