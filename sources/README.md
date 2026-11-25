@@ -1,6 +1,6 @@
 # Sources: how this folder works
 
-Shared overview of the literature for the thesis, used by every Claude session (claude.ai and Claude Code) and by the author. Last restructured 2026-11-25.
+Shared overview of the literature for the project, used by every Claude session (claude.ai and Claude Code) and by the author. Last restructured 2026-11-25.
 
 **This folder in the git repo is the master copy.** The claude.ai project "thesis research" holds a mirror of these three files for chat sessions; if they disagree, the repo wins. Edit here, commit, and push.
 
@@ -32,13 +32,13 @@ The Claude Sheet "Related work sources: learned underwater navigation" (https://
 
 ## Editing rules
 
-1. **Key = bib key.** The first column must match `references.bib`. Add the source to `ratings.md` before citing it in the thesis.
+1. **Key = bib key.** The first column must match `references.bib`. Add the source to `ratings.md` before citing it in the project.
 2. **One row per source.** Update the existing row; do not add duplicates in other files.
 3. **Date changes.** When a rating or verification status changes, write the date in the Note column (e.g. "re-rated Borderline 2026-12-01: venue checked").
-4. **Quotes need page numbers** before they go in the thesis. Quotes in these docs were mostly extracted by a summarising tool.
+4. **Quotes need page numbers** before they go in the project. Quotes in these docs were mostly extracted by a summarising tool.
 5. **Do not upgrade a rating from memory.** Check venue and citations first.
 6. Keep the claude.ai project mirror in sync when convenient (a chat session can copy these files into the project).
 
-## Thesis context (for a new session)
+## Project context (for a new session)
 
-The thesis studies a mapless local navigation policy for a UUV (BlueROV2 in MarineGym): raw sonar + depth image → frozen encoder latent (DeFM or VAE) → recurrent (GRU) + MLP policy trained with RL, outputting velocity commands to reach a goal. It is the underwater counterpart of Kulkarni & Alexis' Deep Collision Encoder (DCE). Research questions: RQ1 bring compressed-depth policies to UUVs with sonar; RQ2 characterise their limits underwater; RQ3 effect of memory architecture (none / recurrent / spatially-enhanced). LaTeX conventions: `NOTATION_STYLE.md`.
+The project studies a mapless local navigation policy for a UUV (BlueROV2 in MarineGym): raw sonar + depth image → frozen encoder latent (DeFM or VAE) → recurrent (GRU) + MLP policy trained with RL, outputting velocity commands to reach a goal. It is the underwater counterpart of Kulkarni & Alexis' Deep Collision Encoder (DCE). Research questions: RQ1 bring compressed-depth policies to UUVs with sonar; RQ2 characterise their limits underwater; RQ3 effect of memory architecture (none / recurrent / spatially-enhanced). LaTeX conventions: `NOTATION_STYLE.md`.

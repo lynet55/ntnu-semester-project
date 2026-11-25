@@ -1,5 +1,6 @@
 % !TEX root = ../main.tex
 \section{Method}
+\label{sec:method}
 \subsection{Proposed method}
 To address the research questions,  an architecture is proposed for navigating an UUV through a corridor filled with obstacles to a goal position while avoiding obstacles only by use of  a FLS and depth images derived from a camera. To achieve this a VAE is introduced in order to encode raw depth images into a compact latent state, and a GRU-based recurrent policy maps sequences of latent state directly to thruster commands, as seen in Figure~\ref{fig:nav-stack-online}.
 
@@ -62,22 +63,22 @@ Index & Symbol & Description & Frame / scaling & Dim \\
 \end{tabular}
 \end{table}
 
-The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described in \cite{kulkarni2023task}. The VAE follows the architecture seen in Figure~\ref{fig:vae} and is trained with the loss in \eqref{eq:vae-loss}. 
+The VAE is trained to reconstruct collision images from a collection of 100,000 images sampled from the training environment used for the policy and augmented following the methodology described by \textcite{kulkarni2023task}. The VAE follows the architecture seen in Figure~\ref{fig:vae} and is trained with the loss in Equation~\eqref{eq:vae-loss}. 
 
 \subsection{Training environment}
 \label{sec:env}
-Dynamics, sensor simulation and reward computation is handled by MarineGym \cite{chu2025marinegym}. As discussed in \ref{sec:marinegym} the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{fossen2021handbook}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
+Dynamics, sensor simulation and reward computation is handled by MarineGym \parencite{chu2025marinegym}. As discussed in Section~\ref{sec:marinegym}, the simulated dynamics in MarineGym are shared between the NVIDIA PhysX and MarineGym's dynamics plug-in based on \textcite{fossen2021handbook}. The depth images used for training are simulated through NVIDIA RTX renderer. Furthermore, a simulated sonar is also available to the agent through an analytical implementation emulating a FLS.
 
  The obstacles are composed of geometric primitives: rectangular prisms, spheres and capsules placed in the environment with random position, orientation, and size.
 
-MarineGym is configured with the BlueROV2 Heavy model chosen because of its relevance discussed in {sec:simulators}.
+MarineGym is configured with the BlueROV2 Heavy model chosen because of its relevance discussed in Section~\ref{sec:marinegym}.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.5\linewidth, trim=1 1 1 1, clip]{figures/bluerov2heavy_marinegym.png}
     \caption{BlueROV2 Heavy model}
     \label{fig:bluerov2}
 \end{figure}
- The model parameters are taken from the URDF used in MarineGym \ref{tab:bluerov_model}.
+ The model parameters are taken from the URDF used in MarineGym (Table~\ref{tab:bluerov_model}).
 \begin{table}[H]
   \centering
   \caption{BlueROV2 Heavy model parameters used in MarineGym.}
@@ -101,10 +102,10 @@ MarineGym is configured with the BlueROV2 Heavy model chosen because of its rele
   \end{tabular}
 \end{table}
 \subsubsection{Sonar emulation}
-The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the theory in \ref{sec:fsl-model}. The ranges are directly used as a policy observation listed in Table~\ref{tab:train_obs}.  
+The forward-looking sonar is implemented as a planar ray cast with 16 ranges and a minimum range $r_{\min} = 0.2$\,m and a maximum range of $r_{\max} = 10$\,m, following the model in Section~\ref{sec:fls-model}. The ranges are directly used as a policy observation listed in Table~\ref{tab:train_obs}.  
 
 \subsection{Recurrent policy}
-The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64 and trained using Asymetric PPO (APPO) \textcite{schulman2017ppo} with rewards calculated using \ref{sec:env} and the rewards calculated as follows \ref{eq:rewards}.
+The policy $\pi_{GRU}$ parametrized by an MLP with [512, 256, 64] fully connected layers followed by a GRU with a hidden layer size of 64 and trained using Asymetric PPO (APPO) \parencite{schulman2017ppo} in the environment of Section~\ref{sec:env}, with the rewards given in Equation~\eqref{eq:rewards}.
 
 \begin{subequations}\label{eq:rewards}
 \begin{balign}
@@ -153,7 +154,7 @@ Here $d^{\mathrm{goal}}_t = \lVert \mathbf{p}^n_{\mathrm{goal}} - \mathbf{p}^n_t
   \end{tabular}
 \end{table}
 
-The policy and critic are trained on $R_t$ by minimising the PPO loss \eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$ and $\epsilon = 0.2$.
+The policy and critic are trained on $R_t$ by minimising the PPO loss in Equation~\eqref{eq:ppo-total}, with $\lambda_V = 1$, $\lambda_H = 0.003$ and $\epsilon = 0.2$.
 
 \subsection{Evaluation protocol}
 

@@ -2,7 +2,7 @@
 
 Detailed notes per paper. Ratings (can I cite it?) live in `sources/ratings.md`; this file says what each paper does. Layout and editing rules: `sources/README.md`.
 
-Thesis context: proposed underwater stack = raw sonar + depth image → frozen encoder latent → GRU + MLP policy, trained by RL (underwater analogue of Kulkarni & Alexis DCE).
+Project context: proposed underwater stack = raw sonar + depth image → frozen encoder latent → GRU + MLP policy, trained by RL (underwater analogue of Kulkarni & Alexis DCE).
 
 Each entry: domain · perception → memory · what to cite it for · caveat. "Check" = not verified from the full text.
 
@@ -61,6 +61,77 @@ Optional (same-group follow-ups / extra domain): Malczyk et al. 2026 (arXiv 2602
 Also relevant: Larsen et al. IFAC (risk-based convolutional perception for ASV collision avoidance, cited as [3] in entry 11) — CNN encoder on range data, surface vessel. Sonar-based deep learning survey arXiv 2412.11840 mentions VAEs/GANs used for OOD detection on sonar.
 
 Finding: underwater VAEs are used for perception (sim-to-real sonar synthesis, compression, enhancement, OOD), not as frozen latents for RL policies. Learned underwater navigation uses end-to-end CNNs (Manderson 2018/2020 imitation; Yang 2022 RL) or large pretrained encoders (Shafer 2026 ResNet-10; DUViN Depth Anything). Only VAE-latent policy found: robotic-fish CM-VAE with behaviour cloning in sim. No found work: frozen task-driven depth VAE + RL underwater.
+
+### Underwater sensing: 3D information from sonar and cameras (verified quotes, 2026-11-25, for Introduction steps 3-4 and 6)
+
+Quotes below were copied from the full text (PDF) and checked word for word on 2026-11-25. Section headings and pages as stated.
+
+23. **Massot-Campos & Oliver-Codina 2015** (`massotcampos2015optical`, Sensors 15(12):31525–31557, doi:10.3390/s151229864) — survey of optical sensors and methods for underwater 3D reconstruction · Use for: infrared depth cameras fail underwater; light absorption and scattering limit optical range.
+    - Sec. 4.4 *Structured Light*, p. 31536: "The use of infrared projectors, such as Kinect, has also been tested underwater [75]. The attempt confirmed that the absorption of the infrared spectrum is too strong to reach distances greater than a few centimeters."
+    - Sec. 2 *The Underwater Environment*, p. 31525: "(3) Insufficient illumination and wavelength-dependent light absorption, producing dim and monotone images [15]."
+    - Sec. 2, p. 31525: "(5) Significant scattering and light diffusion that limits the operational distance of the systems."
+    - Caveat: the Kinect result is a single cited test of an infrared *projector* camera; do not generalise it to all depth cameras.
+
+24. **Westman, Gkioulekas & Kaess 2020** (`westman2020volumetric`, "A Volumetric Albedo Framework for 3D Imaging Sonar Reconstruction", ICRA 2020; PDF https://www.cs.cmu.edu/~kaess/pub/Westman20icra.pdf) — 3D reconstruction from imaging sonar · Use for: FLS measures azimuth and range but not elevation; cameras have limited range in turbid water.
+    - Sec. I *Introduction*, PDF p. 1: "These acoustic sensors offer long-range imaging capabilities in turbid waters that are often encountered in the field, where standard optical cameras typically have a limited sensing range."
+    - Sec. I, PDF p. 1: "Imaging sonars are quite analogous to optical cameras in that they provide 2D image measurements of a 3D environment."
+    - Sec. I, PDF p. 1: "In contrast, each pixel in an FLS image corresponds to discrete azimuth and range bins, with the elevation angle remaining ambiguous."
+    - Caveat: the phrase "the fundamental challenge of 3D imaging sonar reconstruction" is NOT in this paper (it is from a different Westman et al. paper on Fermat paths). Proceedings page numbers not yet looked up.
+
+25. **McConnell, Martin & Englot 2020** (`mcconnell2020fusing`, "Fusing Concurrent Orthogonal Wide-aperture Sonar Images for Dense Underwater 3D Reconstruction", IROS 2020; arXiv 2007.10407) — two orthogonal imaging sonars resolve elevation · Use for: elevation ambiguity; recovering elevation needs extra sonars, multiple viewpoints/motion, or assumptions.
+    - Abstract: "We propose a novel approach to handling the ambiguity in elevation angle associated with the observations of a forward looking multi-beam imaging sonar"
+    - Fig. 2 caption (Sec. I): "the elevation angle ϕ is not captured in the resulting 2D sonar image"
+    - Sec. II-A *Estimating Elevation Angle*: "these methods rely on several assumptions that may often be violated"
+    - Sec. II-B *Carving Out Low-Intensity Background Pixels*: "require the objects of interest to be observed from multiple vantage points"
+    - Sec. II-C *Acoustic Structure From Motion*: "the perception system requiring a series of frames to recover 3D information, rather than a single timestep"
+    - Caveat: checked against the arXiv HTML (v1), not the IEEE version; page numbers still to add.
+
+### Reinforcement learning as the approach (verified quotes, 2026-11-25, for Introduction step 5)
+
+Quotes copied word for word from the full text on 2026-11-25. arXiv versions have no page numbers; check pages in the journal versions before quoting directly in the project.
+
+26. **Kober, Bagnell & Peters 2013** (`kober2013reinforcement`, "Reinforcement Learning in Robotics: A Survey", IJRR, doi:10.1177/0278364913495721) — classic survey of RL in robotics · Use for: RL lets you obtain behaviour that is hard to engineer by hand.
+    - Abstract (authors' preprint, https://www.ri.cmu.edu/pub_files/2013/7/Kober_IJRR_2013.pdf, p. 1): "Reinforcement learning offers to robotics a framework and set of tools for the design of sophisticated and hard-to-engineer behaviors."
+    - Caveat: read from the authors' preprint, not the typeset IJRR article.
+
+27. **Tang, Abbatematteo, Hu, Chandra, Martín-Martín & Stone** (`tang2025deep`, "Deep Reinforcement Learning for Robotics: A Survey of Real-World Successes", accepted to Annu. Rev. Control Robot. Auton. Syst.; arXiv 2408.03539 v3) — survey of real-world DRL successes · Use for: DRL has real-world successes, most mature in quadruped locomotion; caveat that most milestones are in simulation.
+    - Sec. 1 *Introduction*: "recent advances have enabled DRL to succeed at some real-world robotic tasks."
+    - Sec. 1 *Introduction*: "For instance, DRL has enabled champion-level drone racing"
+    - Sec. 1 *Introduction* (caveat): "Yet, the most notable milestones of DRL so far have been achieved in simulation or game environments"
+    - Sec. 2 *Why Another Survey on RL for Robotics?*: "DRL, which is behind the most notable real-world successes of RL in robotics"
+    - Sec. 4.1.1 *Quadruped Locomotion*: "Quadruped locomotion is one of the robotic domains where DRL has provided mature real-world solutions."
+    - Caveat: Sec. 4.2 (Navigation) not read word for word. Published year, volume and DOI to confirm.
+
+28. **Ha, Lee, van de Panne, Xie, Yu & Khadiv** (`ha2025learning`, "Learning-based legged locomotion: state of the art and future perspectives", IJRR, doi:10.1177/02783649241312698; arXiv 2406.01152 v2) — survey of learning-based legged locomotion · Use for: why RL (direct sensory input, no separate state estimator), depth as policy input, history and memory for partial observability.
+    - Abstract: "In recent years, however, a number of factors have dramatically accelerated progress in learning-based methods"
+    - Sec. 1 *Introduction*: "including reliable and affordable hardware, significant improvements in simulation environments, and scalable learning algorithms for high-dimensional continuous control problems."
+    - Sec. 1.3 *Control and Learning Algorithms*: "Currently, the two dominant approaches to controlling legged robots in multi-contact scenarios are optimal control (OC) and reinforcement learning (RL) methods."
+    - Sec. 1.3: "it is simple to directly incorporate arbitrary sensory data as input to the policy, including high-dimensional modalities such as vision."
+    - Sec. 1.3: "This largely eliminates the need for a separate state estimation module"
+    - Sec. 3.2.1 *Proprioception*: "a short history buffer is almost always employed"
+    - Sec. 3.2.2 *Exteroception*: "Instead of feeding the sensory values directly into the policy, a compressed representation of them can be learned."
+    - Sec. 3.2.2: "used raw sensory readings directly as input to the policy, such as depth images or point clouds"
+    - Sec. 4.4 *Privileged Learning*: "Robotic tasks in the real world are inherently partially observable"
+    - Sec. 4.4: belief states are built by "stacking a sequence of previous observations" or "using models with memory such as RNN or TCN"
+    - Caveat: RL is one of TWO dominant approaches; do not write that RL dominates. Checked against arXiv v2; confirm in the IJRR version.
+
+29. **Hong, Liu, Peng & Zhang 2025** (`hong2025control`, "Control of Marine Robots in the Era of Data-Driven Intelligence", arXiv 2506.21063 v1, formatted for Annu. Rev. Control Robot. Auton. Syst.) — review of model-based vs data-driven control of marine robots · Use for: underwater control relied on models; RL learns unknown dynamics without an explicit model; limitations (sample inefficiency, simplified training environments).
+    - Abstract: "The control of marine robots has long relied on model-based methods grounded in classical and modern control theory."
+    - Sec. 3.2 *Model-Free Data-Driven Control Methods*: "rely on simulation or experimental data and reward functions instead of relying on explicit system models."
+    - Sec. 3.3 *Integration of Model-Based and Data-Driven Control Methods*: "their effectiveness depends heavily on the accuracy of system models"
+    - Sec. 3.3: "data-driven approaches, especially RL, excel at learning unknown dynamics and coping with unstructured environments"
+    - Sec. 3.2.1.1 *Value-Based Methods* (limitation): "many studies rely on fixed or overly simplified training environments, limiting the real-world applicability"
+    - Sec. 3.2.1.2 *Policy-Based Methods* (limitation): "standard PPO may suffer from sample inefficiency, poor performance under sparse rewards"
+    - Caveat: preprint; Sec. 6 (conclusions) not read word for word.
+
+30. **Xiao, Liu, Warnell & Stone 2022** (`xiao2022motion`, Autonomous Robots 46(5):569–597; arXiv 2011.13112 v2) — survey of ML for mobile robot navigation · Use for (Related Work 2.1): end-to-end vs subsystem learning; hybrids.
+    - Sec. 3.2 *Learning Navigation Subsystems*: "Most learning approaches in this category have focused on the local planning subsystem"
+    - Sec. 3.4 *Analysis*, Observation 1: "The majority of machine learning for navigation work focuses on end-to-end approaches"
+    - Sec. 3.4, Observation 2: "an end-to-end learning architecture cannot completely replace a map-based path planner"
+    - Sec. 3.4, Observation 4: "Approaches that seek to learn subsystems have focused predominately on local planning rather than global planning."
+    - Sec. 3.4: "leads us to propose a hybrid classical and learning navigation paradigm as a very promising direction for future research"
+
+Not yet read (do not cite until checked): Lai et al. 2026, "A Review on Path Planning for Autonomous Underwater Vehicles: From Models, Classical Methods, and Learning-Based Intelligence Perspectives", J. Field Robotics 43(3):2366–2389, doi:10.1002/rob.70143 (paywalled; candidate Strong anchor for RL in underwater navigation).
 
 ## Classification: where memory lives and what trains it
 

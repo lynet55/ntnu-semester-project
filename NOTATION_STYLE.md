@@ -1,6 +1,6 @@
 # Notation & LaTeX Style Guide
 
-This guide is for an agent that writes or edits LaTeX for this thesis (BlueROV2 / MarineGym, depth- and sonar-based RL navigation, comparing a **DeFM** encoder with a **VAE** encoder). Follow it exactly. When the guide and the existing text disagree, follow the guide and list the disagreement in your preview report (§7).
+This guide is for an agent that writes or edits LaTeX for this project (BlueROV2 / MarineGym, depth- and sonar-based RL navigation, comparing a **DeFM** encoder with a **VAE** encoder). Follow it exactly. When the guide and the existing text disagree, follow the guide and list the disagreement in your preview report (§7).
 
 ---
 
@@ -33,9 +33,18 @@ This guide is for an agent that writes or edits LaTeX for this thesis (BlueROV2 
 * Use `\top` for transpose: `\mathbf{x}^\top`.
 * Units always use `siunitx`: `\si{\metre\per\second}`, `\SI{12}{\metre}`.
 
+### 1.2 Citations and cross-references
+
+* `\textcite{key}` when the authors are part of the sentence: "\textcite{kulkarni2024dce} train …".
+* `\parencite{key}` otherwise, placed before the full stop: "… for aerial robots \parencite{kulkarni2024dce}."
+* Never use `\cite`, `\citep`, `\citet` or bare `[key]` brackets. Never write the author names and `\textcite` together ("Hochreiter and Schmidhuber \textcite{…}").
+* A key must exist in `references.bib` and have a row in `sources/ratings.md` before it is cited.
+* Cross-references always carry their type with a non-breaking space: `Section~\ref{}`, `Figure~\ref{}`, `Table~\ref{}`, `Equation~\eqref{}`. No hard-coded numbers ("Sec. 2.2"); `cleveref` is not loaded.
+* Every `\section` has a label: `sec:introduction`, `sec:background`, `sec:related-work`, `sec:method`, `sec:results`, `sec:discussion`, `sec:conclusion`.
+
 ### 1.1 Notation sources
 
-Each topic takes its notation from one reference. Write that topic the way its reference does, and cite the reference where the notation is introduced in the thesis.
+Each topic takes its notation from one reference. Write that topic the way its reference does, and cite the reference where the notation is introduced in the project.
 
 | Topic | Reference | Key in `references.bib` | What it sets |
 |---|---|---|---|

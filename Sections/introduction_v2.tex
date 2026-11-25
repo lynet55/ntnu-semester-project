@@ -1,5 +1,5 @@
 % !TEX root = ../main.tex
-% Introduction, version 2: restructured as a funnel from application to research
+% Introduction, version 2 (specialization project, TPK4560): restructured as a funnel from application to research
 % questions. The previous version is kept in Sections/Introduction.tex.
 %
 % STORYLINE (each step ends with a sentence that leads into the next)
@@ -12,8 +12,12 @@
 %   7 RQs, 8 contributions, 9 scope, 10 outline
 %
 % Keys written as \texttt{...} are not in references.bib yet.
+%
+% CITATION STYLE (whole project): \textcite{key} when the authors are part of the
+% sentence ("\textcite{x} show ..."); \parencite{key} otherwise, placed before the
+% full stop. Do not use \cite, \citep or bare [key] brackets.
 \section{Preface and Acknowledgements}
-% TODO: move to the front matter, before the Introduction.
+% TODO: move to the front matter, before the Introduction (project, not thesis).
 
 \section{Introduction}
 \label{sec:introduction}
@@ -24,18 +28,17 @@
 \paragraph{Application}
 % Step 1. Short: one paragraph. Aquaculture is the main example, but the argument
 % below does not depend on it.
-Efforts to improve underwater inspection using Unmanned Underwater Vehicles (UUV's) has potenial to unlock great economical- and ecologial value for the Norwegian fish farming industry.  Such UUV's are commonly used in the process of inspection, maintenance and intervention tasks in fish farms, and have already proven an indispensible tool for Norwegian fish farmes as they have replaced divers for monitoring and inspection operations inside of the cage.  \cite{amundsen2024aquaculture}. Specifically operations such as net inspection, biofouling removing, mooring line inspection and fish monitoring \cite{amundsen2025netpen}. However of these operations, net inspection is likely the most important operation, as such failures would represent produciton loss and environmental conserns as fish that have escaped may impact the wild fish population.
+Efforts to improve underwater inspection using Unmanned Underwater Vehicles (UUV's) has potenial to unlock great economical- and ecologial value for the Norwegian fish farming industry.  Such UUV's are commonly used in the process of inspection, maintenance and intervention tasks in fish farms, and have already proven an indispensible tool for Norwegian fish farmes as they have replaced divers for monitoring and inspection operations inside of the cage \parencite{amundsen2024aquaculture}. Specifically operations such as net inspection, biofouling removing, mooring line inspection and fish monitoring \parencite{amundsen2025netpen}. However of these operations, net inspection is likely the most important operation, as such failures would represent produciton loss and environmental conserns as fish that have escaped may impact the wild fish population.
 
-In 2022 aquaculture production surpassed capture of fisheries in global production, accounting for 51 percent of global seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \cite{amundsen2025netpen}.
+In 2022 aquaculture production surpassed capture of fisheries in global production, accounting for 51 percent of global seafood production with in total 130.9 million tons worth 312.8 billion U.S dollars \parencite{amundsen2025netpen}.
 
-The economical impact is especially significant for Norway as aquaculture has grown to be Norway's second-largest export industry behind the oil and gas industry \cite{amundsen2024aquaculture}.
+The economical impact is especially significant for Norway as aquaculture has grown to be Norway's second-largest export industry behind the oil and gas industry \parencite{amundsen2024aquaculture}.
 
-Between 2010 and 2018 more than 70 percent of escaped farmed Atlantic Salamon and rainbow Trout was caused by holes in the net, and avrages to approximatly 220 000 escaped fish per year \cite{evjemo2025aquaculture}.
 
 \begin{todolist}
   \item Cut this down to one paragraph: aquaculture as the main example, plus one clause on other close-proximity operations (offshore infrastructure, harbours).
   \item End with the lead-in: these operations require a vehicle that moves safely through cluttered 3D space.
-  \item Replace second-hand statistics with primary sources: FAO, \emph{The State of World Fisheries and Aquaculture 2024} (production figures); F{\o}re \& Thorvaldsen 2021, \emph{Aquaculture} (escape causes 2010--2018); Glover et al.\ 2017, \emph{Fish and Fisheries} (impact on wild salmon); Statistics Norway or the Norwegian Seafood Council (export rank). Verify each before citing.
+  \item Replace second-hand statistics with primary sources: FAO, \emph{The State of World Fisheries and Aquaculture 2024} (production figures); Statistics Norway or the Norwegian Seafood Council (export rank). Verify each before citing.
   \item \parencite{evjemo2025aquaculture} is a submitted preprint: check whether it is published.
   \item The long verbatim quote from \textcite{evjemo2025aquaculture} in the old Introduction must not be reused as-is. Paraphrase the useful part (planners assume rigid bodies and ignore uncertainty) in step 3 or 6, citing \textcite{xanthidis2023resiplan} and \textcite{amundsen2025netpen}.
 \end{todolist}
@@ -100,15 +103,15 @@ Motivated by the success of "end to end" robotic navigation in above water domai
 \end{description}
 % TODO (visible list; delete each item when done)
 \begin{todolist}
-  \item Decide whether to keep the SRU in RQ3; drop it from the wording if that experiment does not make it into the thesis.
+  \item Decide whether to keep the SRU in RQ3; drop it from the wording if that experiment does not make it into the project.
 \end{todolist}
 
 \subsection{Contributions}
 \label{sec:contributions}
-% State what the thesis DELIVERS, not what it studies; each item answers one RQ.
-% This is where the thesis is placed relative to the closest work (kulkarni2024dce,
+% State what the project DELIVERS, not what it studies; each item answers one RQ.
+% This is where the project is placed relative to the closest work (kulkarni2024dce,
 % deowan2026unified); Related Work only describes those works.
-The main contributions of this thesis are:
+The main contributions of this project are:
 \begin{description}
     \item[C1] An adaptation of the compressed-depth navigation policy used for aerial and legged robots \parencite{kulkarni2024dce} to an underwater vehicle, extending its observation with forward-looking sonar ranges and training it in GPU-parallel simulation. (RQ1)
     \item[C2] An extension of the learned underwater navigation of \textcite{deowan2026unified} with memory inside the policy, and a comparison of policies with no memory, a GRU and a spatially-enhanced recurrent unit \parencite{yang2026spatially}. (RQ3)
@@ -117,7 +120,7 @@ The main contributions of this thesis are:
 % TODO (visible list; delete each item when done)
 \begin{todolist}
   \item C3: name the limitations once results exist (e.g.\ camera range in turbidity, sonar sparsity, slow dynamics and long horizons, sim-to-real of depth).
-  \item C2: check the exact relation to Ether's work. If the thesis reuses its environment, sonar features or policy, write ``builds on''; if it only compares against it, write ``in contrast to'' instead of ``an extension of''.
+  \item C2: check the exact relation to Ether's work. If the project reuses its environment, sonar features or policy, write ``builds on''; if it only compares against it, write ``in contrast to'' instead of ``an extension of''.
   \item Optional C4, only if true and released: open-source environment or sonar emulation for MarineGym.
   \item Order: C3 answers RQ2 but is listed last because it depends on C1 and C2. Either keep that order and say so, or swap RQ2 and RQ3 so the numbering matches.
 \end{todolist}

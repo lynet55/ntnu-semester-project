@@ -1,5 +1,6 @@
 % !TEX root = ../main.tex
 \section{Background}
+\label{sec:background}
 
 \subsection{Reinforcement Learning}
 
@@ -73,7 +74,7 @@ The two most common baseline methods for continuous control are both actor-criti
 \end{itemize}
 
 \paragraph{Proximal Policy Optimization}
-PPO \parencite{schulman2017ppo} alternates between collecting experience with the current policy from $N$ parallel actors and optimising a surrogate objective for several epochs on that batch (Algorithm~\ref{alg:ppo}). The surrogate clips the probability ratio $\kappa_t$ between the new and the old policy to $[1-\epsilon, 1+\epsilon]$, so a single update cannot move the policy far from the one that collected the data. The advantages $\hat A_t$ are computed with generalized advantage estimation (GAE). The full loss used in this work is given in \eqref{eq:ppo-total}.
+PPO \parencite{schulman2017ppo} alternates between collecting experience with the current policy from $N$ parallel actors and optimising a surrogate objective for several epochs on that batch (Algorithm~\ref{alg:ppo}). The surrogate clips the probability ratio $\kappa_t$ between the new and the old policy to $[1-\epsilon, 1+\epsilon]$, so a single update cannot move the policy far from the one that collected the data. The advantages $\hat A_t$ are computed with generalized advantage estimation (GAE). The full loss used in this work is given in Equation~\eqref{eq:ppo-total}.
 
 \begin{algorithm}[htbp]
 \caption{PPO, actor-critic style \parencite{schulman2017ppo}.}
@@ -103,7 +104,7 @@ PPO \parencite{schulman2017ppo} alternates between collecting experience with th
   \Lc{H} &= \mathbb{E}_t\bigl[\mathcal{H}\bigl(\pi(\cdot\mid\mathbf{x}^e_t;\mathbf{w}_\pi)\bigr)\bigr] \label{eq:ppo-entropy}
 \end{balign}
 
-Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm{old}} + \operatorname{clip}(V_t - V_{t,\mathrm{old}}, -\epsilon, \epsilon)$, $\ell_{\mathrm{H}}$ is the Huber loss with threshold 10 and $\mathcal{H}$ is the entropy. The advantage $\hat A_t$ and the return target $\hat G_t$ follow from generalized advantage estimation \eqref{eq:ppo-gae}, with $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. $\hat A_t$ is normalised to zero mean and unit variance over the batch, and $\hat G_t$ by its running mean and variance.
+Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm{old}} + \operatorname{clip}(V_t - V_{t,\mathrm{old}}, -\epsilon, \epsilon)$, $\ell_{\mathrm{H}}$ is the Huber loss with threshold 10 and $\mathcal{H}$ is the entropy. The advantage $\hat A_t$ and the return target $\hat G_t$ follow from generalized advantage estimation, Equation~\eqref{eq:ppo-gae}, with $\gamma = 0.995$ and $\lambda_{\mathrm{GAE}} = 0.95$. $\hat A_t$ is normalised to zero mean and unit variance over the batch, and $\hat G_t$ by its running mean and variance.
 
 \begin{balign}
   \delta_t &= R_t + \gamma V_{t+1} - V_t, \label{eq:ppo-td}\\
@@ -119,7 +120,7 @@ Here $V_t = V(\mathbf{x}^e_t;\mathbf{w}_V)$, $V^{\mathrm{clip}}_t = V_{t,\mathrm
 \end{itemize}
 
 \subsubsection{Reinforcement learning algorithm}
-MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out of the box \cite{chu2025marinegym}. The implementation is identical to the PPO in OmniDrones on which MarineGym was buildt \cite{xu2024omnidrones}.
+MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out of the box \parencite{chu2025marinegym}. The implementation is identical to the PPO in OmniDrones on which MarineGym was buildt \parencite{xu2024omnidrones}.
 
 
 \subsection{Recurrent policies}
@@ -127,7 +128,7 @@ MarineGym comes with an implementation of Proximal Policy Optimization (PPO) out
 % Moved to Related Work (Memory in navigation policies): the paragraph on explicit vs
 % implicit memory, citing yang2026spatially, ha2025learning and morad2023popgym.
 % TODO: one sentence motivating RNNs here (partial observability -> need for memory).
-RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state. A typical RNN is depicted in Figure ~\ref{fig:rnn}.
+RNNs is a variation of a Neural Network which allows it to predict future outcomes based on previously seen observations by introducing a loop which allows information to pass from one prediction step to the next. The architecture is defined by $\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}^e_t)$, where $\mathbf{x_t}$ is the current input state and $\mathbf{h}_{t-1}$ is the past hidden state and $\mathbf{h_t}$ is the current predicted hidden state. A typical RNN is depicted in Figure~\ref{fig:rnn}.
 
 \begin{figure}[htbp]
     \centering
@@ -139,7 +140,7 @@ RNNs is a variation of a Neural Network which allows it to predict future outcom
 
 A downside of RNNs, is that it struggles to produce good predictions when the gap between current observations and previously seen information grows too large. Vanilla RNNs also suffer vanishing and exploding gradients i.e gradients becoming very small of extremely large during training, which makes long-term dependencies challenging to learn and can lead to optimization related issues.
 
-These problems are famously addressed by Hochreiter and Scmidhuber \textcite{hochreiter1997long}, with their introduction of Long Short Term Memory networks (LSTMs) which was also later refined by the work of others aswell \cite{olah2015lstm}. LTSMs manage a way to control what information is added or removed from a network, by introducing the idea of a cell state $\mathbf{c}_t$ where information is only modifed by linear interactions and a gate operation deciding how much information from one source can be combined with information from another. Specifically the gate operation controls this by passing one source of information through a sigmoid layer $\sigma$ and then pointwise multiplying it with the other source of information.
+These problems are famously addressed by \textcite{hochreiter1997long}, with their introduction of Long Short Term Memory networks (LSTMs), which were later refined by the work of others \parencite{olah2015lstm}. LTSMs manage a way to control what information is added or removed from a network, by introducing the idea of a cell state $\mathbf{c}_t$ where information is only modifed by linear interactions and a gate operation deciding how much information from one source can be combined with information from another. Specifically the gate operation controls this by passing one source of information through a sigmoid layer $\sigma$ and then pointwise multiplying it with the other source of information.
 
 \begin{figure}[htbp]
     \centering
@@ -149,9 +150,8 @@ These problems are famously addressed by Hochreiter and Scmidhuber \textcite{hoc
 \end{figure}
 
 
-Another popular variation of the LSTM is a "Gated Recurrent Unit" (GRU) introduced by \cite{cho2014learning}. It combines the forget and input gate into a single "update gate". It merges the cell state and hidden state, in addition to some other changes resulting in a simpler model than the standard LSTM \cite{olah2015lstm} (Figure~\ref{fig:gru}). 
+Another popular variation of the LSTM is a "Gated Recurrent Unit" (GRU) introduced by \textcite{cho2014learning}. It combines the forget and input gate into a single "update gate". It merges the cell state and hidden state, in addition to some other changes resulting in a simpler model than the standard LSTM \parencite{olah2015lstm} (Figure~\ref{fig:gru}).
 
-(Figure~\ref{fig:gru}).
 \begin{figure}[H]
     \centering
     \input{figures/rnn/gru-cell.tex}
@@ -161,7 +161,7 @@ Another popular variation of the LSTM is a "Gated Recurrent Unit" (GRU) introduc
 
 \subsection{Convolutional neural networks}
 % Moved from Related Work (End-to-end encoders)
-Convolutional Neural Networks were first introduced in\textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. A convolutional encoder is illustrated in Figure~\ref{fig:cnn}.
+Convolutional Neural Networks were introduced by \textcite{lecun1998gradient}, and are widely adopted in the field of computer vision for their specific ability to encode variability in 2D shapes. A convolutional encoder is illustrated in Figure~\ref{fig:cnn}.
 
 % TODO theory missing:
 \begin{itemize}
@@ -181,7 +181,7 @@ Convolutional Neural Networks were first introduced in\textcite{lecun1998gradien
 
 \subsection{Autoencoders and VAEs}
 % Moved from Related Work (Encoders trained on reconstruction)
-Another common way to compress data is with so called Auto Encoders (AE), which produce a compressed latent representation of the original input data \textcite{hinton2006reducing}. AEs work by defining two neural networks, one called an encoder and a decoder. The Encoder is constructed in a way so that the input dimensions are of the input data, while the output dimension is set to the desired compression dimension. The compressed representation is called a latent representation, and commonly denoted $z$. The decoder is on the other hand designed oppositely, so that the input dimension is matching the latent and the output dimension map back into the original input data. This is commonly visualized as a bottleneck as in figure \ref{fig:vae}. The Encoder and Decoder is jointly trained on a dataset passed through both networks sequentially, and are penalized with a loss that penalizes the difference between the input data and the reconstructed data. The latent representation, the encoder maps to will then retain most of the information in the original data while the dimensions are reduced. For images, convolutional encoders and decoders preserve spatial structure and shares their weights across images improving spatial understanding \cite{masci2011stacked}. Variational Auto Encoders (VAEs) are a common extention of AE, and are designed to keep latent representations resembling a normal distribution \cite{kingma2014auto}.
+Another common way to compress data is with so called Auto Encoders (AE), which produce a compressed latent representation of the original input data \parencite{hinton2006reducing}. AEs work by defining two neural networks, one called an encoder and a decoder. The Encoder is constructed in a way so that the input dimensions are of the input data, while the output dimension is set to the desired compression dimension. The compressed representation is called a latent representation, and commonly denoted $z$. The decoder is on the other hand designed oppositely, so that the input dimension is matching the latent and the output dimension map back into the original input data. This is commonly visualized as a bottleneck as in Figure~\ref{fig:vae}. The Encoder and Decoder is jointly trained on a dataset passed through both networks sequentially, and are penalized with a loss that penalizes the difference between the input data and the reconstructed data. The latent representation, the encoder maps to will then retain most of the information in the original data while the dimensions are reduced. For images, convolutional encoders and decoders preserve spatial structure and shares their weights across images improving spatial understanding \parencite{masci2011stacked}. Variational Auto Encoders (VAEs) are a common extention of AE, and are designed to keep latent representations resembling a normal distribution \parencite{kingma2014auto}.
 
 \begin{figure}[H]
     \centering
@@ -214,22 +214,24 @@ where $\hat D_t$ is the image reconstructed by the decoder.
 
 \subsection{Collision images}
 % Moved from Related Work (Task-driven compression)
-These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimately combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \cite{kulkarni2023task}. COME BACK TO THIS, its not right.
+These images are generated by first detecting edges along the original image of which some of the edges are selected randomly to be used for meshes. The meshes in combination with a pinhole camera model used to render virtual meshes for the edge pixels of the image and internal image pixels are simply offset by the robot size. The images are ultimately combined into an new image which represents the collision free distance projected along the central axis of the camera, representing the traversable distance by a robot of a specific size along the rays corresponding to each pixel in the image \parencite{kulkarni2023task}. COME BACK TO THIS, its not right.
 
 \subsection{Underwater vehicle model}
 \paragraph{Types of UUVs}
 
 \paragraph{Sensor suite}
-Sensors used for navigation in underwater environments have limited visibility and are limited to the use of acoustic based sensors as electromagnetic waves attenuate in water making satilite systems (GNNS) like GPS of little use once submerged \cite{bogue2015underwater, haugalokken2024lowcost}. Notably visibility gets worse with depth, and debris in the water will also decrease camera visibility \parencite{evjemo2025aquaculture}. Sensors used for localization used in UUVs are therefore sensors such as ultra-short baseline (USBL), Dobbler Velocity Logger (DVL) and sonar \cite{evjemo2025aquaculture}. USBL works by calculating the reception time of the acoustic signal transmissions sent by the transponder a received by the transceivers \cite{evjemo2025aquaculture}. A DVL sends acoustic beams at a surface and measures the Dobbler shift on the returned beams, and the velocity relative to the object reflecting the beams is derived \cite{evjemo2025aquaculture}. Mechanical scanning (Imaging) sonars, use a single narrow beam rotated by a stepper motor to build up a 2D acoustic image of the surroundings. These require time to generate a good image, as increasing the step angle of the motor gives faster scans but crude results. Mechanical sensors may also produce smeared images if the vehicle moves between scans. The Multi-beam forward-looking sonar (FLS) improves this, as it returns an instant image in 2D by forming many beams at once and is therefore particularly useful when it comes to collision avoidance \cite{bogue2015underwater}. Notably 3D 
+Sensors used for navigation in underwater environments have limited visibility and are limited to the use of acoustic based sensors as electromagnetic waves attenuate in water making satilite systems (GNNS) like GPS of little use once submerged \parencite{bogue2015underwater, haugalokken2024lowcost}. Notably visibility gets worse with depth, and debris in the water will also decrease camera visibility \parencite{evjemo2025aquaculture}. Sensors used for localization used in UUVs are therefore sensors such as ultra-short baseline (USBL), Dobbler Velocity Logger (DVL) and sonar \parencite{evjemo2025aquaculture}. USBL works by calculating the reception time of the acoustic signal transmissions sent by the transponder a received by the transceivers \parencite{evjemo2025aquaculture}. A DVL sends acoustic beams at a surface and measures the Dobbler shift on the returned beams, and the velocity relative to the object reflecting the beams is derived \parencite{evjemo2025aquaculture}. Mechanical scanning (Imaging) sonars, use a single narrow beam rotated by a stepper motor to build up a 2D acoustic image of the surroundings. These require time to generate a good image, as increasing the step angle of the motor gives faster scans but crude results. Mechanical sensors may also produce smeared images if the vehicle moves between scans. The Multi-beam forward-looking sonar (FLS) improves this, as it returns an instant image in 2D by forming many beams at once and is therefore particularly useful when it comes to collision avoidance \parencite{bogue2015underwater}. Notably 3D 
 
-Vision based sensors like stereo- and mono camera solutions are also used on a UUV. The mono-camera is often well suited for low-light and used for inspection, while a stereo camera can be used for detection and relative localization of multiple objects, in addition to point cloud representations of the environment. However, cameras are heavy effected by the water quality, illumination and scattering/absorption effects \cite{haugalokken2024lowcost}. The collected data may be applied to simultaneous localization and mapping (SLAM) and scene reconstruction and decision support for UUV operators \textcite{haugalokken2024lowcost}. Furthermore, internal states are measured using a inertial measurement unit (IMU) and vessel depth is usually inferred from a pressure sensor \cite{evjemo2025aquaculture}.
+Vision based sensors like stereo- and mono camera solutions are also used on a UUV. The mono-camera is often well suited for low-light and used for inspection, while a stereo camera can be used for detection and relative localization of multiple objects, in addition to point cloud representations of the environment. However, cameras are heavy effected by the water quality, illumination and scattering/absorption effects \parencite{haugalokken2024lowcost}. The collected data may be applied to simultaneous localization and mapping (SLAM) and scene reconstruction and decision support for UUV operators \parencite{haugalokken2024lowcost}. Furthermore, internal states are measured using a inertial measurement unit (IMU) and vessel depth is usually inferred from a pressure sensor \parencite{evjemo2025aquaculture}.
 
 Capturing spatial information in 3D is a particular challenge for underwater robotics, as visibility is significantly reduced compared to in air.
 
-\textbf{Bonus for your sensing paragraph:} Section 2.2.1 explains that standard LiDAR is ineffective underwater because water strongly absorbs and scatters near-infrared light. It also says light attenuation affects both monocular and stereo cameras. \parencite{zhu2025machinery}
+\begin{todolist}
+  \item Note (not yet prose): \textcite[Sec.~2.2.1]{zhu2025machinery} explain that standard LiDAR is ineffective underwater because water strongly absorbs and scatters near-infrared light, and that light attenuation affects both monocular and stereo cameras.
+\end{todolist}
 
 \subsection{Vehicle model}
-A common approach to modelling underwater vehicles is based on Fossen's 6-DOF equations of motion \citep{fossen2021handbook}. The motion is described using two reference frames: an Earth-fixed North-East-Down (NED) frame $\{n\}$, which is treated as inertial, and a body-fixed frame $\{b\}$ with its origin at the vehicle centre and with $x_b$ pointing forward, $y_b$ to starboard and $z_b$
+A common approach to modelling underwater vehicles is based on Fossen's 6-DOF equations of motion \parencite{fossen2021handbook}. The motion is described using two reference frames: an Earth-fixed North-East-Down (NED) frame $\{n\}$, which is treated as inertial, and a body-fixed frame $\{b\}$ with its origin at the vehicle centre and with $x_b$ pointing forward, $y_b$ to starboard and $z_b$
 down. The state of the vehicle is given by
 \begin{beqn}
 \begin{aligned}
@@ -303,10 +305,10 @@ has redundancy.
 
 \subsection{Simulation}
 \label{sec:marinegym}
-MarineGym \cite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym~\cite{chu2025marinegym}  is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps. Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
+MarineGym \parencite{chu2025marinegym} is a GPU-accelerated framework for training control policies with RL for underwater robotics. MarineGym provides GPU native hydrodynamics, accounts for environmental disturbances, a toolkit for Domain Randomization (DR) and supports multiple UUV- and actutor models. Allowing for large-scale paralellizartion of simulations, outperforming alternative simualtors such as HoloOcean, DAVE ans Stonefish which relies on CPU-based multiprocessing. MarineGym is built on NVIDIA Isaac Sim, a robotics simulator that combines the PhysX physics engine, RTX rendering and sensor simulation. In GPU mode, PhysX runs as CUDA kernels, so the rigid-body calculations are spread across the GPU's many cores. MarineGym accesses the simulation through Isaac Sim's tensor application programming interface (API), which lets PhysX and PyTorch share the same GPU memory. Because Isaac Sim has no native support for hydrodynamic forces, MarineGym adds a custom plugin, written as PyTorch tensor operations, that computes the hydrodynamic terms of Fossen's equations of motion and applies them to each vehicle at every simulation step. Physics, hydrodynamics and policy inference therefore all run on the GPU, and simulation data never has to be copied to the CPU between steps. Sonar-and camera emulation (RGB, Depth and Segmentation) are not explicitly added features added by MarineGym. However, camera emulation is available in Isaac Sim and is a trivial extension to MarineGym. Sonar emulation is also not supported by MarineGym, and is usually implemented manually as raycast (Source).
 
 \paragraph{FLS model}
-\label{sec:fsl-model}
+\label{sec:fls-model}
 The FLS can be be modelled with simplified ray cast model with sparse beams, neglecting the intensities returned by a real multi beam sonar.   
 
 
@@ -336,7 +338,7 @@ r_{\max}, & \text{otherwise},
 \end{beqn}
 
 \paragraph{BlueRov2 Heavy in MarineGym}
-The vehicle dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine bundled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \cite{amundsen2024aquaculture}.  The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model propagated to the next state. This does not include forces and torques introduced by the actuators.
+The vehicle dynamics in MarineGym are handled by decomposing the dynamics into a rigid-body term handled by PhysX, the physics engine bundled with IsaacSim and a hydrodynamic term determined by Fossen's equation of motion \parencite{chu2025marinegym, fossen2021handbook}.  The torque from the hydrodynamic forces is applied to the centroid of each submerged link every time the model propagated to the next state. This does not include forces and torques introduced by the actuators.
 
 
 \begin{beqn}
